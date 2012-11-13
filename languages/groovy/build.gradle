@@ -1,0 +1,21 @@
+apply plugin: 'groovy'
+
+repositories { 
+  mavenCentral()
+}
+
+dependencies {
+  groovy       "org.codehaus.groovy:groovy:1.8.8" 
+
+  testCompile ('org.spockframework:spock-core:0.6-groovy-1.8') {
+                exclude group: 'org.codehaus.groovy', module: 'groovy'  
+              }
+}
+
+/*****************************************************************************
+ * A gradle custom task for generating gradle install scripts so that the user
+ * of the repo does not need to install gradle
+*/
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.2'
+}
