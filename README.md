@@ -4,9 +4,9 @@ hron
 hron - human readable object notation
 
 hron sample
-===========
+-----------
 
-```
+```hron
 
 # This is an ini file using hron
 
@@ -49,23 +49,26 @@ hron sample
 
 
 hron grammar
-============
+------------
 
 The notation is an extended BNF: 
-    1 The symbol "::=" serves the same purpose as colon in Bison. 
-    2 Unquoted parentheses group. 
-    3 A trailing unquoted asterisk (*) indicates 0 or more repetitions. 
-    4 A trailing unquoted plus indicates 1 or more repetitions. 
-    5 Unquoted square braces indicate an optional phrase. 
+1. The symbol "::=" serves the same purpose as colon in Bison. 
+2. Unquoted parentheses group. 
+3. A trailing unquoted asterisk (*) indicates 0 or more repetitions. 
+4. A trailing unquoted plus indicates 1 or more repetitions. 
+5. Unquoted square braces indicate an optional phrase. 
 
 
 Lexical Structure 
-=================
-    1. Comments in hron begin with "#" and continue to the end of the line. 
-    2. Containing only blanks, tabs, and comments are called blank lines. Outside a string they have no effect on idention and are ignored. When expecting a string they count as an empty line
-    3. Tabs immediately at the beginnings of lines are significant. The indention level is the number of tabs at the beginning of line. 
-    4. If one line is indented more than the preceding non-blank line, it is taken to be preceded by an INDENT token. It is an error for the first non-blank line in a file to be indented. 
-    5. If one line is indented less than the preceding non-blank line, it is taken to be preceded by enough DEDENT tokens to match all unmatched INDENT tokens introduced by preceding more-indented lines. The end of a file is preceded by enough DEDENT tokens to match all unmatched INDENT tokens. 
+-----------------
+1. Comments in hron begin with "#" and continue to the end of the line. 
+2. Containing only blanks, tabs, and comments are called blank lines. Outside a string they have no effect on idention and are ignored. When expecting a string they count as an empty line
+3. Tabs immediately at the beginnings of lines are significant. The indention level is the number of tabs at the beginning of line. 
+4. If one line is indented more than the preceding non-blank line, it is taken to be preceded by an INDENT token. It is an error for the first non-blank line in a file to be indented. 
+5. If one line is indented less than the preceding non-blank line, it is taken to be preceded by enough DEDENT tokens to match all unmatched INDENT tokens introduced by preceding more-indented lines. The end of a file is preceded by enough DEDENT tokens to match all unmatched INDENT tokens. 
+
+EBNF 
+----
 
 ```ebnf
 
