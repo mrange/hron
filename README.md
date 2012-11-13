@@ -48,10 +48,9 @@ hron sample
 ```
 
 
-hron grammar
-------------
+hron grammar (EBNF)
+-------------------
 
-The notation is an extended BNF: 
 1. The symbol "::=" serves the same purpose as colon in Bison. 
 2. Unquoted parentheses group. 
 3. A trailing unquoted asterisk (*) indicates 0 or more repetitions. 
@@ -59,7 +58,7 @@ The notation is an extended BNF:
 5. Unquoted square braces indicate an optional phrase. 
 
 
-Lexical Structure 
+lexcial structure 
 -----------------
 1. Comments in hron begin with "#" and continue to the end of the line. 
 2. Containing only blanks, tabs, and comments are called blank lines. Outside a string they have no effect on idention and are ignored. When expecting a string they count as an empty line
