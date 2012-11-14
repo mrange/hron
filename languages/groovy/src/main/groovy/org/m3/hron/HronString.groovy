@@ -20,4 +20,15 @@ class HronString extends HronBase {
 
     hasData = true
   }
+
+  /**
+   * TODO: Clean this up
+   * @param c
+   * @return
+   */
+  def leftShift(Character c) {
+    leftShift(c.toString())
+  }
+
+
 }

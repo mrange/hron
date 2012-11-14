@@ -14,5 +14,5 @@ public interface HronVisitor {
   Appendable stringPropertyVisitStarted(Object parent, String propertyName)
   void stringPropertyVisitEnded(Object parent, String propertyName, Appendable property)
 
-
+  void error(Object parent, long line, int column, HronParseException error)
 }
