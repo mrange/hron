@@ -12,7 +12,7 @@ Following is a typical usage of the parser from groovy:
     def hron = """\
     @welcome
     	=title
-    		Weldome to HRON
+    		Welcome to HRON
     	=copy
     		HRON is a new data format which
     		which is easy to read and
