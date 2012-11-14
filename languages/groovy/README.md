@@ -1,7 +1,7 @@
 About This Project
 ==================
 This project contains a groovy parser for the hron data format. Hron stands
-for Human Readable Object Format, please see the root hron project for details on the format.
+for Human Readable Object Notation, please see the root hron project for details on the format.
 
 The parser mimics the JsonSlurper and XmlParser usage patterns already available in groovy. It however
 adds to these by also supporting custom visitors so you can hook into the hron parsing process and
