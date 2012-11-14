@@ -14,7 +14,7 @@ Following is a typical usage of the parser from groovy:
     	=title
     		Welcome to HRON
     	=copy
-    		HRON is a new data format which
+    		HRON is a new data format
     		which is easy to read and
     		supports multi line strings.
     		
