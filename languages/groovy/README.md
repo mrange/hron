@@ -9,7 +9,9 @@ do some custom processing if needed.
 
 Following is a typical usage of the parser from groovy:
 
-    def hron = """\
+    import org.m3.hron.HronParser
+    
+    def hronBlob = """\
     @welcome
     	=title
     		Welcome to HRON
@@ -27,15 +29,18 @@ Following is a typical usage of the parser from groovy:
     			Developer
     """
     
-    def hron = new HronParser().parseText(hron)
+    def hron = new HronParser().parseText(hronBlob)
     
     assert hron instanceof Map 
     assert hron.welcome.title == "Welcome to HRON"
     assert hron.welcome.copy.readLines()[5] == "The Developers"
-    assert hron.author instanceof Map
-    assert hron.author.firstName == "Bob"
+    assert hron.welcome.author instanceof Map
+    assert hron.welcome.author.firstName == "Bob"
 
-Note that indentation is significant in the hron format and that indentation is performed using TAB characters. 
+Note that indentation is significant in the hron format and that indentation is performed using TAB characters. The above example can be run 
+by first building the project and then executing: 
+
+    > groovy -cp build/libs/hron-parser-1.0.jar sample.groovy
 
 For a few more examples of how you can use the parser, take a look at the [spock specification](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
 for the parser in src/test/groovy. For details on the excellent BDD framework spock, see [the spock web site](http://code.google.com/p/spock/).
