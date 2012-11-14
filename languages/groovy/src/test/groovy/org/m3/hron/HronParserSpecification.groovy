@@ -4,7 +4,7 @@ package org.m3.hron
 import spock.lang.Shared
 import spock.lang.Unroll
 import spock.lang.Specification
-
+import spock.lang.IgnoreRest
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,6 +41,76 @@ class HronParserSpecification  extends Specification  {
 
     File parent = new File(url.toURI())
     new File(parent, fileName).text
+  }
+
+  def "should handle tabs at the start of strings"() {
+    given:
+    def hronData = """|@bean
+                      |\t=propOne
+                      |\t\t\tvalue
+                      |\t=propTwo
+                      |\tx\tfirst line
+                      |\t\t\tsecond line
+                      |\t\t
+                      |\t\t
+                      |\t=propThree
+                      |\t\t
+                      |\t=propFour
+                      |\t\t\t
+                      |\t=propFive
+                      |\t\t""".stripMargin()
+    when:
+    def result = parser.parseText(hronData)
+
+    then:
+    result.bean instanceof Map
+    result.bean.size() == 5
+    result.bean.propOne == "\tvalue"
+    result.bean.propTwo.readLines().size == 3
+    result.bean.propTwo.readLines()[0] == "first line"
+    result.bean.propTwo.readLines()[1] == "\tsecond line"
+    result.bean.propTwo.readLines()[2] == ""
+    result.bean.propThree == ""
+    result.bean.propFour == "\t"
+    result.bean.propFive == ""
+  }
+
+  /**
+   * Note that we can not use the 'hron' data variable as it contains
+   * line feeds and other chars which ar note allowed in method names
+   * @return
+   */
+  @Unroll
+  def "should return '#expected' from expression #expression on row #row"() {
+    given:
+      def result = parser.parseText(hron)
+
+    expect:
+      Eval.me("result", result, "result.${expression}") == expected
+
+    where:
+      row | hron          | expression                 | expected
+      1   | "@MyBean"     | "MyBean.size()"            | 0
+      2   | "@MyBean"     | "MyBean instanceof Map"    | true
+      3   | "@MyBean\n"   | "MyBean.size()"            | 0
+      4   | "@MyBean\n"   | "MyBean instanceof Map"    | true
+      5   | "=MyProp"     | "MyProp"                   | ''
+      6   | "=MyProp"     | "MyProp instanceof String" | true
+      7   | "=MyProp\n"   | "MyProp"                   | ''
+      8   | "=MyProp\n"   | "MyProp instanceof String" | true
+  }
+
+
+  def "should parse bean with no properties"() {
+    given:
+    def hronData = "@MyBean"
+
+    when:
+    def hron = parser.parseText(hronData)
+
+    then:
+    hron.MyBean instanceof Map
+    hron.MyBean.size() == 0
   }
 
   def "should get correct visitor callbacks for single-object hron blob"() {
