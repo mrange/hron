@@ -49,7 +49,7 @@ class HronParserSpecification  extends Specification  {
                       |\t=propOne
                       |\t\t\tvalue
                       |\t=propTwo
-                      |\tx\tfirst line
+                      |\t\tfirst line
                       |\t\t\tsecond line
                       |\t\t
                       |\t\t
