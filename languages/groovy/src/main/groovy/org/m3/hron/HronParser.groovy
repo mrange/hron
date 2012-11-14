@@ -82,7 +82,8 @@ class HronParser {
   }
 
   private void parseLine(String line, HronParseState state) {
-    if (!line) return
+    //ignore empty/null lines and lines starting with our the comment character
+    if (!line || line[0] == '#') return
 
     int indent = 0
     Character first = line.chars.find { char c ->
@@ -107,6 +108,10 @@ class HronParser {
         if (indent < state.currentIndent) state.popUntilIndent(indent)
 
         state.openObject line[(indent+1)..-1]
+        break
+
+      case '#':
+        //a comment line, we ignore this and boldly go forth with the next line
         break
 
       default:
