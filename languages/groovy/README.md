@@ -10,21 +10,31 @@ do some custom processing if needed.
 Following is a typical usage of the parser from groovy:
 
     def hron = """\
-    @greet
-      =title
-        Weldome to HRON
-      =copy
-        HRON is a new data format which
-        which is easy to read and
-        supports multi line strings.
-
-        Best,
-        The Developers"""
+    @welcome
+    	=title
+    		Weldome to HRON
+    	=copy
+    		HRON is a new data format which
+    		which is easy to read and
+    		supports multi line strings.
+    		
+    		Best,
+    		The Developers
+    	@author
+    		=firstName
+    			Bob
+    		=lastName
+    			Developer
+    
+"""
 
     def hron = new HronParser().parseText(hron)
 
-    assert hron.title == "Welcome to HRON"
-    assert hron.copy.readLines()[5] == "The Developers"
+    assert hron instanceof Map 
+    assert hron.welcome.title == "Welcome to HRON"
+    assert hron.welcome.copy.readLines()[5] == "The Developers"
+    assert hron.author instanceof Map
+    assert hron.author.firstName == "Bob"
 
 For a few more examples of how you can use the parser, take a look at the spock specifications
 in src/test/groovy (see [the spock web site](http://code.google.com/p/spock/) for details on spock).
