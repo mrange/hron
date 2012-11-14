@@ -26,3 +26,4 @@ assert hron.welcome.copy.readLines()[5] == "The Developers"
 assert hron.welcome.author instanceof Map
 assert hron.welcome.author.firstName == "Bob"
 
+println "Hron sample successfully executed!"
