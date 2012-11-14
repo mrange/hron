@@ -35,12 +35,14 @@ Following is a typical usage of the parser from groovy:
     assert hron.author instanceof Map
     assert hron.author.firstName == "Bob"
 
+Note that indentation is significant in the hron format and that indentation is performed using TAB characters. 
+
 For a few more examples of how you can use the parser, take a look at the [spock specification](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
 for the parser in src/test/groovy. For details on the excellent BDD framework spock, see [the spock web site](http://code.google.com/p/spock/).
 
 Building The Project
 ====================
-The project is configured as a gradle build project (see [the gradle home page](http://gradle.org) for details).
+The project is configured as a gradle build project (for details on the gradle build system, see [the gradle home page](http://gradle.org)).
 
 The only thing you need installed on your machine to build the project is java. To build, run the following:
 
