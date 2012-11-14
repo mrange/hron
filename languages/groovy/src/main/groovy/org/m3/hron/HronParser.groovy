@@ -82,44 +82,55 @@ class HronParser {
   }
 
   private void parseLine(String line, HronParseState state) {
-    //ignore empty/null lines and lines starting with our the comment character
+    //ignore empty/null lines and lines starting with the comment character
     if (!line || line[0] == '#') return
 
-    int indent = 0
-    Character first = line.chars.find { char c ->
-      boolean isTab = (c == '\t')
-      if (isTab) indent++
+    List<Character> whole = line.chars.collect { it as Character }
+    List<Character> head = whole.take(state.currentIndent).takeWhile { it == '\t' }
 
-      !isTab
+    int indent = head.size()
+    List<Character> tail = whole.drop(indent)
+
+    //Ignore lines which are all tabs and too short to reach the current indent
+    if (!tail) return
+
+    Character pivot = tail.first()
+    String rest = (tail.size() < 2) ? "" : line[(indent+1)..-1]
+    def location = { "[${reader.line}, ${indent+1}]" }
+
+    try {
+      switch(pivot) {
+        case '#':
+          break
+
+        case '=':
+          if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at line ${location()}")
+          if (indent < state.currentIndent) state.popUntilIndent(indent)
+
+          state.openString rest
+          break
+
+        case '@':
+          if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at ${location()}")
+          if (indent < state.currentIndent) state.popUntilIndent(indent)
+
+          state.openObject rest
+          break
+
+        case '\t':
+          //for string data
+          if (state.currentString == null) throw new HronParseException("String data encountered even though no string has been opened at ${location()}")
+          if (indent != state.currentIndent) throw new HronParseException("Invalid indent $indent at ${location()}, expected ${state.currentIndent+1}")
+
+          state.currentString << rest
+          break
+
+        default:
+          throw new HronParseException("Invalid character '$pivot' encountered at ${location()}")
+      }
+    } catch (HronParseException e) {
+      state.visitor.error(state.currentObject, reader.line, indent+1, e)
+      throw e
     }
-
-    if (first == null && indent != state.currentIndent + 1) return
-
-    switch(first) {
-      case '=':
-        if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at line ${reader.line}")
-        if (indent < state.currentIndent) state.popUntilIndent(indent)
-
-        state.openString line[(indent+1)..-1]
-        break
-
-      case '@':
-        if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at line ${reader.line}")
-        if (indent < state.currentIndent) state.popUntilIndent(indent)
-
-        state.openObject line[(indent+1)..-1]
-        break
-
-      case '#':
-        //a comment line, we ignore this and boldly go forth with the next line
-        break
-
-      default:
-        //for string data
-        if (state.currentString == null) throw new HronParseException("String data encountered even though no string has been opened at line ${reader.line}")
-        if (indent != state.currentIndent + 1) throw new HronParseException("Invalid indent $indent at line ${reader.line}, expected ${state.currentIndent+1}")
-
-        state.currentString << (first == null ? "" : line[indent..-1])
-    }
-  }
+ }
 }

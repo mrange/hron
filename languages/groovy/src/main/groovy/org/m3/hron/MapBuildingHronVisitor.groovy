@@ -42,4 +42,9 @@ class MapBuildingHronVisitor implements HronVisitor {
     Map parentMap = (parent == null) ? map : parent as Map
     parentMap[propertyName] = propertyValue.toString()
   }
+
+  @Override
+  void error(Object parent, long line, int column, HronParseException error) {
+    //do nothing for now
+  }
 }
