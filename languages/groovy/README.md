@@ -36,11 +36,15 @@ Following is a typical usage of the parser from groovy:
     assert hron.welcome.copy.readLines()[5] == "The Developers"
     assert hron.welcome.author instanceof Map
     assert hron.welcome.author.firstName == "Bob"
+    
+    println "Hron sample successfully executed!"
 
 Note that indentation is significant in the hron format and that indentation is performed using TAB characters. The above example can be run 
-by first building the project and then executing: 
+by (first build the project jar file and then execute a sample groovy script against it): 
 
-    > groovy -cp build/libs/hron-parser-1.0.jar sample.groovy
+    > gradlew clean build 
+    > groovy -cp build/libs/hron-parser-1.0.jar src/samples/sample.groovy
+    Hron sample successfully executed!
 
 For a few more examples of how you can use the parser, take a look at the [spock specification](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
 for the parser in src/test/groovy. For details on the excellent BDD framework spock, see [the spock web site](http://code.google.com/p/spock/).
@@ -51,9 +55,13 @@ The project is configured as a gradle build project (for details on the gradle b
 
 The only thing you need installed on your machine to build the project is java. To build, run the following:
 
-  > ./gradlew clean build
+  > gradlew clean build
 
 from the root of the project tree (replace with 'gradlew.bat' for windows). This will compile and test the project
 and generate a jar file in directory build/libs.
 
 
+TODO
+====
+* Add array support using '=' or '@' lines without identitiers as array values
+* Add groovy builder for hron documents
