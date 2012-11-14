@@ -25,11 +25,10 @@ Following is a typical usage of the parser from groovy:
     			Bob
     		=lastName
     			Developer
+    """
     
-"""
-
     def hron = new HronParser().parseText(hron)
-
+    
     assert hron instanceof Map 
     assert hron.welcome.title == "Welcome to HRON"
     assert hron.welcome.copy.readLines()[5] == "The Developers"
