@@ -94,4 +94,36 @@ class HronParserSpecification  extends Specification  {
       multiLine[2] == ""
       multiLine[3] == "Third line"
   }
+
+  def "should ignore comment lines for simple hron blob"() {
+    given:
+      String hron =   """|#######################################
+                         |# I am a comment line on the root level
+                         |@bean
+                         |	=propOne
+                         |		valueOne
+                         |	######################################################
+                         |	# I am a comment line at the current indentation level
+                         |	=propTwo
+                         |#######################################
+                         |# And a comment inserted straight into the flow
+                         |		valueTwo
+                         |	=propThree
+                         |		multi-line string value
+                         |	# with a indent-level comment injected and ignored
+                         |# and a root-level comment injected and ignored
+                         |		second line of multi-line string value
+                         |""".stripMargin()
+
+    when:
+      Map result = parser.parseText(hron) as Map
+
+    then:
+      result.bean.size() == 3
+      result.bean.propOne == 'valueOne'
+      result.bean.propTwo == 'valueTwo'
+      result.bean.propThree.readLines().size() == 2
+      result.bean.propThree.readLines()[0] == "multi-line string value"
+      result.bean.propThree.readLines()[1] == "second line of multi-line string value"
+  }
 }
