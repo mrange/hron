@@ -18,23 +18,28 @@ class MapBuildingHronVisitor implements HronVisitor {
   }
 
   @Override
-  HronVisitor objectPropertyVisitStarted(String propertyName) {
-    map[propertyName] = new MapBuildingHronVisitor()
+  Object objectPropertyVisitStarted(Object parent, String propertyName) {
+    Map<String, Object> child = [:]
+
+    Map parentMap = (parent == null) ? map : parent as Map
+    parentMap[propertyName] = child
+
+    child
   }
 
   @Override
-  void objectPropertyVisitEnded() {
+  void objectPropertyVisitEnded(Object parent, String propertyName, Object child) {
     //do nothing for now
   }
 
   @Override
-  Appendable stringPropertyVisitStarted(String propertyName) {
+  Appendable stringPropertyVisitStarted(Object parent, String propertyName) {
     new StringBuilder()
   }
 
   @Override
-  void stringPropertyVisitEnded(String propertyName, Appendable propertyValue) {
-    //we want Strings in our result, not string builders
-    map[propertyName] = propertyValue.toString()
+  void stringPropertyVisitEnded(Object parent, String propertyName, Appendable propertyValue) {
+    Map parentMap = (parent == null) ? map : parent as Map
+    parentMap[propertyName] = propertyValue.toString()
   }
 }

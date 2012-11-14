@@ -9,21 +9,19 @@
 @DataBaseConnection
 	=Name
 		CustomerDB
-	=ConnectionString
-		Data Source=.\SQLEXPRESS;Initial Catalog=Customers
 	=TimeOut
 		10
-@DataBaseConnection
+@grandParent
 	=Name
 		PartnerDB
 	=ConnectionString
 		Data Source=.\SQLEXPRESS;Initial Catalog=Partners
-	@Params2
+	@parent
 		=One
 			value
 		=Two
 			value
-		@Bean1
+		@child
 			=prop1
 				val1
 			=prop2

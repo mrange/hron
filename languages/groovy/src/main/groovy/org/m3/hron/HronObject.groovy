@@ -3,11 +3,10 @@ package org.m3.hron
 /**
  * Created with IntelliJ IDEA.
  * User: mbjarland
- * Date: 11/13/12
- * Time: 11:33 PM
+ * Date: 11/14/12
+ * Time: 9:49 AM
  * To change this template use File | Settings | File Templates.
  */
-class HronStringProperty {
-  String propertyName
-  Appendable data
+class HronObject extends HronBase {
+  Object object
 }

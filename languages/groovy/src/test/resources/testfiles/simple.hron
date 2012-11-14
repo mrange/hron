@@ -1,7 +1,7 @@
-@ObjectName
-	=StringPropertyOne
+@bean
+	=propOne
 		valueOne
-	=StringPropertyTwo
+	=propTwo
 		valueTwo
 
 

@@ -8,11 +8,11 @@ package org.m3.hron
  * To change this template use File | Settings | File Templates.
  */
 public interface HronVisitor {
-  HronVisitor objectPropertyVisitStarted(String propertyName)
-  void objectPropertyVisitEnded()
+  Object objectPropertyVisitStarted(Object parent, String propertyName)
+  void objectPropertyVisitEnded(Object parent, String propertyName, Object child)
 
-  Appendable stringPropertyVisitStarted(String propertyName)
-  void stringPropertyVisitEnded(String propertyName, Appendable property)
+  Appendable stringPropertyVisitStarted(Object parent, String propertyName)
+  void stringPropertyVisitEnded(Object parent, String propertyName, Appendable property)
 
 
 }

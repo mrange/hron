@@ -8,11 +8,19 @@ package org.m3.hron
  * To change this template use File | Settings | File Templates.
  */
 class HronParseState {
-  Stack<HronVisitorMarker> objects = []
+  Stack<HronObject> objects = []
+  HronString currentString
+  HronVisitor visitor
 
-  HronStringProperty currentString
+  void open() {
+    objects << new HronObject(indent: -1)
+  }
 
-  HronVisitorMarker getCurrentObject() {
+  void close() {
+    popUntilIndent(0)
+  }
+
+  HronObject getCurrentObject() {
     objects.peek()
   }
 
@@ -20,36 +28,33 @@ class HronParseState {
     currentObject.indent + 1
   }
 
-  HronVisitor getCurrentVisitor() {
-    currentObject.visitor
-  }
-
   void openString(String propertyName) {
     closeString()
 
-    Appendable data = currentVisitor.stringPropertyVisitStarted(propertyName)
-    currentString = new HronStringProperty(propertyName: propertyName, data: data)
+    Appendable data = visitor.stringPropertyVisitStarted(currentObject.object, propertyName)
+    currentString = new HronString(parent: currentObject.object, propertyName: propertyName, indent: currentIndent, data: data)
   }
 
   void closeString() {
     if (currentString == null) return
 
-    currentVisitor.stringPropertyVisitEnded(currentString.propertyName, currentString.data)
+    visitor.stringPropertyVisitEnded(currentObject.object, currentString.propertyName, currentString.data)
     currentString = null
   }
 
   void openObject(String objectName) {
     closeString()
-    HronVisitor newVisitor = currentVisitor.objectPropertyVisitStarted(objectName)
+    Object child = visitor.objectPropertyVisitStarted(currentObject.object, objectName)
 
-    objects << new HronVisitorMarker(indent: currentIndent, visitor: newVisitor)
+    objects << new HronObject(parent: currentObject.object, propertyName: objectName, indent: currentIndent, object: child)
   }
 
   void popUntilIndent(int indent) {
     closeString()
     while (indent < currentIndent) {
-      currentVisitor.objectPropertyVisitEnded()
+      visitor.objectPropertyVisitEnded(currentObject.parent, currentObject.propertyName, currentObject.object)
       objects.pop()
     }
   }
-  }
+
+}
