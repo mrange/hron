@@ -9,10 +9,15 @@ package org.m3.hron
  */
 class HronString extends HronBase {
   Appendable data
+  boolean hasData = false
 
   def leftShift(String str) {
     if (data == null) return
 
+    if (hasData) data << "\n"
+
     data << str
+
+    hasData = true
   }
 }

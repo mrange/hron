@@ -82,13 +82,17 @@ class HronParser {
   }
 
   private void parseLine(String line, HronParseState state) {
-    int indent = -1
-    Character first = line?.chars?.find { char c ->
-      indent++
-      c != '\t'
+    if (!line) return
+
+    int indent = 0
+    Character first = line.chars.find { char c ->
+      boolean isTab = (c == '\t')
+      if (isTab) indent++
+
+      !isTab
     }
 
-    if (first == null) return
+    if (first == null && indent != state.currentIndent + 1) return
 
     switch(first) {
       case '=':
@@ -110,7 +114,7 @@ class HronParser {
         if (state.currentString == null) throw new HronParseException("String data encountered even though no string has been opened at line ${reader.line}")
         if (indent != state.currentIndent + 1) throw new HronParseException("Invalid indent $indent at line ${reader.line}, expected ${state.currentIndent+1}")
 
-        state.currentString << line[indent..-1]
+        state.currentString << (first == null ? "" : line[indent..-1])
     }
   }
 }

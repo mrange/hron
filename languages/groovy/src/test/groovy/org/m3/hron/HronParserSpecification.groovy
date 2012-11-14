@@ -26,11 +26,9 @@ class HronParserSpecification  extends Specification  {
   }
 
   def cleanup() {
-
   }
 
   def setupSpec() {
-
   }
 
   def cleanupSpec() {
@@ -45,8 +43,7 @@ class HronParserSpecification  extends Specification  {
     new File(parent, fileName).text
   }
 
-
-  def "should get visitor callbacks for single-object hron blob"() {
+  def "should get correct visitor callbacks for single-object hron blob"() {
     given:
       def visitor = Mock(HronVisitor)
 
@@ -72,7 +69,6 @@ class HronParserSpecification  extends Specification  {
     then:
       result instanceof Map
       Eval.me("result", result, "result.${expression}") == expected
-      //result."$expression" == expected
 
     where:
       file           | expression                          || expected
@@ -80,5 +76,22 @@ class HronParserSpecification  extends Specification  {
       'simple.hron'  | 'bean.propOne'                      || 'valueOne'
       'complex.hron' | 'DataBaseConnection'                || [Name: 'CustomerDB', TimeOut: '10']
       'complex.hron' | 'grandParent.parent.child.prop1'    || 'val1'
+  }
+
+  def "should return correct value for multi-line string in file complex.hron"() {
+    given:
+      String hron = loadHronData('complex.hron')
+
+    when:
+      Map result = parser.parseText(hron) as Map
+      List<String> multiLine = result.Common.WelcomeMessage.readLines()
+
+    then:
+      result instanceof Map
+      multiLine.size() == 4
+      multiLine[0] == "Hello there!"
+      multiLine[1] == "This is a multiline script"
+      multiLine[2] == ""
+      multiLine[3] == "Third line"
   }
 }

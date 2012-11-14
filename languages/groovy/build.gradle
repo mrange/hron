@@ -1,5 +1,8 @@
 apply plugin: 'groovy'
 
+group = 'org.m3.hron'
+version = '1.0'
+
 repositories { 
   mavenCentral()
 }
