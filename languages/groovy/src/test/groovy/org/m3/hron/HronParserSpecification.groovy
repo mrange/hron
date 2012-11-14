@@ -45,34 +45,34 @@ class HronParserSpecification  extends Specification  {
 
   def "should handle tabs at the start of strings"() {
     given:
-    def hronData = """|@bean
-                      |\t=propOne
-                      |\t\t\tvalue
-                      |\t=propTwo
-                      |\t\tfirst line
-                      |\t\t\tsecond line
-                      |\t\t
-                      |\t\t
-                      |\t=propThree
-                      |\t\t
-                      |\t=propFour
-                      |\t\t\t
-                      |\t=propFive
-                      |\t\t""".stripMargin()
+      def hronData = """|@bean
+                        |\t=propOne
+                        |\t\t\tvalue
+                        |\t=propTwo
+                        |\t\tfirst line
+                        |\t\t\tsecond line
+                        |\t\t
+                        |\t\t
+                        |\t=propThree
+                        |\t\t
+                        |\t=propFour
+                        |\t\t\t
+                        |\t=propFive
+                        |\t\t""".stripMargin()
     when:
-    def result = parser.parseText(hronData)
+      def result = parser.parseText(hronData)
 
     then:
-    result.bean instanceof Map
-    result.bean.size() == 5
-    result.bean.propOne == "\tvalue"
-    result.bean.propTwo.readLines().size == 3
-    result.bean.propTwo.readLines()[0] == "first line"
-    result.bean.propTwo.readLines()[1] == "\tsecond line"
-    result.bean.propTwo.readLines()[2] == ""
-    result.bean.propThree == ""
-    result.bean.propFour == "\t"
-    result.bean.propFive == ""
+      result.bean instanceof Map
+      result.bean.size() == 5
+      result.bean.propOne == "\tvalue"
+      result.bean.propTwo.readLines().size == 3
+      result.bean.propTwo.readLines()[0] == "first line"
+      result.bean.propTwo.readLines()[1] == "\tsecond line"
+      result.bean.propTwo.readLines()[2] == ""
+      result.bean.propThree == ""
+      result.bean.propFour == "\t"
+      result.bean.propFive == ""
   }
 
   /**
@@ -103,14 +103,14 @@ class HronParserSpecification  extends Specification  {
 
   def "should parse bean with no properties"() {
     given:
-    def hronData = "@MyBean"
+      def hronData = "@MyBean"
 
     when:
-    def hron = parser.parseText(hronData)
+      def hron = parser.parseText(hronData)
 
     then:
-    hron.MyBean instanceof Map
-    hron.MyBean.size() == 0
+      hron.MyBean instanceof Map
+      hron.MyBean.size() == 0
   }
 
   def "should get correct visitor callbacks for single-object hron blob"() {
