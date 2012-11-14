@@ -35,8 +35,8 @@ Following is a typical usage of the parser from groovy:
     assert hron.author instanceof Map
     assert hron.author.firstName == "Bob"
 
-For a few more examples of how you can use the parser, take a look at the spock specifications
-in src/test/groovy (see [the spock web site](http://code.google.com/p/spock/) for details on spock).
+For a few more examples of how you can use the parser, take a look at the [spock specifications](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
+in src/test/groovy. For details on the excellent BDD framework spock, see [the spock web site](http://code.google.com/p/spock/).
 
 Building The Project
 ====================
