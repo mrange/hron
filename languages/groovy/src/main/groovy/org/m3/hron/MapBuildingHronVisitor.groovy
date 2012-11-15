@@ -11,7 +11,7 @@ class MapBuildingHronVisitor implements HronVisitor {
   Map<String, Object> map = [:]
   Map<Object, Object> lastInserted = [:]
 
-  private insertOrArrayify(parent, child, String propertyName) {
+  private Object insertOrArrayify(parent, child, String propertyName) {
     Map parentMap = (parent == null) ? map : parent as Map
 
     if (propertyName == '') {
@@ -26,21 +26,20 @@ class MapBuildingHronVisitor implements HronVisitor {
       parentMap[propertyName] = child
       lastInserted[parent] = propertyName
     }
+
+    child
   }
 
   @Override
   Object objectPropertyVisitStarted(Object parent, String propertyName) {
-    Map<String, Object> child = [:]
-
-    insertOrArrayify(parent, child, propertyName)
-
-    child
+    insertOrArrayify(parent, [:], propertyName)
   }
 
 
   @Override
   void objectPropertyVisitEnded(Object parent, String propertyName, Object child) {
     //do nothing for now
+    lastInserted.remove(child)
   }
 
   @Override
@@ -50,9 +49,7 @@ class MapBuildingHronVisitor implements HronVisitor {
 
   @Override
   void stringPropertyVisitEnded(Object parent, String propertyName, Appendable propertyValue) {
-    String child = propertyValue.toString()
-
-    insertOrArrayify(parent, child, propertyName)
+    insertOrArrayify(parent, propertyValue.toString(), propertyName)
   }
 
   @Override
