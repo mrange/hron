@@ -92,8 +92,8 @@ class HronParser {
     //ignore empty/null lines and lines starting with the comment character
     if (!line || line[0] == '#') return
 
-    List<Character> whole = line.chars.collect { it as Character }
-    List<Character> head = whole.take(state.currentIndent).takeWhile { it == '\t' }
+    List<Character> whole = line.chars as List
+    List<Character> head  = whole.take(state.currentIndent).takeWhile { it == '\t' }
 
     int indent = head.size()
     List<Character> tail = whole.drop(indent)
@@ -102,10 +102,9 @@ class HronParser {
     if (!tail) return
 
     String pivot = tail.first()
-    String rest = (tail.size() < 2) ? "" : line.substring(indent+1)
+    String rest = (tail.size() == 1) ? "" : line.substring(indent+1)
 
     def fail = { String msg -> throw new HronParseException(reader.line, indent+1, errorContext, msg) }
-
     try {
       switch(pivot) {
         case '#':
