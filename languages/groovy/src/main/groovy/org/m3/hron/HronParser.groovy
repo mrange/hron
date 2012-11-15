@@ -4,6 +4,7 @@ import groovy.io.LineColumnReader
 
 class HronParser {
   private LineColumnReader reader
+  private Queue<String> errorContext = [] as Queue
 
   /**
    * Parse a text representation of a HRON data structure
@@ -75,18 +76,24 @@ class HronParser {
     state.open()
 
     reader.eachLine { String line ->
-      parseLine(line, state)
+      storeContext line
+      parseLine line, state
     }
 
     state.close()
+  }
+
+  private void storeContext(String line) {
+    errorContext << line
+    while (errorContext.size() > 4) errorContext.remove()
   }
 
   private void parseLine(String line, HronParseState state) {
     //ignore empty/null lines and lines starting with the comment character
     if (!line || line[0] == '#') return
 
-    List<Character> whole = line.chars.collect { it as Character }
-    List<Character> head = whole.take(state.currentIndent).takeWhile { it == '\t' }
+    List<Character> whole = line.chars as List
+    List<Character> head  = whole.take(state.currentIndent).takeWhile { it == '\t' }
 
     int indent = head.size()
     List<Character> tail = whole.drop(indent)
@@ -94,42 +101,30 @@ class HronParser {
     //Ignore lines which are all tabs and too short to reach the current indent
     if (!tail) return
 
-    Character pivot = tail.first()
-    String rest = (tail.size() < 2) ? "" : line[(indent+1)..-1]
-    int r = reader.line
-    int c = indent + 1
+    String pivot = tail.first()
+    String rest = (tail.size() == 1) ? "" : line.substring(indent+1)
 
+    def fail = { String msg -> throw new HronParseException(reader.line, indent+1, errorContext, msg) }
     try {
       switch(pivot) {
         case '#':
           break
 
-        case '=':
-          if (indent > state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent")
-          if (indent < state.currentIndent) state.popUntilIndent(indent)
+        case ['=', '@']:
+          if (indent < state.currentIndent) state.closeUntilIndent(indent)
+          if (!rest && !state.arrayIsOk()) fail("Array syntax without context encountered")
 
-          if (!rest && !state.arrayIsOk()) throw new HronParseException(r, c, "Array syntax with no existing context")
-          state.openString rest
-          break
-
-        case '@':
-          if (indent > state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent")
-          if (indent < state.currentIndent) state.popUntilIndent(indent)
-
-          if (!rest && !state.arrayIsOk()) throw new HronParseException(r, c, "Array syntax with no existing context")
-          state.openObject rest
+          (pivot == '=') ? state.openString(rest) : state.openObject(rest)
           break
 
         case '\t':
-          //for string data
-          if (state.currentString == null) throw new HronParseException(r, c, "String data encountered even though no string has been opened")
-          if (indent != state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent, expected ${state.currentIndent+1}")
+          if (!state.currentString) fail("String data encountered even though no string has been opened")
 
           state.currentString << rest
           break
 
         default:
-          throw new HronParseException(r, c, "Invalid character '$pivot' encountered")
+          fail("Invalid character '$pivot' encountered")
       }
     } catch (HronParseException e) {
       state.visitor.error(state.currentObject, reader.line, indent+1, e)
