@@ -130,5 +130,5 @@ class HronParser {
       state.visitor.error(state.currentObject, reader.line, indent+1, e)
       throw e
     }
- }
+  }
 }
