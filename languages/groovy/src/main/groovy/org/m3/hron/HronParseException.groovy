@@ -13,14 +13,26 @@ import groovy.transform.InheritConstructors
 class HronParseException extends Exception {
   int row
   int column
+  List<String> errorContext
 
-  HronParseException(int row, int column, String message) {
+  HronParseException(row, column, errorContext, String message) {
     super(message)
+
     this.row = row
     this.column = column
+    this.errorContext = errorContext
   }
 
   String getMessage() {
-    super.getMessage() + " at [$row, $column]"
+    StringBuilder result = new StringBuilder()
+    result << "${super.message} at [$row, $column] \n"
+    errorContext.eachWithIndex { line, i ->
+      result << "${row - 2 + i} |".padLeft(3)
+      result << line.replaceAll(/\t/, / /)
+      result << '\n'
+    }
+    result << "${'-' * (column+3)}^"
+
+    result
   }
 }

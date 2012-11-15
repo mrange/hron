@@ -17,7 +17,7 @@ class HronParseState {
   }
 
   void close() {
-    popUntilIndent(0)
+    closeUntilIndent(0)
   }
 
   boolean arrayIsOk() {
@@ -56,7 +56,7 @@ class HronParseState {
     objects << new HronObject(parent: currentObject.object, propertyName: objectName, indent: currentIndent, object: child)
   }
 
-  void popUntilIndent(int indent) {
+  void closeUntilIndent(int indent) {
     closeString()
     while (indent < currentIndent) {
       visitor.objectPropertyVisitEnded(currentObject.parent, currentObject.propertyName, currentObject.object)
