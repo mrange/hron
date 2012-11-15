@@ -9,23 +9,34 @@ package org.m3.hron
  */
 class MapBuildingHronVisitor implements HronVisitor {
   Map<String, Object> map = [:]
+  Map<Object, Object> lastInserted = [:]
 
-  private MapBuildingHronVisitor checkParent(HronVisitor parent) {
-    if (!(parent instanceof MapBuildingHronVisitor))
-      throw new HronParseException("Received invalid visitor class ${parent.class.name}, expeceted ${this.class.name}")
+  private insertOrArrayify(parent, child, String propertyName) {
+    Map parentMap = (parent == null) ? map : parent as Map
 
-    parent as MapBuildingHronVisitor
+    if (propertyName == '') {
+      String lastKey = lastInserted[parent]
+      def last = parentMap[lastKey]
+      if (last instanceof List) {
+        last << child
+      } else {
+        parentMap[lastKey] = [last, child]
+      }
+    } else {
+      parentMap[propertyName] = child
+      lastInserted[parent] = propertyName
+    }
   }
 
   @Override
   Object objectPropertyVisitStarted(Object parent, String propertyName) {
     Map<String, Object> child = [:]
 
-    Map parentMap = (parent == null) ? map : parent as Map
-    parentMap[propertyName] = child
+    insertOrArrayify(parent, child, propertyName)
 
     child
   }
+
 
   @Override
   void objectPropertyVisitEnded(Object parent, String propertyName, Object child) {
@@ -39,8 +50,9 @@ class MapBuildingHronVisitor implements HronVisitor {
 
   @Override
   void stringPropertyVisitEnded(Object parent, String propertyName, Appendable propertyValue) {
-    Map parentMap = (parent == null) ? map : parent as Map
-    parentMap[propertyName] = propertyValue.toString()
+    String child = propertyValue.toString()
+
+    insertOrArrayify(parent, child, propertyName)
   }
 
   @Override

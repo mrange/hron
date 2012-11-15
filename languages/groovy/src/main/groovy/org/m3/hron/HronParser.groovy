@@ -96,7 +96,8 @@ class HronParser {
 
     Character pivot = tail.first()
     String rest = (tail.size() < 2) ? "" : line[(indent+1)..-1]
-    def location = { "[${reader.line}, ${indent+1}]" }
+    int r = reader.line
+    int c = indent + 1
 
     try {
       switch(pivot) {
@@ -104,29 +105,31 @@ class HronParser {
           break
 
         case '=':
-          if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at line ${location()}")
+          if (indent > state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent")
           if (indent < state.currentIndent) state.popUntilIndent(indent)
 
+          if (!rest && !state.arrayIsOk()) throw new HronParseException(r, c, "Array syntax with no existing context")
           state.openString rest
           break
 
         case '@':
-          if (indent > state.currentIndent) throw new HronParseException("Invalid indent $indent at ${location()}")
+          if (indent > state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent")
           if (indent < state.currentIndent) state.popUntilIndent(indent)
 
+          if (!rest && !state.arrayIsOk()) throw new HronParseException(r, c, "Array syntax with no existing context")
           state.openObject rest
           break
 
         case '\t':
           //for string data
-          if (state.currentString == null) throw new HronParseException("String data encountered even though no string has been opened at ${location()}")
-          if (indent != state.currentIndent) throw new HronParseException("Invalid indent $indent at ${location()}, expected ${state.currentIndent+1}")
+          if (state.currentString == null) throw new HronParseException(r, c, "String data encountered even though no string has been opened")
+          if (indent != state.currentIndent) throw new HronParseException(r, c, "Invalid indent $indent, expected ${state.currentIndent+1}")
 
           state.currentString << rest
           break
 
         default:
-          throw new HronParseException("Invalid character '$pivot' encountered at ${location()}")
+          throw new HronParseException(r, c, "Invalid character '$pivot' encountered")
       }
     } catch (HronParseException e) {
       state.visitor.error(state.currentObject, reader.line, indent+1, e)
