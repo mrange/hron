@@ -20,6 +20,10 @@ class HronParseState {
     popUntilIndent(0)
   }
 
+  boolean arrayIsOk() {
+    currentObject.hasChildren
+  }
+
   HronObject getCurrentObject() {
     objects.peek()
   }
@@ -32,6 +36,8 @@ class HronParseState {
     closeString()
 
     Appendable data = visitor.stringPropertyVisitStarted(currentObject.object, propertyName)
+
+    currentObject.hasChildren = true
     currentString = new HronString(parent: currentObject.object, propertyName: propertyName, indent: currentIndent, data: data)
   }
 
@@ -46,6 +52,7 @@ class HronParseState {
     closeString()
     Object child = visitor.objectPropertyVisitStarted(currentObject.object, objectName)
 
+    currentObject.hasChildren = true
     objects << new HronObject(parent: currentObject.object, propertyName: objectName, indent: currentIndent, object: child)
   }
 

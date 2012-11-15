@@ -8,5 +8,6 @@ package org.m3.hron
  * To change this template use File | Settings | File Templates.
  */
 class HronObject extends HronBase {
+  boolean hasChildren = false
   Object object
 }

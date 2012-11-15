@@ -11,4 +11,16 @@ import groovy.transform.InheritConstructors
  */
 @InheritConstructors
 class HronParseException extends Exception {
+  int row
+  int column
+
+  HronParseException(int row, int column, String message) {
+    super(message)
+    this.row = row
+    this.column = column
+  }
+
+  String getMessage() {
+    super.getMessage() + " at [$row, $column]"
+  }
 }

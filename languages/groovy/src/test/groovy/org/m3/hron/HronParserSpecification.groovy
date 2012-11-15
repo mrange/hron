@@ -196,4 +196,82 @@ class HronParserSpecification  extends Specification  {
       result.bean.propThree.readLines()[0] == "multi-line string value"
       result.bean.propThree.readLines()[1] == "second line of multi-line string value"
   }
+
+  def "should fail for array syntax without existing context"() {
+    given:
+      String hron
+      HronParseException e
+
+    when:
+      hron =   """|@
+                  |""".stripMargin()
+      parser.parseText(hron) as Map
+
+    then:
+      e = thrown()
+      e.row == 1
+      e.column == 1
+
+    when:
+      hron =   """|=
+                  |""".stripMargin()
+      parser.parseText(hron) as Map
+
+    then:
+      e = thrown()
+      e.row == 1
+      e.column == 1
+
+    when:
+      hron =   """|@bean
+                  |\t=
+                  |""".stripMargin()
+      parser.parseText(hron) as Map
+
+    then:
+      e = thrown()
+      e.row == 2
+      e.column == 2
+
+    when:
+      hron =   """|@bean
+                  |\t@
+                  |""".stripMargin()
+      parser.parseText(hron) as Map
+
+    then:
+      e = thrown()
+      e.row == 2
+      e.column == 2
+
+  }
+
+
+  def "should handle arrays"() {
+    given:
+      String hron = """|@bean
+                       |\t=stringProp
+                       |\t\tvalueOne
+                       |\t=
+                       |\t\tvalueTwo
+                       |\t@beanProp
+                       |\t@
+                       |\t\t=nestedProp
+                       |\t\t\tnestedValue
+                       |""".stripMargin()
+
+    when:
+      def result = parser.parseText(hron) as Map
+
+    then:
+      result.bean.stringProp instanceof List
+      result.bean.stringProp.size() == 2
+      result.bean.stringProp[0] == 'valueOne'
+      result.bean.stringProp[1] == 'valueTwo'
+      result.bean.beanProp instanceof List
+      result.bean.beanProp.size() == 2
+      result.bean.beanProp[0] == [:]
+      result.bean.beanProp[1] == ['nestedProp': 'nestedValue']
+  }
+
 }
