@@ -11,11 +11,16 @@ def hronBlob = """\
 		
 		Best,
 		The Developers
-	@author
+	@authors
 		=firstName
 			Bob
 		=lastName
 			Developer
+	@
+		=firstName
+			Steve
+		=lastName
+			Stevensson
 """
     
 def hron = new HronParser().parseText(hronBlob)

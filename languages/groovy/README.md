@@ -22,11 +22,16 @@ Following is a typical usage of the parser from groovy:
     		
     		Best,
     		The Developers
-    	@author
+    	@authors
     		=firstName
     			Bob
     		=lastName
     			Developer
+    	@
+    	  =firstName
+    	    Steve
+    	  =lastNAme
+    	    Stevensson
     """
     
     def hron = new HronParser().parseText(hronBlob)
@@ -63,5 +68,4 @@ and generate a jar file in directory build/libs.
 
 TODO
 ====
-* Add array support using '=' or '@' lines without identitiers as array values
 * Add groovy builder for hron documents
