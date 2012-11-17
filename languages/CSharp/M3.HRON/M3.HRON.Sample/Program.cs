@@ -10,10 +10,14 @@
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
 
-using M3.HRON.Source.Common;
-
 namespace M3.HRON.Sample
 {
+    using System.Dynamic;
+    using System.Collections.Generic;
+
+    using Source.Common;
+
+
     partial class Program
     {
         static void Main(string[] args)
@@ -52,6 +56,28 @@ namespace M3.HRON.Sample
             else
             {
                 Log.Error("Failed to parse HRON document");                
+            }
+
+            {
+                dynamic billg       = new ExpandoObject();
+                billg.Type          = "Person"  ;
+                billg.FirstName     = "Bill"    ;
+                billg.LastName      = "Gates"   ;
+                billg.YearOfBirth   = 1955      ;
+
+                dynamic melindag        = new ExpandoObject();
+                melindag.Type           = "Person"  ;
+                melindag.FirstName      = "Melinda" ;
+                melindag.LastName       = "Gates"   ;
+                melindag.YearOfBirth    = 1964;
+
+                billg.Spouse            = melindag;
+
+
+                IDictionary<string, object> dictionary = billg;
+                // Note: Currently the serializer can't handle a recursive 
+                // structure and will simply get stuck
+                Log.Success(dictionary.SerializeKeyValuePairsAsHRON());
             }
         }
 

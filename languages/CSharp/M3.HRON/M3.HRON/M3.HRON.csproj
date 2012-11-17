@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HRONSerialization.cs" />
+    <Compile Include="HRONSerializationExtensions.cs" />
     <Compile Include="Include_T4Include.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
