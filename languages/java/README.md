@@ -1,3 +1,8 @@
+NOTE
+====
+This project is in its infancy. It will stabilize within the next few days but as of now, take anything here (including this readme) 
+with a grain of salt. 
+
 About This Project
 ==================
 This project contains a pure java parser for the hron data format. Hron stands
