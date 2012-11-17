@@ -73,16 +73,30 @@ namespace M3.HRON
     
         abstract partial class BaseHRONWriterVisitor : IHRONVisitor
         {
-            readonly StringBuilder m_sb = new StringBuilder();
-            int m_indent;
-            
-            protected abstract void WriteLine (string line);
-            protected abstract void WriteLine (StringBuilder line);
+            readonly    StringBuilder   m_sb    = new StringBuilder();
+            bool                        m_first = true  ;
+            int                         m_indent        ;
+    
+            protected abstract void Write       (StringBuilder line);
+            protected abstract void WriteLine   ();
+            void                    WriteLine   (StringBuilder line)
+            {
+                if (m_first)
+                {
+                    m_first = false;
+                }
+                else
+                {
+                    WriteLine ();
+                }
+    
+                Write (line);
+            }
     
             public void Empty (SubString line)
             {
                 m_sb.Clear();
-                m_sb.Append(line);
+                m_sb.AppendSubString(line);
                 WriteLine(m_sb);
             }
     
@@ -91,7 +105,7 @@ namespace M3.HRON
                 m_sb.Clear();
                 m_sb.Append('\t', indent);
                 m_sb.Append('#');
-                m_sb.Append(comment);
+                m_sb.AppendSubString(comment);
                 WriteLine(m_sb);
             }
     
@@ -109,7 +123,7 @@ namespace M3.HRON
             {
                 m_sb.Clear();
                 m_sb.Append('\t', m_indent);
-                m_sb.Append(value);
+                m_sb.AppendSubString(value);
                 WriteLine(m_sb);
             }
     
@@ -123,7 +137,7 @@ namespace M3.HRON
                 m_sb.Clear();
                 m_sb.Append('\t', m_indent);
                 m_sb.Append('@');
-                m_sb.Append(name);
+                m_sb.AppendSubString(name);
                 WriteLine(m_sb);
                 ++m_indent;
             }
@@ -154,18 +168,13 @@ namespace M3.HRON
                 }
             }
     
-            protected override void WriteLine(string line)
+            protected override void Write(StringBuilder line)
             {
-                m_sb.AppendLine(line);
+                m_sb.Append(line.ToString());
             }
     
-            protected override void WriteLine(StringBuilder line)
+            protected override void WriteLine()
             {
-                var count = line.Length;
-                for (var iter = 0; iter < count; ++iter)
-                {
-                    m_sb.Append(line[iter]);
-                }
                 m_sb.AppendLine();
             }
         }
@@ -208,19 +217,23 @@ namespace M3.HRON
                 {
                     ++lineNo;
     
-                    var currentIndent = 0;
-                    var lineLength = line.Length;
+                    var lineLength      = line.Length;
+                    var begin           = line.Begin;
+                    var end             = line.End;
     
-                    for (var iter = 0; iter < lineLength; ++iter)
+                    var currentIndent   = 0;
+                    var baseString      = line.BaseString;
+    
+                    for (var iter = begin; iter < end; ++iter)
                     {
-                        var ch = line[iter];
+                        var ch = baseString[iter];
                         if (ch == '\t')
                         {
                             ++currentIndent;
                         }
                         else
                         {
-                            iter = lineLength;
+                            break;
                         }
                     }
     
@@ -239,14 +252,14 @@ namespace M3.HRON
                     {
                         case ParseState.ExpectingTag:
                             isComment = currentIndent < lineLength
-                                && line[currentIndent] == '#'
+                                && baseString[currentIndent + begin] == '#'
                                 ;
                             break;
                         case ParseState.ExpectingValue:
                         default:
                             isComment = currentIndent < expectedIndent
                                 && currentIndent < lineLength
-                                && line[currentIndent] == '#'
+                                && baseString[currentIndent + begin] == '#'
                                 ;
                             break;
                     }
@@ -318,7 +331,7 @@ namespace M3.HRON
                             case ParseState.ExpectingTag:
                                 if (currentIndent < lineLength)
                                 {
-                                    var first = line[currentIndent];
+                                    var first = baseString[currentIndent + begin];
                                     switch (first)
                                     {
                                         case '@':
@@ -453,6 +466,29 @@ namespace M3.HRON
             public HRONDynamicMembers(IEnumerable<IHRONEntity> entities)
             {
                 m_entities = (entities ?? Array<IHRONEntity>.Empty).ToArray ();
+            }
+    
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+    
+                var first = true;
+    
+                foreach (var entity in m_entities)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(", ");
+                    }
+    
+                    entity.ToString(sb);
+                }
+    
+                return sb.ToString();
             }
     
             public int GetCount ()
@@ -720,7 +756,21 @@ namespace M3.HRON
             public override void ToString(StringBuilder sb)
             {
                 sb.Append('"');
-                sb.Append(m_value);
+    
+                var first = true;
+    
+                foreach (var line in m_value.ReadLines())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(", ");
+                    }
+                    sb.AppendSubString(line);                
+                }
                 sb.Append('"');
             }
         }
@@ -991,16 +1041,41 @@ namespace M3.HRON
     
         static class SubStringExtensions
         {
-            public static void Append (this StringBuilder sb, SubString ss)
+            public static void AppendSubString (this StringBuilder sb, SubString ss)
             {
                 sb.Append(ss.BaseString, ss.Begin, ss.Length);
             }
     
-            public static void AppendLine(this StringBuilder sb, SubString ss)
+            public static string Concatenate (this IEnumerable<SubString> values, string delimiter = null)
             {
-                sb.Append(ss.BaseString, ss.Begin, ss.Length);
-                sb.AppendLine();
+                if (values == null)
+                {
+                    return "";
+                }
+    
+                delimiter = delimiter ?? ", ";
+    
+                var first = true;
+    
+                var sb = new StringBuilder();
+                foreach (var value in values)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(delimiter);
+                    }
+    
+                    sb.AppendSubString(value);
+                }
+    
+                return sb.ToString();
             }
+    
+    
     
             public static SubString ToSubString (this string value, int begin = 0, int count = int.MaxValue / 2)
             {
@@ -1106,8 +1181,12 @@ namespace M3.HRON
                 switch (state)
                 {
                     case ParseLineState.NewLine:
+                        yield return new SubString(baseString, 0, 0);
                         break;
                     case ParseLineState.ConsumedCR:
+                        yield return new SubString(baseString, beginLine, count);
+                        yield return new SubString(baseString, 0, 0);
+                        break;
                     case ParseLineState.Inline:
                     default:
                         yield return new SubString(baseString, beginLine, count);
@@ -1151,30 +1230,28 @@ namespace M3.HRON
     
             public SubString(SubString subString, int begin, int count) : this()
             {
-                m_baseString = subString.BaseString;
-                var length = subString.Length;
+                m_baseString    = subString.BaseString;
+                var length      = subString.Length;
     
-                begin = Clamp(begin, 0, length);
-                count = Clamp(count, 0, length - begin);
+                begin           = Clamp(begin, 0, length);
+                count           = Clamp(count, 0, length - begin);
+                var end         = begin + count;
     
-                var end = begin + count;
-    
-                m_begin = subString.Begin + begin;
-                m_end = subString.Begin + end;
+                m_begin         = subString.Begin + begin;
+                m_end           = subString.Begin + end;
             }
     
             public SubString(string baseString, int begin, int count) : this()
             {
-                m_baseString = baseString;
-                var length = BaseString.Length;
+                m_baseString    = baseString;
+                var length      = BaseString.Length;
     
-                begin = Clamp(begin, 0, length);
-                count = Clamp(count, 0, length - begin);
+                begin           = Clamp(begin, 0, length);
+                count           = Clamp(count, 0, length - begin);
+                var end         = begin + count;
     
-                var end = begin + count;
-    
-                m_begin = begin;
-                m_end = end;
+                m_begin         = begin;
+                m_end           = end;
             }
     
             public bool Equals(SubString other)
@@ -1326,7 +1403,7 @@ namespace M3.HRON.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-11-13T22:07:00";
+        public const string IncludeDate     = @"2012-11-17T13:00:40";
 
         public const string Include_0       = @"mrange/T4Include/master/Hron/HRONSerializer.cs";
         public const string Include_1       = @"mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs";

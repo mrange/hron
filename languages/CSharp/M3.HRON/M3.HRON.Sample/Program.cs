@@ -74,6 +74,8 @@ namespace M3.HRON.Sample
 		Letters like this causes hron no problems: &<>\'@=
 
 		This helps readability
+
+
 @DataBaseConnection
 	=Name
 		CustomerDB
