@@ -1,3 +1,6 @@
+//we apply the groovy plugin even though this is a java 
+//project as we want to use spock for testing and that 
+//requires compiling groovy code
 apply plugin: 'groovy'
 
 group = 'org.m3.hron'
@@ -15,11 +18,16 @@ dependencies {
               }
 }
 
+jar {
+  manifest {
+    attributes("Main-Class": "org.m3.hron.Main")
+  }
+}
 /*****************************************************************************
  * A gradle custom task for generating gradle install scripts so that the user
  * of the repo does not need to install gradle
 */
 task wrapper(type: Wrapper) {
   gradleVersion = '1.2'
-	jarFile = file('.gradle/wrapper/gradle-wrapper.jar')
+  jarFile = file('.gradle/wrapper/gradle-wrapper.jar')
 }
