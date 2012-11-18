@@ -47,7 +47,7 @@ public class Main {
   }
 
   private void run() throws IOException {
-    File large = new File("../../reference-data/large.hron");
+    File large = new File("../../reference-data/random.hron");
     HronParser parser = new HronParser();
     EmptyVisitor visitor = new EmptyVisitor();
 

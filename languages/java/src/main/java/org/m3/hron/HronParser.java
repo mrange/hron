@@ -131,11 +131,10 @@ class HronParser {
           pivotFound = true;
           pivot = c;
 
-        } else if (column == state.currentIndent) {
-          if (c != '@' && c != '=' && c != '\t') fail(row, column, "Invalid character '" + c + "' encountered");
+        } else if (column == state.currentIndent && state.currentString != null) {
+          //if (c != '@' && c != '=' && c != '\t') fail(row, column, "Invalid character '" + c + "' encountered");
           pivotFound = true;
           pivot = c;
-
         }
 
         indent = column;
