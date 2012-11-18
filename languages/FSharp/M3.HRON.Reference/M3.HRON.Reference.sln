@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference", "M3.HRON.Reference\M3.HRON.Reference.fsproj", "{7B07EC34-C008-4C37-96C3-F37236E83E65}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference.Tests", "M3.HRON.Reference.Tests\M3.HRON.Reference.Tests.fsproj", "{47BC4B21-179D-45FD-98DA-9DF5875E7095}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B07EC34-C008-4C37-96C3-F37236E83E65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B07EC34-C008-4C37-96C3-F37236E83E65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B07EC34-C008-4C37-96C3-F37236E83E65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B07EC34-C008-4C37-96C3-F37236E83E65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

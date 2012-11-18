@@ -11,6 +11,10 @@
 
 
 // ############################################################################
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/BasicExtensions.cs
+// @@@ INCLUDE_FOUND: ../Common/Array.cs
+// @@@ INCLUDE_FOUND: ../Common/Config.cs
+// @@@ INCLUDE_FOUND: ../Common/Log.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Hron/HRONSerializer.cs
 // @@@ INCLUDE_FOUND: ../Common/Array.cs
 // @@@ INCLUDE_FOUND: ../Common/Config.cs
@@ -19,8 +23,13 @@
 // @@@ INCLUDE_FOUND: HRONSerializer.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Array.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Config.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Log.cs
+// @@@ INCLUDE_FOUND: Generated_Log.cs
+// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Array.cs
+// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/SubString.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Hron/HRONSerializer.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs
 // ############################################################################
 // Certains directives such as #define and // Resharper comments has to be 
 // moved to top in order to work properly    
@@ -29,7 +38,243 @@
 // ReSharper disable PartialMethodWithSinglePart
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable RedundantCaseLabel
+// ReSharper disable RedundantNameQualifier
 // ############################################################################
+
+// ############################################################################
+namespace M3.HRON
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    
+    
+    namespace Source.Extensions
+    {
+        using System;
+        using System.Collections.Generic;
+        using System.Globalization;
+        using System.IO;
+        using System.Reflection;
+    
+        using Source.Common;
+    
+        static partial class BasicExtensions
+        {
+            public static bool IsNullOrWhiteSpace (this string v)
+            {
+                return string.IsNullOrWhiteSpace (v);
+            }
+    
+            public static bool IsNullOrEmpty (this string v)
+            {
+                return string.IsNullOrEmpty (v);
+            }
+    
+            public static T FirstOrReturn<T>(this T[] values, T defaultValue)
+            {
+                if (values == null)
+                {
+                    return defaultValue;
+                }
+    
+                if (values.Length == 0)
+                {
+                    return defaultValue;
+                }
+    
+                return values[0];
+            }
+    
+            public static T FirstOrReturn<T>(this IEnumerable<T> values, T defaultValue)
+            {
+                if (values == null)
+                {
+                    return defaultValue;
+                }
+    
+                foreach (var value in values)
+                {
+                    return value;
+                }
+    
+                return defaultValue;
+            }
+    
+            public static string DefaultTo(this string v, string defaultValue = null)
+            {
+                return !v.IsNullOrEmpty () ? v : (defaultValue ?? "");
+            }
+    
+            public static IEnumerable<T> DefaultTo<T>(
+                this IEnumerable<T> values, 
+                IEnumerable<T> defaultValue = null
+                )
+            {
+                return values ?? defaultValue ?? Array<T>.Empty;
+            }
+    
+            public static T[] DefaultTo<T>(this T[] values, T[] defaultValue = null)
+            {
+                return values ?? defaultValue ?? Array<T>.Empty;
+            }
+    
+            public static T DefaultTo<T>(this T v, T defaultValue = default (T))
+                where T : struct, IEquatable<T>
+            {
+                return !v.Equals (default (T)) ? v : defaultValue;
+            }
+    
+            public static string FormatWith (this string format, CultureInfo cultureInfo, params object[] args)
+            {
+                return string.Format (cultureInfo, format ?? "", args.DefaultTo ());
+            }
+    
+            public static string FormatWith (this string format, params object[] args)
+            {
+                return format.FormatWith (Config.DefaultCulture, args);
+            }
+    
+            public static TValue Lookup<TKey, TValue>(
+                this IDictionary<TKey, TValue> dictionary, 
+                TKey key, 
+                TValue defaultValue = default (TValue))
+            {
+                if (dictionary == null)
+                {
+                    return defaultValue;
+                }
+    
+                TValue value;
+                return dictionary.TryGetValue (key, out value) ? value : defaultValue;
+            }
+    
+            public static TValue GetOrAdd<TKey, TValue>(
+                this IDictionary<TKey, TValue> dictionary, 
+                TKey key, 
+                TValue defaultValue = default (TValue))
+            {
+                if (dictionary == null)
+                {
+                    return defaultValue;
+                }
+    
+                TValue value;
+                if (!dictionary.TryGetValue (key, out value))
+                {
+                    value = defaultValue;
+                    dictionary[key] = value;
+                }
+    
+                return value;
+            }
+    
+            public static TValue GetOrAdd<TKey, TValue>(
+                this IDictionary<TKey, TValue> dictionary,
+                TKey key,
+                Func<TValue> valueCreator
+                )
+            {
+                if (dictionary == null)
+                {
+                    return valueCreator ();
+                }
+    
+                TValue value;
+                if (!dictionary.TryGetValue (key, out value))
+                {
+                    value = valueCreator ();
+                    dictionary[key] = value;
+                }
+    
+                return value;
+            }
+    
+            public static void DisposeNoThrow (this IDisposable disposable)
+            {
+                try
+                {
+                    if (disposable != null)
+                    {
+                        disposable.Dispose ();
+                    }
+                }
+                catch (Exception exc)
+                {
+                    Log.Exception ("DisposeNoThrow: Dispose threw: {0}", exc);
+                }
+            }
+    
+            public static TTo CastTo<TTo> (this object value, TTo defaultValue)
+            {
+                return value is TTo ? (TTo) value : defaultValue;
+            }
+    
+            public static string Concatenate(this IEnumerable<string> values, string delimiter = null, int capacity = 16)
+            {
+                values = values ?? Array<string>.Empty;
+                delimiter = delimiter ?? ", ";
+    
+                return string.Join(delimiter, values);
+            }
+    
+            public static string GetResourceString (this Assembly assembly, string name, string defaultValue = null)
+            {
+                defaultValue = defaultValue ?? "";
+    
+                if (assembly == null)
+                {
+                    return defaultValue;
+                }
+    
+                var stream = assembly.GetManifestResourceStream(name ?? "");
+                if (stream == null)
+                {
+                    return defaultValue;
+                }
+    
+                using (stream)
+                using (var streamReader = new StreamReader (stream))
+                {
+                    return streamReader.ReadToEnd();
+                }
+            }
+    
+            public static IEnumerable<string> ReadLines(this TextReader textReader)
+            {
+                if (textReader == null)
+                {
+                    yield break;
+                }
+    
+                string line;
+    
+                while ((line = textReader.ReadLine()) != null)
+                {
+                    yield return line;
+                }
+            }
+    
+            public static IEnumerable<Type> GetInheritanceChain (this Type type)
+            {
+                while (type != null)
+                {
+                    yield return type;
+                    type = type.BaseType;
+                }
+            }
+        }
+    }
+}
 
 // ############################################################################
 namespace M3.HRON
@@ -73,16 +318,30 @@ namespace M3.HRON
     
         abstract partial class BaseHRONWriterVisitor : IHRONVisitor
         {
-            readonly StringBuilder m_sb = new StringBuilder();
-            int m_indent;
-            
-            protected abstract void WriteLine (string line);
-            protected abstract void WriteLine (StringBuilder line);
+            readonly    StringBuilder   m_sb    = new StringBuilder();
+            bool                        m_first = true  ;
+            int                         m_indent        ;
+    
+            protected abstract void Write       (StringBuilder line);
+            protected abstract void WriteLine   ();
+            void                    WriteLine   (StringBuilder line)
+            {
+                if (m_first)
+                {
+                    m_first = false;
+                }
+                else
+                {
+                    WriteLine ();
+                }
+    
+                Write (line);
+            }
     
             public void Empty (SubString line)
             {
                 m_sb.Clear();
-                m_sb.Append(line);
+                m_sb.AppendSubString(line);
                 WriteLine(m_sb);
             }
     
@@ -91,7 +350,7 @@ namespace M3.HRON
                 m_sb.Clear();
                 m_sb.Append('\t', indent);
                 m_sb.Append('#');
-                m_sb.Append(comment);
+                m_sb.AppendSubString(comment);
                 WriteLine(m_sb);
             }
     
@@ -109,7 +368,7 @@ namespace M3.HRON
             {
                 m_sb.Clear();
                 m_sb.Append('\t', m_indent);
-                m_sb.Append(value);
+                m_sb.AppendSubString(value);
                 WriteLine(m_sb);
             }
     
@@ -123,7 +382,7 @@ namespace M3.HRON
                 m_sb.Clear();
                 m_sb.Append('\t', m_indent);
                 m_sb.Append('@');
-                m_sb.Append(name);
+                m_sb.AppendSubString(name);
                 WriteLine(m_sb);
                 ++m_indent;
             }
@@ -154,18 +413,13 @@ namespace M3.HRON
                 }
             }
     
-            protected override void WriteLine(string line)
+            protected override void Write(StringBuilder line)
             {
-                m_sb.AppendLine(line);
+                m_sb.Append(line.ToString());
             }
     
-            protected override void WriteLine(StringBuilder line)
+            protected override void WriteLine()
             {
-                var count = line.Length;
-                for (var iter = 0; iter < count; ++iter)
-                {
-                    m_sb.Append(line[iter]);
-                }
                 m_sb.AppendLine();
             }
         }
@@ -208,19 +462,23 @@ namespace M3.HRON
                 {
                     ++lineNo;
     
-                    var currentIndent = 0;
-                    var lineLength = line.Length;
+                    var lineLength      = line.Length;
+                    var begin           = line.Begin;
+                    var end             = line.End;
     
-                    for (var iter = 0; iter < lineLength; ++iter)
+                    var currentIndent   = 0;
+                    var baseString      = line.BaseString;
+    
+                    for (var iter = begin; iter < end; ++iter)
                     {
-                        var ch = line[iter];
+                        var ch = baseString[iter];
                         if (ch == '\t')
                         {
                             ++currentIndent;
                         }
                         else
                         {
-                            iter = lineLength;
+                            break;
                         }
                     }
     
@@ -239,14 +497,14 @@ namespace M3.HRON
                     {
                         case ParseState.ExpectingTag:
                             isComment = currentIndent < lineLength
-                                && line[currentIndent] == '#'
+                                && baseString[currentIndent + begin] == '#'
                                 ;
                             break;
                         case ParseState.ExpectingValue:
                         default:
                             isComment = currentIndent < expectedIndent
                                 && currentIndent < lineLength
-                                && line[currentIndent] == '#'
+                                && baseString[currentIndent + begin] == '#'
                                 ;
                             break;
                     }
@@ -318,7 +576,7 @@ namespace M3.HRON
                             case ParseState.ExpectingTag:
                                 if (currentIndent < lineLength)
                                 {
-                                    var first = line[currentIndent];
+                                    var first = baseString[currentIndent + begin];
                                     switch (first)
                                     {
                                         case '@':
@@ -453,6 +711,29 @@ namespace M3.HRON
             public HRONDynamicMembers(IEnumerable<IHRONEntity> entities)
             {
                 m_entities = (entities ?? Array<IHRONEntity>.Empty).ToArray ();
+            }
+    
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+    
+                var first = true;
+    
+                foreach (var entity in m_entities)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(", ");
+                    }
+    
+                    entity.ToString(sb);
+                }
+    
+                return sb.ToString();
             }
     
             public int GetCount ()
@@ -720,7 +1001,21 @@ namespace M3.HRON
             public override void ToString(StringBuilder sb)
             {
                 sb.Append('"');
-                sb.Append(m_value);
+    
+                var first = true;
+    
+                foreach (var line in m_value.ReadLines())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(", ");
+                    }
+                    sb.AppendSubString(line);                
+                }
                 sb.Append('"');
             }
         }
@@ -981,6 +1276,66 @@ namespace M3.HRON
     // ----------------------------------------------------------------------------------------------
     
     
+    
+    namespace Source.Common
+    {
+        using System;
+        using System.Globalization;
+    
+        static partial class Log
+        {
+            static partial void Partial_LogMessage (Level level, string message);
+            static partial void Partial_ExceptionOnLog (Level level, string format, object[] args, Exception exc);
+    
+            public static void LogMessage (Level level, string format, params object[] args)
+            {
+                try
+                {
+                    Partial_LogMessage (level, GetMessage (format, args));
+                }
+                catch (Exception exc)
+                {
+                    Partial_ExceptionOnLog (level, format, args, exc);
+                }
+                
+            }
+    
+            static string GetMessage (string format, object[] args)
+            {
+                format = format ?? "";
+                try
+                {
+                    return (args == null || args.Length == 0)
+                               ? format
+                               : string.Format (Config.DefaultCulture, format, args)
+                        ;
+                }
+                catch (FormatException)
+                {
+    
+                    return format;
+                }
+            }
+        }
+    }
+}
+
+// ############################################################################
+namespace M3.HRON
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    
     namespace Source.Common
     {
         using System;
@@ -991,16 +1346,41 @@ namespace M3.HRON
     
         static class SubStringExtensions
         {
-            public static void Append (this StringBuilder sb, SubString ss)
+            public static void AppendSubString (this StringBuilder sb, SubString ss)
             {
                 sb.Append(ss.BaseString, ss.Begin, ss.Length);
             }
     
-            public static void AppendLine(this StringBuilder sb, SubString ss)
+            public static string Concatenate (this IEnumerable<SubString> values, string delimiter = null)
             {
-                sb.Append(ss.BaseString, ss.Begin, ss.Length);
-                sb.AppendLine();
+                if (values == null)
+                {
+                    return "";
+                }
+    
+                delimiter = delimiter ?? ", ";
+    
+                var first = true;
+    
+                var sb = new StringBuilder();
+                foreach (var value in values)
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        sb.Append(delimiter);
+                    }
+    
+                    sb.AppendSubString(value);
+                }
+    
+                return sb.ToString();
             }
+    
+    
     
             public static SubString ToSubString (this string value, int begin = 0, int count = int.MaxValue / 2)
             {
@@ -1106,8 +1486,12 @@ namespace M3.HRON
                 switch (state)
                 {
                     case ParseLineState.NewLine:
+                        yield return new SubString(baseString, 0, 0);
                         break;
                     case ParseLineState.ConsumedCR:
+                        yield return new SubString(baseString, beginLine, count);
+                        yield return new SubString(baseString, 0, 0);
+                        break;
                     case ParseLineState.Inline:
                     default:
                         yield return new SubString(baseString, beginLine, count);
@@ -1151,30 +1535,28 @@ namespace M3.HRON
     
             public SubString(SubString subString, int begin, int count) : this()
             {
-                m_baseString = subString.BaseString;
-                var length = subString.Length;
+                m_baseString    = subString.BaseString;
+                var length      = subString.Length;
     
-                begin = Clamp(begin, 0, length);
-                count = Clamp(count, 0, length - begin);
+                begin           = Clamp(begin, 0, length);
+                count           = Clamp(count, 0, length - begin);
+                var end         = begin + count;
     
-                var end = begin + count;
-    
-                m_begin = subString.Begin + begin;
-                m_end = subString.Begin + end;
+                m_begin         = subString.Begin + begin;
+                m_end           = subString.Begin + end;
             }
     
             public SubString(string baseString, int begin, int count) : this()
             {
-                m_baseString = baseString;
-                var length = BaseString.Length;
+                m_baseString    = baseString;
+                var length      = BaseString.Length;
     
-                begin = Clamp(begin, 0, length);
-                count = Clamp(count, 0, length - begin);
+                begin           = Clamp(begin, 0, length);
+                count           = Clamp(count, 0, length - begin);
+                var end         = begin + count;
     
-                var end = begin + count;
-    
-                m_begin = begin;
-                m_end = end;
+                m_begin         = begin;
+                m_end           = end;
             }
     
             public bool Equals(SubString other)
@@ -1318,6 +1700,121 @@ namespace M3.HRON
         }
     }
 }
+
+// ############################################################################
+namespace M3.HRON
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    // ############################################################################
+    // #                                                                          #
+    // #        ---==>  T H I S  F I L E  I S   G E N E R A T E D  <==---         #
+    // #                                                                          #
+    // # This means that any edits to the .cs file will be lost when its          #
+    // # regenerated. Changes should instead be applied to the corresponding      #
+    // # template file (.tt)                                                      #
+    // ############################################################################
+    
+    
+    
+    
+    
+    namespace Source.Common
+    {
+        using System;
+    
+        partial class Log
+        {
+            public enum Level
+            {
+                Success = 1000,
+                HighLight = 2000,
+                Info = 3000,
+                Warning = 10000,
+                Error = 20000,
+                Exception = 21000,
+            }
+    
+            public static void Success (string format, params object[] args)
+            {
+                LogMessage (Level.Success, format, args);
+            }
+            public static void HighLight (string format, params object[] args)
+            {
+                LogMessage (Level.HighLight, format, args);
+            }
+            public static void Info (string format, params object[] args)
+            {
+                LogMessage (Level.Info, format, args);
+            }
+            public static void Warning (string format, params object[] args)
+            {
+                LogMessage (Level.Warning, format, args);
+            }
+            public static void Error (string format, params object[] args)
+            {
+                LogMessage (Level.Error, format, args);
+            }
+            public static void Exception (string format, params object[] args)
+            {
+                LogMessage (Level.Exception, format, args);
+            }
+            static ConsoleColor GetLevelColor (Level level)
+            {
+                switch (level)
+                {
+                    case Level.Success:
+                        return ConsoleColor.Green;
+                    case Level.HighLight:
+                        return ConsoleColor.White;
+                    case Level.Info:
+                        return ConsoleColor.Gray;
+                    case Level.Warning:
+                        return ConsoleColor.Yellow;
+                    case Level.Error:
+                        return ConsoleColor.Red;
+                    case Level.Exception:
+                        return ConsoleColor.Red;
+                    default:
+                        return ConsoleColor.Magenta;
+                }
+            }
+    
+            static string GetLevelMessage (Level level)
+            {
+                switch (level)
+                {
+                    case Level.Success:
+                        return "SUCCESS  ";
+                    case Level.HighLight:
+                        return "HIGHLIGHT";
+                    case Level.Info:
+                        return "INFO     ";
+                    case Level.Warning:
+                        return "WARNING  ";
+                    case Level.Error:
+                        return "ERROR    ";
+                    case Level.Exception:
+                        return "EXCEPTION";
+                    default:
+                        return "UNKNOWN  ";
+                }
+            }
+    
+        }
+    }
+    
+}
 // ############################################################################
 
 // ############################################################################
@@ -1326,13 +1823,16 @@ namespace M3.HRON.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-11-13T22:07:00";
+        public const string IncludeDate     = @"2012-11-17T13:05:42";
 
-        public const string Include_0       = @"mrange/T4Include/master/Hron/HRONSerializer.cs";
-        public const string Include_1       = @"mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs";
-        public const string Include_2       = @"https://raw.github.com/mrange/T4Include/master/Common/Array.cs";
-        public const string Include_3       = @"https://raw.github.com/mrange/T4Include/master/Common/Config.cs";
-        public const string Include_4       = @"https://raw.github.com/mrange/T4Include/master/Common/SubString.cs";
+        public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
+        public const string Include_1       = @"mrange/T4Include/master/Hron/HRONSerializer.cs";
+        public const string Include_2       = @"mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs";
+        public const string Include_3       = @"https://raw.github.com/mrange/T4Include/master/Common/Array.cs";
+        public const string Include_4       = @"https://raw.github.com/mrange/T4Include/master/Common/Config.cs";
+        public const string Include_5       = @"https://raw.github.com/mrange/T4Include/master/Common/Log.cs";
+        public const string Include_6       = @"https://raw.github.com/mrange/T4Include/master/Common/SubString.cs";
+        public const string Include_7       = @"https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs";
     }
 }
 // ############################################################################

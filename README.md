@@ -56,29 +56,38 @@ hron grammar (EBNF)
 3. A trailing unquoted asterisk (*) indicates 0 or more repetitions. 
 4. A trailing unquoted plus indicates 1 or more repetitions. 
 5. Unquoted square braces indicate an optional phrase. 
-
-
-lexcial structure 
------------------
-1. Comments in hron begin with "#" and continue to the end of the line. 
-2. Containing only blanks, tabs, and comments are called blank lines. Outside a string they have no effect on idention and are ignored. When expecting a string they count as an empty line
-3. Tabs immediately at the beginnings of lines are significant. The indention level is the number of tabs at the beginning of line. 
-4. If one line is indented more than the preceding non-blank line, it is taken to be preceded by an INDENT token. It is an error for the first non-blank line in a file to be indented. 
-5. If one line is indented less than the preceding non-blank line, it is taken to be preceded by enough DEDENT tokens to match all unmatched INDENT tokens introduced by preceding more-indented lines. The end of a file is preceded by enough DEDENT tokens to match all unmatched INDENT tokens. 
+6. "p EXCEPT q" means that parser succeeds if p succeeds and q fails
 
 EBNF 
 ----
 
 ```ebnf
 
-string ::= <any source character except NEWLINE>
+anychar         ::= <parses any character>
+whitespace      ::= <parses any whitespace character>
+eos             ::= <parses END OF STREAM>
+eol             ::= <parses END OF LINE (END OF STREAM counts as END OF LINE)>
+indention       ::= <parses the current indention>
+indent          ::= <increases indention by one>
+dedent          ::= <decreases indention by one>
 
-value ::= "=" string NEWLINE INDENT (string NEWLINE)* DEDENT
+empty_string    ::= (whitespace EXCEPT eol)*
+string          ::= (anychar EXCEPT eol)*
+comment_string  ::= empty_string "#" string
 
-object ::= "@" string NEWLINE INDENT (member NEWLINE)* DEDENT
+empty_line      ::= empty_string eol
+comment_line    ::= comment_string eol
+nonempty_line   ::= indention string eol
+value_line      ::= nonempty_line | comment_line | empty_line
+value_lines     ::= (value_line EXCEPT eos)*
 
-member ::= value | object
+value           ::= indention "=" eol indent values_lines dedent
+empty           ::= empty_string eol
+comment         ::= comment_string eol
+object          ::= indention "@" eol indent members dedent
+member          ::= value | object | comment | empty
+members         ::= (member EXCEPT eos)* 
 
-hron ::= member*
+hron ::= members
 
 ```
