@@ -84,7 +84,7 @@ value_lines     ::= (value_line EXCEPT eos)*
 value           ::= indention "=" eol indent values_lines dedent
 empty           ::= empty_string eol
 comment         ::= comment_string eol
-object          ::= indention "@" eold indent members dedent
+object          ::= indention "@" eol indent members dedent
 member          ::= value | object | comment | empty
 members         ::= (member EXCEPT eos)* 
 
