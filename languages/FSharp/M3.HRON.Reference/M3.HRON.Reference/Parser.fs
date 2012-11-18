@@ -1,4 +1,16 @@
-﻿namespace M3.HRON.Reference
+﻿// ----------------------------------------------------------------------------------------------
+// Copyright (c) Mårten Rånge.
+// ----------------------------------------------------------------------------------------------
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License.
+// ----------------------------------------------------------------------------------------------
+// You must not remove this notice, or any other, from this software.
+// ----------------------------------------------------------------------------------------------
+
+namespace M3.HRON.Reference
 
 open System
 open System.Diagnostics
@@ -37,9 +49,10 @@ module Parser =
 
     let p_debug p           = (fun ps -> 
 //        if System.Diagnostics.Debugger.IsAttached then System.Diagnostics.Debugger.Break ()
-        if (is_eos ps) then printf "DEBUG: EOS"
+        if (is_eos ps) then printf "DEBUG: EOS\r\n"
         else (printf "DEBUG: pos:%d indent:%d %s\r\n" ps.pos ps.indent (current_pos ps))        
-        p ps
+        let r = p ps
+        r
         )
 
     let p_eos               = (fun ps -> if is_eos ps then Success((), ps) else Failure("Expected EOS", ps))
@@ -56,7 +69,7 @@ module Parser =
                 if (test ps.input.[ps.pos]) 
                     then Success (ps.input.[ps.pos], advance ps)
                     else Failure (e, ps)
-            else Failure ("EOS", ps)
+            else  Failure ("EOS", ps)
         )
 
     let p_map (p : Parser<'a>) m = (fun ps ->
@@ -143,6 +156,7 @@ module Parser =
 
     let p_char ch   = (p_satisy (fun c -> c = ch) ("Expected: " + ch.ToString())) >>? (fun ch -> ()) 
 
+    let p_whitespace= p_satisy Char.IsWhiteSpace "Expected whitespace"
     let p_cr        = p_choose [p_char '\r'; p_eos;]
     let p_ln        = p_choose [p_char '\n'; p_eos;]
     let p_tab       = p_char '\t'
