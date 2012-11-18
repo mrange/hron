@@ -14,12 +14,20 @@ namespace M3.HRON.Reference
 
 open System
 open System.Diagnostics
+open System.Text
+
 open Parser
 
+type ValueLine      =
+    |   EmptyLine   of string
+    |   CommentLine of string*string
+    |   ContentLine of string          
+
 type Member         =
-    |   Value   of string*string list
+    |   Empty   of string
+    |   Value   of string*ValueLine list
     |   Object  of string*Member list
-    |   Other
+    |   Comment of string*string
 
 
 type HRON           = Member list
@@ -30,28 +38,23 @@ module HRONParser =
     let p_object_tag    = p_char '@'
     let p_comment_tag   = p_char '#'
 
-    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> ()) 
+    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(List.toArray cs)) 
     let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(List.toArray cs))
     let p_comment_string= p_empty_string 
-                            >>. p_comment_tag 
-                            >>. p_string 
+                            .>> p_comment_tag 
+                            >>  p_string 
 
-    let invalid_line                = "<<INVALID_LINE>>"
-    let is_valid_line (line: string)= Object.ReferenceEquals(line, invalid_line) = false
-    let is_valid_member m           = match m with
-                                        | Other ->  false
-                                        | _     ->  true
-                                 
 
     let p_empty_line    = p_empty_string 
                             .>> p_eol 
-                            >>? (fun cs -> "")
+                            >>? EmptyLine
     let p_comment_line  = p_comment_string
                             .>> p_eol 
-                            >>? (fun cs -> invalid_line)
+                            >>? CommentLine
     let p_nonempty_line = p_indention 
                             >>. p_string 
                             .>> p_eol
+                            >>? ContentLine
 
     let p_value_line    = p_choose [
                             p_nonempty_line ; 
@@ -59,7 +62,6 @@ module HRONParser =
                             p_empty_line    ;
                             ]
     let p_value_lines   = p_many (p_value_line >>! p_eos)
-                            >>? (fun vs -> vs |> List.filter is_valid_line)
 
     let p_value         = p_indention 
                             >>. p_value_tag 
@@ -71,14 +73,13 @@ module HRONParser =
 
     let p_empty         = p_empty_string 
                             .>> p_eol 
-                            >>? (fun cs -> Other)
+                            >>? Empty
 
     let p_comment       = p_comment_string
                             .>> p_eol 
-                            >>? (fun cs -> Other)
+                            >>? Comment
 
-    let rec p_members ps= (p_many (p_member >>! p_eos) 
-                            >>? (fun ms -> ms |> List.filter is_valid_member)) ps
+    let rec p_members ps= (p_many (p_member >>! p_eos)) ps 
     and p_object ps     = (p_indention 
                             >>. p_object_tag 
                             >>. p_string 
@@ -97,3 +98,27 @@ module HRONParser =
 
     let p_hron  = p_members
 
+    let to_string hron  =
+        let value_to_string (sb : StringBuilder) i v =
+            match v with
+                |   CommentLine (ws, ln)-> sb.Append(ws).Append('#').Append(ln).AppendLine()
+                |   EmptyLine   ws      -> sb.Append(ws).AppendLine()
+                |   ContentLine ln      -> sb.Append('\t', i).Append(ln).AppendLine()
+        let rec member_to_string (sb : StringBuilder) i m =
+            match m with
+                |   Comment (ws, ln)    -> sb.Append(ws).Append('#').Append(ln).AppendLine()
+                |   Empty   ws          -> sb.Append(ws).AppendLine()
+                |   Object  (nm, ms)    ->
+                    ignore (sb.Append('\t', i).Append('@').Append(nm).AppendLine())
+                    for m' in ms do
+                       ignore (member_to_string sb (i + 1) m')
+                    sb
+                |   Value (nm, vs)      ->                         
+                    ignore (sb.Append('\t', i).Append('=').Append(nm).AppendLine())
+                    for v' in vs do
+                       ignore (value_to_string sb (i + 1) v')
+                    sb
+        let sb = new StringBuilder(128)
+        for m' in hron do
+            ignore (member_to_string sb 0 m')
+        sb.ToString ()

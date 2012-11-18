@@ -19,6 +19,7 @@ let main argv =
     let input = File.ReadAllText(@"..\..\..\..\..\..\reference-data\helloworld.hron")     
     let result = Parser.parse HRONParser.p_hron input
     match result with 
-        |   Success (doc, ps)   ->  Console.WriteLine("Success")
-        |   Failure (_,_)       ->  Console.WriteLine("Failure")
+        |   Success (doc, ps)   ->  printf "Success\r\n%s" (HRONParser.to_string doc)
+        |   Failure (_,_)       ->  printf "Failure"
+    
     0 
