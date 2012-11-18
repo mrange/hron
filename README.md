@@ -8,8 +8,8 @@ formats. However they are not without flaws:
 
 XML
 ---
-1. XML handles multi-line text well but a document author has to take care avoiding
-   letters such as &<> and encode them properly. This hurts readability and writeability.
+1. XML author has to take care avoiding letters such as &<> and encode them properly. 
+   This hurts readability and writeability.
 
 JSON
 ----
@@ -24,6 +24,7 @@ hron
 ----
 
 hron means human readable objection notation
+
 1. we put human readable in the acronym in order to remind us why we started thinking about 
    hron in the first place.
 2. hron supports multi-line texts
