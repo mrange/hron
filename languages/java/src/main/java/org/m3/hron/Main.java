@@ -26,8 +26,7 @@ public class Main {
 
     @Override
     public Appendable stringPropertyVisitStarted(Object parent, String propertyName) {
-      stringCount++;
-
+      //stringCount++;
       return null;
     }
 
