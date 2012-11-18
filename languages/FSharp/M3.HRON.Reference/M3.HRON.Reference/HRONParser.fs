@@ -31,8 +31,10 @@ module HRONParser =
     let p_comment_tag   = p_char '#'
 
     let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> ()) 
-
     let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(List.toArray cs))
+    let p_comment_string= p_empty_string 
+                            >>. p_comment_tag 
+                            >>. p_string 
 
     let invalid_line                = "<<INVALID_LINE>>"
     let is_valid_line (line: string)= Object.ReferenceEquals(line, invalid_line) = false
@@ -44,19 +46,17 @@ module HRONParser =
     let p_empty_line    = p_empty_string 
                             .>> p_eol 
                             >>? (fun cs -> "")
+    let p_comment_line  = p_comment_string
+                            .>> p_eol 
+                            >>? (fun cs -> invalid_line)
     let p_nonempty_line = p_indention 
                             >>. p_string 
                             .>> p_eol
-    let p_comment_line  = p_empty_string 
-                            >>. p_comment_tag 
-                            >>. p_string 
-                            .>> p_eol 
-                            >>? (fun cs -> invalid_line)
 
     let p_value_line    = p_choose [
-                            p_nonempty_line; 
-                            p_comment_line; 
-                            p_empty_line;
+                            p_nonempty_line ; 
+                            p_comment_line  ; 
+                            p_empty_line    ;
                             ]
     let p_value_lines   = p_many (p_value_line >>! p_eos)
                             >>? (fun vs -> vs |> List.filter is_valid_line)
@@ -73,9 +73,7 @@ module HRONParser =
                             .>> p_eol 
                             >>? (fun cs -> Other)
 
-    let p_comment       = p_empty_string 
-                            >>. p_comment_tag 
-                            >>. p_string 
+    let p_comment       = p_comment_string
                             .>> p_eol 
                             >>? (fun cs -> Other)
 
@@ -91,10 +89,10 @@ module HRONParser =
                             ) ps
 
     and p_member ps     = (p_choose [
-                            p_value; 
-                            p_object; 
-                            p_comment; 
-                            p_empty;
+                            p_value     ; 
+                            p_object    ; 
+                            p_comment   ; 
+                            p_empty     ;
                             ]) ps
 
     let p_hron  = p_members
