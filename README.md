@@ -112,10 +112,10 @@ nonempty_line   ::= indention string eol
 value_line      ::= nonempty_line | comment_line | empty_line
 value_lines     ::= (value_line EXCEPT eos)*
 
-value           ::= indention "=" eol indent values_lines dedent
+value           ::= indention "=" string eol indent values_lines dedent
 empty           ::= empty_string eol
 comment         ::= comment_string eol
-object          ::= indention "@" eol indent members dedent
+object          ::= indention "@" string eol indent members dedent
 member          ::= value | object | comment | empty
 members         ::= (member EXCEPT eos)* 
 
