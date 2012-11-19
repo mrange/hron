@@ -86,7 +86,7 @@ hron sample
 
 Is There a Parser for Language X?
 ---------------------------------
-Possibly! Check in the (languages sub directory)[https://github.com/mrange/hron/tree/master/languages]. 
+Possibly! Check in the (languages sub directory)[https://github.com/mrange/hron/tree/master/languages].
 
 We are busy implementing parsers in various languages, some as reference implementations with little 
 concern for the parser performance (i.e. the groovy parser), others with specific performance metrics 
@@ -153,15 +153,15 @@ would be a better place with a simple, human readable data interchange format.
 Current contributors: 
 
 Mårten Rånge
-hron language specification, BNF, and implementations in CSharp and FSharp. 
-marten.range@gmail.com
+  hron language specification, BNF, and implementations in CSharp and FSharp. 
+  marten.range@gmail.com
 
 Matias Bjarland
-Contributions to hron language specification, implementations in groovy and java.
-mbjarland@gmail.com
+  Contributions to hron language specification, implementations in groovy and java.
+  mbjarland@gmail.com
 
 Mattias Karlsson
-Together with Mårten responsible for spawning the idea for hron. Contributions to language 
-specification, invaluable feedback. 
+  Together with Mårten responsible for spawning the idea for hron. Contributions to language 
+  specification, invaluable feedback. 
 
 
