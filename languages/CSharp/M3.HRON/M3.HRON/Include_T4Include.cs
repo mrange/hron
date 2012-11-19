@@ -434,6 +434,7 @@ namespace M3.HRON
     
             public enum ParseError
             {
+                ProgrammingError                ,
                 IndentIncreasedMoreThanExpected ,
                 TagIsNotCorrectlyFormatted      ,
             }
@@ -480,16 +481,6 @@ namespace M3.HRON
                         {
                             break;
                         }
-                    }
-    
-                    if (currentIndent > expectedIndent)
-                    {
-                        visitor.Error(lineNo, line, ParseError.IndentIncreasedMoreThanExpected);
-                        if (++errorCount > 0)
-                        {
-                            return;
-                        }
-                        continue;
                     }
     
                     bool isComment;
@@ -574,7 +565,15 @@ namespace M3.HRON
                         switch (state)
                         {
                             case ParseState.ExpectingTag:
-                                if (currentIndent < lineLength)
+                                if (currentIndent > expectedIndent)
+                                {
+                                    visitor.Error(lineNo, line, ParseError.IndentIncreasedMoreThanExpected);
+                                    if (++errorCount > 0)
+                                    {
+                                        return;
+                                    }
+                                }
+                                else if (currentIndent < lineLength)
                                 {
                                     var first = baseString[currentIndent + begin];
                                     switch (first)
@@ -598,6 +597,14 @@ namespace M3.HRON
                                                 return;
                                             }
                                             break;
+                                    }
+                                }
+                                else
+                                {
+                                    visitor.Error(lineNo, line, ParseError.ProgrammingError);
+                                    if (++errorCount > 0)
+                                    {
+                                        return;
                                     }
                                 }
                                 break;
@@ -1823,7 +1830,7 @@ namespace M3.HRON.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-11-17T13:05:42";
+        public const string IncludeDate     = @"2012-11-19T21:05:53";
 
         public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
         public const string Include_1       = @"mrange/T4Include/master/Hron/HRONSerializer.cs";
