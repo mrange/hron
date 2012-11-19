@@ -45,22 +45,24 @@ hron sample
 # This is an ini file using hron
 
 # object values are started with '@'
-@Common
-	=LogPath
-		Logs\CurrentDay
+@Greeting
+	=Title
+		Hello World from hron!
 	=WelcomeMessage
 		Hello there!
 
-		String values in hron is started with '='
+		String values in hron are started with '='
 
-		Just as with Python in hron the indention is important
+		Just as in Python, indentation is significant in hron
 
 		Idention promotes readability but also allows hron string values 
-		to be multi-line and hron has no special letters that requires escaping
-		
-		Letters like this causes hron no problems: &<>\"'@=
+		to be multi-line and relieves them from the need for escaping. 
 
-		This helps readability
+		Let us say that again, there exists _no_ character escaping in hron. 
+		
+		Letters like this are fine in an hron string: &<>\"'@=
+
+		This helps readability!
 @DataBaseConnection
 	=Name
 		CustomerDB
@@ -74,8 +76,11 @@ hron sample
 		=Password
 			123
 
-# As we don't 'name' the below object, we will implicitly create an array out of the 
-# above DataBaseConnection and the below object. 
+# As we don't 'name' the below object, this will implicitly create an array out of the 
+# above DataBaseConnection and the below object. Like in real life, adding an apple 
+# next to an existing apple does not create some new concept of "array of apples", 
+# two apples next to each other implicitly constitute a "collection of apples" 
+# without the need for any special sauce (pun intended). 
 @
 	=Name
 		PartnerDB
@@ -83,6 +88,13 @@ hron sample
 		Data Source=.\SQLEXPRESS;Initial Catalog=Partners
 
 ```
+
+The above would (in groovy/java lingo, replace Map with dictionary for .Net) parse to a map with
+two keys: 'Greeting' and 'DataBaseConnection' where the value for key Greeting is a map with two string 
+values and the value for key DataBaseConnection is a list which contains two map objects. For a good examlpe
+of what is an is not valid, take a look at 
+[the parser unit tests](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
+, some which are very descriptive. 
 
 Is There a Parser for Language X?
 ---------------------------------
