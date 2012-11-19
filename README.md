@@ -98,13 +98,14 @@ anychar         ::= <parses any character>
 whitespace      ::= <parses any whitespace character>
 eos             ::= <parses END OF STREAM>
 eol             ::= <parses END OF LINE (END OF STREAM counts as END OF LINE)>
+any_indention   ::= <parses any indention>
 indention       ::= <parses the current indention>
 indent          ::= <increases indention by one>
 dedent          ::= <decreases indention by one>
 
 empty_string    ::= (whitespace EXCEPT eol)*
 string          ::= (anychar EXCEPT eol)*
-comment_string  ::= empty_string "#" string
+comment_string  ::= any_indention "#" string
 
 empty_line      ::= empty_string eol
 comment_line    ::= comment_string eol

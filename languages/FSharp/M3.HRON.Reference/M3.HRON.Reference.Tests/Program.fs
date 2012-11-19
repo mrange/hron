@@ -15,7 +15,7 @@ open System.IO
 open M3.HRON.Reference
 
 let min_empty_string = 0
-let max_empty_string = 2
+let max_empty_string = 10
 
 let min_string = 4
 let max_string = 10
@@ -23,7 +23,10 @@ let max_string = 10
 let min_member = 5
 let max_member = 10
 
-let min_value_lines = 1
+let min_indent = 0
+let max_indent = 4
+
+let min_value_lines = 0
 let max_value_lines = 5
 
 let max_level = 5
@@ -48,7 +51,7 @@ let build_string (random : Random)=
 let build_value_line (random : Random)=
     let c = random.Next(0, 10)
     match c with
-        |   0           -> CommentLine  (build_empty_string random, build_string random)
+        |   0           -> CommentLine  (random.Next(min_indent, max_indent), build_string random)
         |   _ when c < 4-> EmptyLine    (build_empty_string random)
         |   _           -> ContentLine  (build_string random)
 
@@ -60,7 +63,7 @@ let rec build_member l (random : Random)=
     let c = random.Next(0, 10)
     match c with
         |   0           -> Empty    (build_empty_string random)
-        |   1           -> Comment  (build_empty_string random, build_string random)
+        |   1           -> Comment  (random.Next(min_indent, max_indent), build_string random)
         |   _ when c < 5-> Value    (build_string random, build_value_lines random)
         |   _           -> Object   (build_string random, build_members l random)
 and build_members l (random : Random)= 
@@ -69,14 +72,16 @@ and build_members l (random : Random)=
     then [for i in 0..c -> build_member (l - 1) random]
     else []
 
+let build_random() =
+    let random = new Random (19740531)
+
+    let x = build_members max_level random
+    let y = HRONParser.to_string x
+    File.WriteAllText ("random.hron", y)
 
 [<EntryPoint>]
 let main argv = 
-    let random = new Random (19740531)
-
-//    let x = build_members max_level random
-//    let y = HRONParser.to_string x
-//    File.WriteAllText ("random.hron", y)
+//    build_random()
 
     let path  = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\random.hron")
     let input = File.ReadAllText(path)

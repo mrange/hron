@@ -20,14 +20,14 @@ open Parser
 
 type ValueLine      =
     |   EmptyLine   of string
-    |   CommentLine of string*string
+    |   CommentLine of int*string
     |   ContentLine of string          
 
 type Member         =
     |   Empty   of string
     |   Value   of string*ValueLine list
     |   Object  of string*Member list
-    |   Comment of string*string
+    |   Comment of int*string
 
 
 type HRON           = Member list
@@ -40,7 +40,8 @@ module HRONParser =
 
     let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(List.toArray cs)) 
     let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(List.toArray cs))
-    let p_comment_string= p_empty_string 
+    let p_any_indention = p_many p_tab >>? (fun cs -> List.length cs)
+    let p_comment_string= p_any_indention
                             .>> p_comment_tag 
                             >>  p_string 
 
@@ -101,12 +102,12 @@ module HRONParser =
     let to_string hron  =
         let value_to_string (sb : StringBuilder) i v =
             match v with
-                |   CommentLine (ws, ln)-> sb.Append(ws).Append('#').Append(ln).AppendLine()
+                |   CommentLine (i, ln) -> sb.Append('\t', i).Append('#').Append(ln).AppendLine()
                 |   EmptyLine   ws      -> sb.Append(ws).AppendLine()
                 |   ContentLine ln      -> sb.Append('\t', i).Append(ln).AppendLine()
         let rec member_to_string (sb : StringBuilder) i m =
             match m with
-                |   Comment (ws, ln)    -> sb.Append(ws).Append('#').Append(ln).AppendLine()
+                |   Comment (i, ln)     -> sb.Append('\t', i).Append('#').Append(ln).AppendLine()
                 |   Empty   ws          -> sb.Append(ws).AppendLine()
                 |   Object  (nm, ms)    ->
                     ignore (sb.Append('\t', i).Append('@').Append(nm).AppendLine())
