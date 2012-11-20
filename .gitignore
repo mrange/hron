@@ -1,7 +1,12 @@
 bin
 obj
-Output
-*_Resharper*
+[Oo]utput
+ipch/
+[Ii]ntermediate/*
+_Resharper*
 *.user
 *.suo
 *.nupkg
+*.opensdf
+*.sdf
+*.filters
