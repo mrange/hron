@@ -1,8 +1,8 @@
-bin
-obj
-[Oo]utput
+bin/
+obj/
+[Oo]utput/
 ipch/
-[Ii]ntermediate/*
+[Ii]ntermediate/
 _Resharper*
 *.user
 *.suo
