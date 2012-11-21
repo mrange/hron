@@ -40,7 +40,7 @@ namespace M3.HRON.Sample
                 {
                     string name             = databaseConnection.Name;
                     string connectionString = databaseConnection.ConnectionString;
-                    string timeOut          = databaseConnection.TimeOut;
+                    int    timeOut          = databaseConnection.TimeOut;
 
                     string userName         = databaseConnection.User.UserName;
                     string password         = databaseConnection.User.Password;
