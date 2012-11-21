@@ -29,8 +29,9 @@ type Member         =
     |   Object  of string*Member[]
     |   Comment of int*string
 
+type PreProcessor   =   string
 
-type HRON           = Member[]
+type HRON           = PreProcessor[]*Member[]
 
 module HRONParser =
 
@@ -46,6 +47,11 @@ module HRONParser =
                             .>> p_comment_tag 
                             >>  p_string 
 
+    let p_preprocessor  = p_preprocessor_tag
+                            >>. p_string
+                            .>> p_eol
+
+    let p_preprocessors = p_many p_preprocessor                              
 
     let p_empty_line    = p_empty_string 
                             .>> p_eol 
@@ -98,9 +104,9 @@ module HRONParser =
                             p_empty     ;
                             ]) ps
 
-    let p_hron  = p_members
+    let p_hron  = p_preprocessors >> p_members
 
-    let to_string hron  =
+    let to_string (hron : HRON) =
         let value_to_string (sb : StringBuilder) i v =
             match v with
                 |   CommentLine (i, ln) -> sb.Append('\t', i).Append('#').Append(ln).AppendLine()
@@ -121,6 +127,9 @@ module HRONParser =
                        ignore (value_to_string sb (i + 1) v')
                     sb
         let sb = new StringBuilder(128)
-        for m' in hron do
+        let (preprocessors, members) = hron
+        for p' in preprocessors do
+            ignore (sb.Append('!').Append(p').AppendLine())
+        for m' in members do
             ignore (member_to_string sb 0 m')
         sb.ToString ()

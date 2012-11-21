@@ -76,7 +76,7 @@ let build_random() =
     let random = new Random (19740531)
 
     let x = build_members max_level random
-    let y = HRONParser.to_string x
+    let y = HRONParser.to_string ([||], x)
     File.WriteAllText ("random.hron", y)
 
 [<EntryPoint>]

@@ -140,6 +140,9 @@ empty_string    ::= (whitespace EXCEPT eol)*
 string          ::= (anychar EXCEPT eol)*
 comment_string  ::= any_indention "#" string
 
+preprocessor    ::= "!" string eol
+preprocessors   ::= preprocessor*
+
 empty_line      ::= empty_string eol
 comment_line    ::= comment_string eol
 nonempty_line   ::= indention string eol
@@ -153,7 +156,7 @@ object          ::= indention "@" string eol indent members dedent
 member          ::= value | object | comment | empty
 members         ::= (member EXCEPT eos)* 
 
-hron ::= members
+hron ::= preprocessors members
 
 ```
 
