@@ -25,22 +25,23 @@ type ValueLine      =
 
 type Member         =
     |   Empty   of string
-    |   Value   of string*ValueLine list
-    |   Object  of string*Member list
+    |   Value   of string*ValueLine[]
+    |   Object  of string*Member[]
     |   Comment of int*string
 
 
-type HRON           = Member list
+type HRON           = Member[]
 
 module HRONParser =
 
-    let p_value_tag     = p_char '='
-    let p_object_tag    = p_char '@'
-    let p_comment_tag   = p_char '#'
+    let p_preprocessor_tag  = p_char '!'
+    let p_value_tag         = p_char '='
+    let p_object_tag        = p_char '@'
+    let p_comment_tag       = p_char '#'
 
-    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(List.toArray cs)) 
-    let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(List.toArray cs))
-    let p_any_indention = p_many p_tab >>? (fun cs -> List.length cs)
+    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(cs)) 
+    let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(cs))
+    let p_any_indention = p_many p_tab >>? (fun cs -> cs.Length)
     let p_comment_string= p_any_indention
                             .>> p_comment_tag 
                             >>  p_string 
