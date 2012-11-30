@@ -30,6 +30,7 @@ module Parser =
         p ps
 
     let advance     ps      = {ps with pos = ps.pos + 1}
+    let move_to     ps pos  = {ps with pos = pos}
     let is_not_eos  ps      = ps.pos < ps.input.Length
     let is_eos      ps      = ps.pos >= ps.input.Length
     let is_success  pr      =   match pr with
@@ -72,6 +73,14 @@ module Parser =
             else  Failure ("EOS", ps)
         )
 
+    let p_satisy_many test = (fun ps -> 
+        let e = seq {for x in ps.pos..ps.input.Length -> x} 
+                |> Seq.tryFind (fun x -> (test x ps.input.[x]) = false)
+        match e with
+            |   Some x' -> Success (ps.input.Substring(ps.pos, x' - ps.pos), move_to ps x')
+            |   _       -> Success (ps.input.Substring(ps.pos), move_to ps ps.input.Length)
+        )
+
     let p_map (p : Parser<'a>) m = (fun ps ->
         match p ps with
             |   Success(v, ps') ->  Success(m v, ps')
@@ -79,16 +88,20 @@ module Parser =
         )
 
     let p_many (p : Parser<'a>)  = 
-        let rec build ps = 
-            match p ps with
-                |   Success (v, ps')    ->  
-                    let (vs, ps'') = build ps'
-                    (v::vs, ps'')
-                |   Failure (_, _)      ->
-                    ([], ps)
         (fun ps ->
-            let (vs, ps) = build ps 
-            Success (vs, ps)
+            let mutable is_looking  = true
+            let mutable ps'         = ps
+            let         result      = new ResizeArray<'a> ()
+            while (is_looking) do
+                let pr = p ps'
+                match pr with
+                    |   Success (v, ps'')   ->
+                        result.Add(v)
+                        ps'     <- ps''
+                    |   _       ->
+                        is_looking <- false
+
+            Success (result.ToArray (), ps')
         )
 
     let p_opt (p : Parser<'a>)  = (fun ps ->
@@ -104,15 +117,23 @@ module Parser =
         )
 
     let p_choose (parsers : Parser<'a> list) = 
-        let rec pick_first parsers' ps =
-            match parsers' with
-                |   p::parsers''    -> 
-                    match p ps with
-                        |   Success(v, ps') ->  Success(v, ps')
-                        |   _               ->  pick_first parsers'' ps
-                |   _               -> Failure ("No match", ps) 
         (fun ps ->
-            pick_first parsers ps
+            let mutable parsers'    = parsers
+            let mutable ps'         = ps
+            let mutable result      = None
+            while parsers'.Length > 0 do
+                let pr = parsers'.Head ps'
+                match pr with
+                    |   Success (v, ps'') ->
+                        parsers'    <- []
+                        ps'         <- ps''
+                        result      <- Some v
+                    |   _   ->
+                        parsers' <- parsers'.Tail
+
+            match result with
+                |   Some x  -> Success (x, ps')
+                |   _       -> Failure ("No match found", ps)                         
         )
 
     let p_combine (pl : Parser<'a>) (pr : Parser<'b>) = (fun ps ->
@@ -154,12 +175,15 @@ module Parser =
     let (>>?)   = p_map
     let (>>!)   = p_except
 
-    let p_char ch   = (p_satisy (fun c -> c = ch) ("Expected: " + ch.ToString())) >>? (fun ch -> ()) 
+    let p_char ch               = (p_satisy (fun c -> c = ch) ("Expected: " + ch.ToString())) >>? (fun ch -> ()) 
+    let p_string (str : string) = (p_satisy_many (fun i c -> (i < str.Length) && (str.[i] = c))) >>? (fun str -> ()) 
 
-    let p_whitespace= p_satisy Char.IsWhiteSpace "Expected whitespace"
-    let p_cr        = p_choose [p_char '\r'; p_eos;]
-    let p_ln        = p_choose [p_char '\n'; p_eos;]
-    let p_tab       = p_char '\t'
+    let p_whitespace            = p_satisy Char.IsWhiteSpace "Expected whitespace"
+    let p_whitespaces           = p_satisy_many (fun _ c -> Char.IsWhiteSpace(c))
+
+    let p_cr                    = p_choose [p_char '\r'; p_eos;]
+    let p_ln                    = p_choose [p_char '\n'; p_eos;]
+    let p_tab                   = p_char '\t'
 
     let p_eol = (fun ps ->
         match p_cr ps with
@@ -171,14 +195,15 @@ module Parser =
         )
 
     let p_indention = 
-        let rec consume_indention ps current_indent= 
-            if current_indent = ps.indent then Some ps
-            elif (is_not_eos ps) && ps.input.[ps.pos] = '\t' then consume_indention (advance ps) (current_indent + 1)
-            else None
         (fun ps ->
-            match consume_indention ps 0 with
-                |   Some ps'    ->  Success ((), ps')
-                |   _           ->  Failure("Expected indent", ps)
+            let pos' = seq {for x in ps.pos..(min ps.input.Length (ps.pos + ps.indent)) -> x}  
+                    |> Seq.tryFind (fun x -> ps.input.[x] <> '\t')
+            let pos = match pos' with
+                |   Some i' -> i'
+                |   _       -> ps.input.Length
+            if pos = ps.indent + ps.pos
+            then Success ((), move_to ps pos)
+            else Failure("Expected indent", ps)
         )     
 
 

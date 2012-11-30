@@ -57,7 +57,7 @@ let build_value_line (random : Random)=
 
 let build_value_lines (random : Random)=
     let c = random.Next(min_value_lines, max_value_lines)
-    [for i in 0..c -> build_value_line random]
+    [|for i in 0..c -> build_value_line random|]
 
 let rec build_member l (random : Random)=
     let c = random.Next(0, 10)
@@ -69,14 +69,14 @@ let rec build_member l (random : Random)=
 and build_members l (random : Random)= 
     let c = random.Next(min_member, max_member)
     if l > 0
-    then [for i in 0..c -> build_member (l - 1) random]
-    else []
+    then [|for i in 0..c -> build_member (l - 1) random|]
+    else [||]
 
 let build_random() =
     let random = new Random (19740531)
 
     let x = build_members max_level random
-    let y = HRONParser.to_string x
+    let y = HRONParser.to_string ([||], x)
     File.WriteAllText ("random.hron", y)
 
 [<EntryPoint>]
@@ -91,7 +91,7 @@ let main argv =
         |   Success (doc, ps)   ->  
             let output = HRONParser.to_string doc
             let l1              = input.Length
-            let l2              = input.Length
+            let l2              = output.Length
             let lm              = min l1 l2
             let mutable first   = -1
             for i in 0..(lm - 1) do
