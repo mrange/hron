@@ -101,7 +101,7 @@ Is There a Parser for Language X?
 Possibly! Check in the [languages sub directory](https://github.com/mrange/hron/tree/master/languages).
 
 We are busy implementing parsers in various languages, some as reference implementations with little 
-concern for the parser performance (i.e. the groovy parser), others with specific performance metrics 
+concern for parser performance (i.e. the groovy parser), others with specific performance metrics 
 in mind (like the java one). Shortly upcoming parsers include scala and c++. 
 
 If you can not find a parser in your language, fork the repo and write one! We welcome all contributions. 
