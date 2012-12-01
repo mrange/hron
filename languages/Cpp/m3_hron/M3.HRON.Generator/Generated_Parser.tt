@@ -1,0 +1,181 @@
+﻿<#@ include file="Header.ttinclude" #>
+
+<#
+
+    var model = new []
+        {
+            new ParserState ("TagExpected")     
+            {
+                new NextParserState ("TagExpected"  , "\t"  ),
+                new NextParserState ("ObjectTag"    , "@"   ),
+                new NextParserState ("ValueTag"     , "="   ),
+                new NextParserState ("CommentTag"   , "#"   ),
+                new NextParserState ("EmptyLine"    , " "   ),
+                new NextParserState ("EndOfEmpty"   , "\r\n"),
+                new NextParserState ("Error"        , ""    ),
+            },
+
+            new ParserState ("ObjectTag")     
+            {
+                new NextParserState ("EndOfTag"     , "\r\n"),
+                new NextParserState ("ObjectTag"    , ""    ),
+            },
+
+            new ParserState ("ValueTag")     
+            {
+                new NextParserState ("EndOfValue"   , "\r\n"),
+                new NextParserState ("ValueTag"     , ""    ),
+            },
+
+            new ParserState ("CommentTag")     
+            {
+                new NextParserState ("EndOfComment" , "\r\n"),
+                new NextParserState ("CommentTag"   , ""    ),
+            },
+
+            new ParserState ("ValueExpected")     
+            {
+                new NextParserState ("ValueExpected", "\t"  ),
+                new NextParserState ("CommentTag"   , "#"   ),
+                new NextParserState ("EndOfEmpty"   , "\r\n"),
+                new NextParserState ("ValueLine"    , ""    ),
+            },
+        };
+
+#>
+
+namespace M3.HRON.Generator.Parser
+{
+    enum ParserState
+    {
+<#
+    foreach (var parserState in model)
+    {
+#>
+        <#=parserState.Name#>,
+<#
+    }
+#>
+    }
+
+    enum ParserResult
+    {
+        Error   ,
+        Continue,
+        Done    ,
+    }
+
+    sealed partial class Scanner
+    {
+        ParserState State = default (ParserState);
+
+        public ParserResult AcceptLine (string l)
+        {
+            l = l ?? "";
+
+            for (var iter = 0; iter < l.Length; ++iter)
+            {
+                switch (AcceptCharacter (l[iter]))
+                {
+                case ParserResult.Continue:
+                    break;
+                case ParserResult.Done:
+                    return ParserResult.Done;
+                case ParserResult.Error:
+                default:
+                    return ParserResult.Error;
+                }
+            }
+        }
+
+        public ParserResult AcceptCharacter (char ch)
+        {
+            switch (State)
+            {
+<#
+    foreach (var parserState in model)
+    {
+#>
+            case ParserState.<#=parserState.Name#>:
+                switch (ch)
+                {
+<#
+    foreach (var nextParserState in parserState)
+    {
+        if (nextParserState.Characters.Length == 0)
+        {
+#>
+                default:
+                    State = ParserState.<#=nextParserState.Name#>;
+                    return ParserResult.Continue;
+<#
+        }
+        else
+        {
+            foreach (var ch in nextParserState.Characters)
+            {
+#>
+                case <#=GetCase(ch)#>:
+                    State = ParserState.<#=nextParserState.Name#>;
+                    return ParserResult.Continue;
+<#
+            }
+        }
+    }
+#>    
+                }
+                break;
+<#
+    }
+#>
+            default:
+                return ParserResult.Error;
+            }
+        }
+    }
+
+
+}
+
+<#+
+
+    sealed class ParserState : BaseContainer<Root, NextParserState>
+    {
+        public readonly string Name;
+
+        public ParserState (string name)
+        {
+            Name = name ?? S_NoName;
+        }
+
+    }
+
+    sealed class NextParserState : BaseEntity<ParserState>
+    {
+        public readonly string Name         ;
+        public readonly string Characters   ;
+
+        public NextParserState (string name, string characters)
+        {
+            Name        = name          ?? S_NoName ;
+            Characters  = characters    ?? ""       ;
+        }
+    }
+
+    static string GetCase (char ch)
+    {
+        switch (ch)
+        {
+        case '\t':
+            return "'\\t'";
+        case '\r':
+            return "'\\r'";
+        case '\n':
+            return "'\\n'";
+        default:
+            return "'" + ch + "'";
+        }
+    }
+
+
+#>
