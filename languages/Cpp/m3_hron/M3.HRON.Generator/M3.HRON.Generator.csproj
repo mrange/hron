@@ -51,6 +51,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Include_T4Include.tt</DependentUpon>
     </Compile>
+    <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
