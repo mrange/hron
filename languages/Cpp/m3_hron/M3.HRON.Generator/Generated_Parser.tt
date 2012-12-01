@@ -1,47 +1,120 @@
 ﻿<#@ include file="Header.ttinclude" #>
 
+// ReSharper disable InconsistentNaming
+
 <#
 
     var model = new []
         {
+            new ParserState ("Error", isDefault:true    )     
+            {
+                new NextParserState ("Error"        , ""    ),
+            },
+
             new ParserState ("TagExpected")     
             {
                 new NextParserState ("TagExpected"  , "\t"  ),
                 new NextParserState ("ObjectTag"    , "@"   ),
                 new NextParserState ("ValueTag"     , "="   ),
                 new NextParserState ("CommentTag"   , "#"   ),
-                new NextParserState ("EmptyLine"    , " "   ),
-                new NextParserState ("EndOfEmpty"   , "\r\n"),
-                new NextParserState ("Error"        , ""    ),
+                new NextParserState ("EmptyTag"     , " "   ),
+                new NextParserState ("EndOfEmptyTag", "\r\n"),
             },
 
             new ParserState ("ObjectTag")     
             {
-                new NextParserState ("EndOfTag"     , "\r\n"),
-                new NextParserState ("ObjectTag"    , ""    ),
+                new NextParserState ("EndOfObjectTag"   , "\r\n"),
+                new NextParserState ("ObjectTag"                ),
             },
 
             new ParserState ("ValueTag")     
             {
-                new NextParserState ("EndOfValue"   , "\r\n"),
-                new NextParserState ("ValueTag"     , ""    ),
+                new NextParserState ("EndOfValueTag", "\r\n"),
+                new NextParserState ("ValueTag"             ),
+            },
+
+            new ParserState ("EmptyTag")     
+            {
+                new NextParserState ("EndOfEmptyTag", "\r\n"),
+                new NextParserState ("EmptyTag"     , "\t " ),
             },
 
             new ParserState ("CommentTag")     
             {
-                new NextParserState ("EndOfComment" , "\r\n"),
-                new NextParserState ("CommentTag"   , ""    ),
+                new NextParserState ("EndOfCommentTag"  , "\r\n"),
+                new NextParserState ("CommentTag"               ),
+            },
+
+            new ParserState ("EndOfObjectTag")     
+            {
+                new NextParserState ("EndOfObjectTag"   , "\n"  ),
+                new NextParserState ("TagExpected"              ),
+            },
+
+            new ParserState ("EndOfEmptyTag")     
+            {
+                new NextParserState ("EndOfEmptyTag"    , "\n"  ),
+                new NextParserState ("TagExpected"              ),
+            },
+
+            new ParserState ("EndOfValueTag")     
+            {
+                new NextParserState ("EndOfValueTag"    , "\n"  ),
+                new NextParserState ("ValueExpected"            ),
+            },
+
+            new ParserState ("EndOfCommentTag")     
+            {
+                new NextParserState ("EndOfCommentTag"  , "\n"  ),
+                new NextParserState ("TagExpected"              ),
             },
 
             new ParserState ("ValueExpected")     
             {
-                new NextParserState ("ValueExpected", "\t"  ),
-                new NextParserState ("CommentTag"   , "#"   ),
-                new NextParserState ("EndOfEmpty"   , "\r\n"),
-                new NextParserState ("ValueLine"    , ""    ),
+                new NextParserState ("ValueExpected"    , "\t"  ),
+                new NextParserState ("CommentLine"      , "#"   ),
+                new NextParserState ("EndOfEmptyLine"   , "\r\n"),
+                new NextParserState ("ValueLine"                ),
             },
+
+            new ParserState ("CommentLine")     
+            {
+                new NextParserState ("EndOfCommmentLine"    , "\r\n"),
+                new NextParserState ("CommentLine"                  ),
+            },
+
+            new ParserState ("ValueLine")     
+            {
+                new NextParserState ("EndOfValueLine"       , "\r\n"),
+                new NextParserState ("ValueLine"                    ),
+            },
+
+            new ParserState ("EndOfEmptyLine")     
+            {
+                new NextParserState ("EndOfEmptyLine"       , "\n"  ),
+                new NextParserState ("TagExpected"                  ),
+            },
+
+            new ParserState ("EndOfCommmentLine")     
+            {
+                new NextParserState ("EndOfCommmentLine"    , "\n"  ),
+                new NextParserState ("ValueExpected"                ),
+            },
+
+            new ParserState ("EndOfValueLine")     
+            {
+                new NextParserState ("EndOfValueLine"       , "\n"  ),
+                new NextParserState ("TagExpected"                  ),
+            },
+
         };
 
+#>
+
+<#
+
+    var defaultState = model
+        .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
 #>
 
 namespace M3.HRON.Generator.Parser
@@ -58,6 +131,21 @@ namespace M3.HRON.Generator.Parser
 #>
     }
 
+    enum ParserStateTransition
+    {
+<#
+    foreach (var parserState in model)
+    {
+        foreach (var nextParserState in parserState.NextStates(defaultState))
+        {
+#>
+            From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
+<#
+        }
+    }
+#>
+    }
+
     enum ParserResult
     {
         Error   ,
@@ -69,6 +157,15 @@ namespace M3.HRON.Generator.Parser
     {
         ParserState State = default (ParserState);
 
+        partial void Partial_ComputeNewState (
+            char                    current     ,
+            ParserState             from        ,
+            ParserState             to          ,
+            ParserStateTransition   transition  ,
+            ref ParserResult        result      ,
+            ref ParserState         newState
+            );
+                
         public ParserResult AcceptLine (string l)
         {
             l = l ?? "";
@@ -86,10 +183,12 @@ namespace M3.HRON.Generator.Parser
                     return ParserResult.Error;
                 }
             }
+            return ParserResult.Continue;
         }
 
         public ParserResult AcceptCharacter (char ch)
         {
+            var result = ParserResult.Continue; 
             switch (State)
             {
 <#
@@ -100,14 +199,21 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
 <#
-    foreach (var nextParserState in parserState)
+    foreach (var nextParserState in parserState.NextStates (defaultState))
     {
-        if (nextParserState.Characters.Length == 0)
+        if (nextParserState.IsDefault)
         {
 #>
                 default:
-                    State = ParserState.<#=nextParserState.Name#>;
-                    return ParserResult.Continue;
+                    Partial_ComputeNewState (
+                        ch,
+                        ParserState.<#=parserState.Name#>,
+                        ParserState.<#=nextParserState.Name#>,
+                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
+                        ref result,
+                        ref State
+                        );
+                    break;
 <#
         }
         else
@@ -116,8 +222,15 @@ namespace M3.HRON.Generator.Parser
             {
 #>
                 case <#=GetCase(ch)#>:
-                    State = ParserState.<#=nextParserState.Name#>;
-                    return ParserResult.Continue;
+                    Partial_ComputeNewState (
+                        ch,
+                        ParserState.<#=parserState.Name#>,
+                        ParserState.<#=nextParserState.Name#>,
+                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
+                        ref result,
+                        ref State
+                        );
+                    break;
 <#
             }
         }
@@ -129,9 +242,13 @@ namespace M3.HRON.Generator.Parser
     }
 #>
             default:
-                return ParserResult.Error;
+                result = ParserResult.Error;
+                break;
             }
+
+            return result;
         }
+
     }
 
 
@@ -141,11 +258,31 @@ namespace M3.HRON.Generator.Parser
 
     sealed class ParserState : BaseContainer<Root, NextParserState>
     {
-        public readonly string Name;
+        public readonly string  Name        ;
+        public readonly bool    IsDefault   ;
 
-        public ParserState (string name)
+        public ParserState (string name, bool isDefault = false)
         {
-            Name = name ?? S_NoName;
+            Name        = name ?? S_NoName  ;
+            IsDefault   = isDefault         ; 
+        }
+
+        public IEnumerable<NextParserState> NextStates (ParserState defaultState)
+        {
+            foreach (var nextParserState in this.Where (nsp => !nsp.IsDefault))
+            {
+                yield return nextParserState;
+            }
+
+            var defaultCase = this.FirstOrDefault (nsp => nsp.IsDefault);
+            if (defaultCase != null)
+            {
+                yield return defaultCase;
+            }
+            else
+            {
+                yield return new NextParserState (defaultState.Name);
+            }
         }
 
     }
@@ -155,10 +292,18 @@ namespace M3.HRON.Generator.Parser
         public readonly string Name         ;
         public readonly string Characters   ;
 
-        public NextParserState (string name, string characters)
+        public NextParserState (string name, string characters = null)
         {
             Name        = name          ?? S_NoName ;
             Characters  = characters    ?? ""       ;
+        }
+
+        public bool IsDefault
+        {
+            get
+            {
+                return Characters.Length == 0;
+            }
         }
     }
 
