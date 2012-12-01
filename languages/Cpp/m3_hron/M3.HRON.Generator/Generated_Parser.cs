@@ -195,15 +195,6 @@ namespace M3.HRON.Generator.Parser
                         );
                     break;
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.TagExpected,
-                        ParserState.EndOfEmptyTag,
-                        ParserStateTransition.From_TagExpected__To_EndOfEmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -231,15 +222,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ObjectTag,
-                        ParserState.EndOfObjectTag,
-                        ParserStateTransition.From_ObjectTag__To_EndOfObjectTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -267,15 +249,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ValueTag,
-                        ParserState.EndOfValueTag,
-                        ParserStateTransition.From_ValueTag__To_EndOfValueTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -303,15 +276,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EmptyTag,
-                        ParserState.EndOfEmptyTag,
-                        ParserStateTransition.From_EmptyTag__To_EndOfEmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -323,15 +287,6 @@ namespace M3.HRON.Generator.Parser
                         );
                     break;
                 case '\t':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EmptyTag,
-                        ParserState.EmptyTag,
-                        ParserStateTransition.From_EmptyTag__To_EmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case ' ':
                     Partial_ComputeNewState (
                         ch,
@@ -359,15 +314,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.CommentTag,
-                        ParserState.EndOfCommentTag,
-                        ParserStateTransition.From_CommentTag__To_EndOfCommentTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -519,15 +465,6 @@ namespace M3.HRON.Generator.Parser
                         );
                     break;
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ValueExpected,
-                        ParserState.EndOfEmptyLine,
-                        ParserStateTransition.From_ValueExpected__To_EndOfEmptyLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -555,15 +492,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.CommentLine,
-                        ParserState.EndOfCommmentLine,
-                        ParserStateTransition.From_CommentLine__To_EndOfCommmentLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
@@ -591,15 +519,6 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 case '\r':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ValueLine,
-                        ParserState.EndOfValueLine,
-                        ParserStateTransition.From_ValueLine__To_EndOfValueLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\n':
                     Partial_ComputeNewState (
                         ch,
