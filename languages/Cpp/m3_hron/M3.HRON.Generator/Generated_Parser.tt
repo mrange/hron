@@ -222,6 +222,9 @@ namespace M3.HRON.Generator.Parser
             {
 #>
                 case <#=GetCase(ch)#>:
+<#
+            }
+#>
                     Partial_ComputeNewState (
                         ch,
                         ParserState.<#=parserState.Name#>,
@@ -232,7 +235,6 @@ namespace M3.HRON.Generator.Parser
                         );
                     break;
 <#
-            }
         }
     }
 #>    
