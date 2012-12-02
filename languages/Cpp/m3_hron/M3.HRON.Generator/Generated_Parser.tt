@@ -13,10 +13,10 @@
 
             new ParserState ("Indention")     
             {
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
                 Next        ("\t"       , "Indention"                   ),
                 HandOver    (DefaultCase, "TagExpected" 
                                         , "ValueLine" 
-                                        , "OtherValueLine"      
                                         , "Error"                       ),
             },
 
@@ -79,36 +79,7 @@
                 Next        (DefaultCase, "ValueLine"           ),
             },
 
-            new ParserState ("OtherValueLine")     
-            {
-                Terminator  (NoCase     , "EndOfEmptyLine"      ),
-                Next        ("#"        , "CommentLine"         ),
-                Next        (" "        , "EmptyLine"           ),
-            },
-
-            new ParserState ("CommentLine")     
-            {
-                Terminator  (NoCase     , "EndOfCommentLine"    ),
-                Next        (DefaultCase, "CommentLine"         ),
-            },
-
-            new ParserState ("EmptyLine")     
-            {
-                Terminator  (NoCase     , "EndOfEmptyLine"      ),
-                Next        ("\t "      , "EmptyLine"           ),
-            },
-
             new ParserState ("EndOfValueLine")     
-            {
-                HandOver    (DefaultCase, "Indention"           ),
-            },
-
-            new ParserState ("EndOfCommentLine")     
-            {
-                HandOver    (DefaultCase, "Indention"           ),
-            },
-
-            new ParserState ("EndOfEmptyLine")     
             {
                 HandOver    (DefaultCase, "Indention"           ),
             },
@@ -125,6 +96,8 @@
 
 namespace M3.HRON.Generator.Parser
 {
+    using M3.HRON.Generator.Source.Common;
+
     enum ParserState
     {
 <#
@@ -177,8 +150,8 @@ namespace M3.HRON.Generator.Parser
     {
         ParserState State = default (ParserState);
 
-        partial void Partial_BeginLine (string l);
-        partial void Partial_EndLine (string l);
+        partial void Partial_BeginLine (SubString ss);
+        partial void Partial_EndLine ();
 
         partial void Partial_StateChoice (
             char                    current     ,
@@ -194,24 +167,33 @@ namespace M3.HRON.Generator.Parser
             ParserStateTransition   transition  ,
             ref ParserResult        result      
             );
+
+        partial void Partial_AcceptEndOfStream ();
                 
-        public ParserResult AcceptLine (string l)
+        public ParserResult AcceptEndOfStream ()
         {
-            l = l ?? "";
+            Partial_AcceptEndOfStream ();
+            return ParserResult.Continue;             
+        }
 
+        public ParserResult AcceptLine (SubString ss)
+        {
             var result = ParserResult.Continue;
-            var length = l.Length;
 
-            Partial_BeginLine (l);
+            Partial_BeginLine (ss);
 
-            for (var iter = 0; (iter < length) & (result == ParserResult.Continue); ++iter)
+            var bs = ss.BaseString;
+            var begin = ss.Begin;
+            var end = ss.End;
+
+            for (var iter = begin; (iter < end) & (result == ParserResult.Continue); ++iter)
             {
-                result = AcceptCharacter (l[iter]);
+                result = AcceptCharacter (bs[iter]);
             }
 
             AcceptEndOfLine ();
 
-            Partial_EndLine (l);
+            Partial_EndLine ();
 
             return result;
         }
@@ -220,7 +202,6 @@ namespace M3.HRON.Generator.Parser
 
         ParserResult AcceptEndOfLine ()
         {
-            var next = default (ParserState);
             var result = ParserResult.Continue; 
             switch (State)
             {
@@ -238,10 +219,10 @@ namespace M3.HRON.Generator.Parser
                     EndOfStream,
                     ParserStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
                     ParserState.<#=parserState.Name#>,
-                    ref next
+                    ref State
                     );
 
-                switch (next)
+                switch (State)
                 {
 <#
         foreach (var name in nextParserState.Names)
@@ -251,7 +232,7 @@ namespace M3.HRON.Generator.Parser
                     Partial_StateTransition (
                         EndOfStream,
                         ParserState.<#=parserState.Name#>,
-                        next,
+                        State,
                         ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
                         ref result
                         );
@@ -269,23 +250,24 @@ namespace M3.HRON.Generator.Parser
         {
             var name = nextParserState.Names[0]; 
 #>
-                next = ParserState.<#=name#>; 
+                State = ParserState.<#=name#>; 
                 Partial_StateTransition (
                     EndOfStream,
                     ParserState.<#=parserState.Name#>,
-                    next,
+                    ParserState.<#=name#>,
                     ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
                     ref result
                     );
 
 <#
         }
+
     if (nextParserState.HandOver)
     {
 #>
                 if (result == ParserResult.Continue)
                 {
-                    AcceptEndOfLine ();    
+                    result = AcceptCharacter (EndOfStream);    
                 }   
 <#
     }
@@ -296,14 +278,11 @@ namespace M3.HRON.Generator.Parser
 #>
             }
 
-            State = next;
-
             return result;
         }
 
         ParserResult AcceptCharacter (char ch)
         {
-            var next = default (ParserState);
             var result = ParserResult.Continue; 
             switch (State)
             {
@@ -317,7 +296,7 @@ namespace M3.HRON.Generator.Parser
 <#
     foreach (var nextParserState in parserState.NextStates (defaultState))
     {
-        if (nextParserState.IsDefault)
+        if (nextParserState.IsDefaultCase)
         {
 #>
                 default:
@@ -336,13 +315,13 @@ namespace M3.HRON.Generator.Parser
         {
 #>
                     Partial_StateChoice (
-                        EndOfStream,
+                        ch,
                         ParserStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
                         ParserState.<#=parserState.Name#>,
-                        ref next
+                        ref State
                         );
 
-                    switch (next)
+                    switch (State)
                     {
 <#
         foreach (var name in nextParserState.Names)
@@ -350,9 +329,9 @@ namespace M3.HRON.Generator.Parser
 #>
                     case ParserState.<#=name#>:
                         Partial_StateTransition (
-                            EndOfStream,
+                            ch,
                             ParserState.<#=parserState.Name#>,
-                            next,
+                            State,
                             ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
                             ref result
                             );
@@ -370,11 +349,11 @@ namespace M3.HRON.Generator.Parser
         {
             var name = nextParserState.Names[0]; 
 #>
-                    next = ParserState.<#=name#>; 
+                    State = ParserState.<#=name#>; 
                     Partial_StateTransition (
                         ch,
                         ParserState.<#=parserState.Name#>,
-                        next,
+                        ParserState.<#=name#>,
                         ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
                         ref result
                         );
@@ -385,7 +364,7 @@ namespace M3.HRON.Generator.Parser
 #>
                     if (result == ParserResult.Continue)
                     {
-                        AcceptCharacter (ch);    
+                        result = AcceptCharacter (ch);    
                     }   
 <#
     }
@@ -403,8 +382,6 @@ namespace M3.HRON.Generator.Parser
                 result = ParserResult.Error;
                 break;
             }
-
-            State = next;
 
             return result;
         }
@@ -430,6 +407,25 @@ namespace M3.HRON.Generator.Parser
             IsDefault   = isDefault         ; 
         }
 
+        public bool OnlyHasDefault 
+        {
+            get
+            {
+                var count = this.Count ();
+                if (count == 0)
+                {
+                    return true;
+                }
+
+                if (count == 1)
+                {
+                    return this.First().IsDefaultCase;
+                }
+
+                return false;
+            }
+        }
+
         public IEnumerable<NextParserState> NextStates (ParserState defaultState)
         {
             return AllStates (defaultState).Where (nsp => !nsp.IsNoCase);
@@ -437,12 +433,12 @@ namespace M3.HRON.Generator.Parser
 
         public IEnumerable<NextParserState> AllStates (ParserState defaultState)
         {
-            foreach (var nextParserState in this.Where (nsp => !nsp.IsDefault))
+            foreach (var nextParserState in this.Where (nsp => !nsp.IsDefaultCase))
             {
                 yield return nextParserState;
             }
 
-            var defaultCase = this.FirstOrDefault (nsp => nsp.IsDefault);
+            var defaultCase = this.FirstOrDefault (nsp => nsp.IsDefaultCase);
             if (defaultCase != null)
             {
                 yield return defaultCase;
@@ -484,6 +480,14 @@ namespace M3.HRON.Generator.Parser
             HandOver    = handOver                              ;
         }
 
+        public bool IsDefaultHandOver
+        {
+            get
+            {
+                return HandOver && (IsNoCase || IsDefaultCase);
+            }
+        }
+
         public bool IsNoCase
         {
             get
@@ -500,7 +504,7 @@ namespace M3.HRON.Generator.Parser
             }
         }
 
-        public bool IsDefault
+        public bool IsDefaultCase
         {
             get
             {
