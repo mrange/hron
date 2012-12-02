@@ -57,7 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="CSharpParserGenerator.ttinclude" />
+    <None Include="T4\CSharpParserGenerator.ttinclude" />
     <None Include="Generated_Parser.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_Parser.cs</LastGenOutput>
@@ -67,7 +67,7 @@
       <LastGenOutput>Include_T4Include.cs</LastGenOutput>
     </None>
     <None Include="packages.config" />
-    <None Include="ParserGenerator.ttinclude" />
+    <None Include="T4\ParserGenerator.ttinclude" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
