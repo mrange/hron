@@ -6,105 +6,111 @@
 
     var model = new []
         {
-            new ParserState ("Error", isDefault:true    )     
+            new ParserState ("Error", isDefault:true)     
             {
-                new NextParserState ("Error"        , ""    ),
+                Next        (DefaultCase        , "Error"       ),
+            },
+
+            new ParserState ("Indention")     
+            {
+                Next        ("\t"       , "Indention"                   ),
+                HandOver    (DefaultCase, "TagExpected" 
+                                        , "ValueLine" 
+                                        , "OtherValueLine"      
+                                        , "Error"                       ),
             },
 
             new ParserState ("TagExpected")     
             {
-                new NextParserState ("TagExpected"  , "\t"  ),
-                new NextParserState ("ObjectTag"    , "@"   ),
-                new NextParserState ("ValueTag"     , "="   ),
-                new NextParserState ("CommentTag"   , "#"   ),
-                new NextParserState ("EmptyTag"     , " "   ),
-                new NextParserState ("EndOfEmptyTag", "\r\n"),
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
+                Next        ("@"        , "ObjectTag"           ),
+                Next        ("="        , "ValueTag"            ),
+                Next        ("#"        , "CommentTag"          ),
+                Next        ("\t "      , "EmptyTag"            ),
             },
 
             new ParserState ("ObjectTag")     
             {
-                new NextParserState ("EndOfObjectTag"   , "\r\n"),
-                new NextParserState ("ObjectTag"                ),
+                Terminator  (NoCase     , "EndOfObjectTag"      ),
+                Next        (DefaultCase, "ObjectTag"           ),
             },
 
             new ParserState ("ValueTag")     
             {
-                new NextParserState ("EndOfValueTag", "\r\n"),
-                new NextParserState ("ValueTag"             ),
+                Terminator  (NoCase     , "EndOfValueTag"       ),
+                Next        (DefaultCase, "ValueTag"            ),
             },
 
             new ParserState ("EmptyTag")     
             {
-                new NextParserState ("EndOfEmptyTag", "\r\n"),
-                new NextParserState ("EmptyTag"     , "\t " ),
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
+                Next        ("\t "      , "EmptyTag"            ),
             },
 
             new ParserState ("CommentTag")     
             {
-                new NextParserState ("EndOfCommentTag"  , "\r\n"),
-                new NextParserState ("CommentTag"               ),
+                Terminator  (NoCase     , "EndOfCommentTag"     ),
+                Next        (DefaultCase, "CommentTag"          ),
             },
 
             new ParserState ("EndOfObjectTag")     
             {
-                new NextParserState ("EndOfObjectTag"   , "\n"  ),
-                new NextParserState ("TagExpected"              ),
+                HandOver    (DefaultCase, "Indention"           ),
             },
 
             new ParserState ("EndOfEmptyTag")     
             {
-                new NextParserState ("EndOfEmptyTag"    , "\n"  ),
-                new NextParserState ("TagExpected"              ),
+                HandOver    (DefaultCase, "Indention"           ),
             },
 
             new ParserState ("EndOfValueTag")     
             {
-                new NextParserState ("EndOfValueTag"    , "\n"  ),
-                new NextParserState ("ValueExpected"            ),
+                HandOver    (DefaultCase, "Indention"           ),
             },
 
             new ParserState ("EndOfCommentTag")     
             {
-                new NextParserState ("EndOfCommentTag"  , "\n"  ),
-                new NextParserState ("TagExpected"              ),
-            },
-
-            new ParserState ("ValueExpected")     
-            {
-                new NextParserState ("ValueExpected"    , "\t"  ),
-                new NextParserState ("CommentLine"      , "#"   ),
-                new NextParserState ("EndOfEmptyLine"   , "\r\n"),
-                new NextParserState ("ValueLine"                ),
-            },
-
-            new ParserState ("CommentLine")     
-            {
-                new NextParserState ("EndOfCommmentLine"    , "\r\n"),
-                new NextParserState ("CommentLine"                  ),
+                HandOver    (DefaultCase, "Indention"           ),
             },
 
             new ParserState ("ValueLine")     
             {
-                new NextParserState ("EndOfValueLine"       , "\r\n"),
-                new NextParserState ("ValueLine"                    ),
+                Terminator  (NoCase     , "EndOfValueLine"      ),
+                Next        (DefaultCase, "ValueLine"           ),
             },
 
-            new ParserState ("EndOfEmptyLine")     
+            new ParserState ("OtherValueLine")     
             {
-                new NextParserState ("EndOfEmptyLine"       , "\n"  ),
-                new NextParserState ("TagExpected"                  ),
+                Terminator  (NoCase     , "EndOfEmptyLine"      ),
+                Next        ("#"        , "CommentLine"         ),
+                Next        (" "        , "EmptyLine"           ),
             },
 
-            new ParserState ("EndOfCommmentLine")     
+            new ParserState ("CommentLine")     
             {
-                new NextParserState ("EndOfCommmentLine"    , "\n"  ),
-                new NextParserState ("ValueExpected"                ),
+                Terminator  (NoCase     , "EndOfCommentLine"    ),
+                Next        (DefaultCase, "CommentLine"         ),
+            },
+
+            new ParserState ("EmptyLine")     
+            {
+                Terminator  (NoCase     , "EndOfEmptyLine"      ),
+                Next        ("\t "      , "EmptyLine"           ),
             },
 
             new ParserState ("EndOfValueLine")     
             {
-                new NextParserState ("EndOfValueLine"       , "\n"  ),
-                new NextParserState ("TagExpected"                  ),
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("EndOfCommentLine")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("EndOfEmptyLine")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
             },
 
         };
@@ -112,7 +118,7 @@
 #>
 
 <#
-
+    
     var defaultState = model
         .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
 #>
@@ -136,10 +142,25 @@ namespace M3.HRON.Generator.Parser
 <#
     foreach (var parserState in model)
     {
-        foreach (var nextParserState in parserState.NextStates(defaultState))
+        foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
         {
 #>
-            From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
+            From_<#=parserState.Name#>__To_<#=name#>,
+<#
+        }
+    }
+#>
+    }
+
+    enum ParserStateChoice
+    {
+<#
+    foreach (var parserState in model)
+    {
+        foreach (var nextParserState in parserState.ChoiceStates(defaultState))
+        {
+#>
+            From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
 <#
         }
     }
@@ -150,44 +171,139 @@ namespace M3.HRON.Generator.Parser
     {
         Error   ,
         Continue,
-        Done    ,
     }
 
     sealed partial class Scanner
     {
         ParserState State = default (ParserState);
 
-        partial void Partial_ComputeNewState (
+        partial void Partial_BeginLine (string l);
+        partial void Partial_EndLine (string l);
+
+        partial void Partial_StateChoice (
+            char                    current     ,
+            ParserStateChoice       choice      ,
+            ParserState             from        ,
+            ref ParserState         to
+            );
+
+        partial void Partial_StateTransition (
             char                    current     ,
             ParserState             from        ,
             ParserState             to          ,
             ParserStateTransition   transition  ,
-            ref ParserResult        result      ,
-            ref ParserState         newState
+            ref ParserResult        result      
             );
                 
         public ParserResult AcceptLine (string l)
         {
             l = l ?? "";
 
-            for (var iter = 0; iter < l.Length; ++iter)
+            var result = ParserResult.Continue;
+            var length = l.Length;
+
+            Partial_BeginLine (l);
+
+            for (var iter = 0; (iter < length) & (result == ParserResult.Continue); ++iter)
             {
-                switch (AcceptCharacter (l[iter]))
-                {
-                case ParserResult.Continue:
-                    break;
-                case ParserResult.Done:
-                    return ParserResult.Done;
-                case ParserResult.Error:
-                default:
-                    return ParserResult.Error;
-                }
+                result = AcceptCharacter (l[iter]);
             }
-            return ParserResult.Continue;
+
+            AcceptEndOfLine ();
+
+            Partial_EndLine (l);
+
+            return result;
         }
 
-        public ParserResult AcceptCharacter (char ch)
+        const char EndOfStream = (char)0;
+
+        ParserResult AcceptEndOfLine ()
         {
+            var next = default (ParserState);
+            var result = ParserResult.Continue; 
+            switch (State)
+            {
+<#
+    foreach (var parserState in model.Where (ps => ps.Any (nps => nps.IsTerminator)))
+    {
+#>
+            case ParserState.<#=parserState.Name#>:
+<#
+        var nextParserState = parserState.First (nps => nps.IsTerminator);
+        if (nextParserState.IsChoice)
+        {
+#>
+                Partial_StateChoice (
+                    EndOfStream,
+                    ParserStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
+                    ParserState.<#=parserState.Name#>,
+                    ref next
+                    );
+
+                switch (next)
+                {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                case ParserState.<#=name#>:
+                    Partial_StateTransition (
+                        EndOfStream,
+                        ParserState.<#=parserState.Name#>,
+                        next,
+                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
+                        ref result
+                        );
+                    break;
+<#
+        }
+#>
+                    default:
+                        result = ParserResult.Error;
+                        break;
+                }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+#>
+                next = ParserState.<#=name#>; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.<#=parserState.Name#>,
+                    next,
+                    ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
+                    ref result
+                    );
+
+<#
+        }
+    if (nextParserState.HandOver)
+    {
+#>
+                if (result == ParserResult.Continue)
+                {
+                    AcceptEndOfLine ();    
+                }   
+<#
+    }
+#>
+                break;
+<#
+    }
+#>
+            }
+
+            State = next;
+
+            return result;
+        }
+
+        ParserResult AcceptCharacter (char ch)
+        {
+            var next = default (ParserState);
             var result = ParserResult.Continue; 
             switch (State)
             {
@@ -205,15 +321,6 @@ namespace M3.HRON.Generator.Parser
         {
 #>
                 default:
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.<#=parserState.Name#>,
-                        ParserState.<#=nextParserState.Name#>,
-                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
-                        ref result,
-                        ref State
-                        );
-                    break;
 <#
         }
         else
@@ -224,18 +331,67 @@ namespace M3.HRON.Generator.Parser
                 case <#=GetCase(ch)#>:
 <#
             }
+        }
+        if (nextParserState.IsChoice)
+        {
 #>
-                    Partial_ComputeNewState (
-                        ch,
+                    Partial_StateChoice (
+                        EndOfStream,
+                        ParserStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
                         ParserState.<#=parserState.Name#>,
-                        ParserState.<#=nextParserState.Name#>,
-                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=nextParserState.Name#>,
-                        ref result,
-                        ref State
+                        ref next
                         );
-                    break;
+
+                    switch (next)
+                    {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                    case ParserState.<#=name#>:
+                        Partial_StateTransition (
+                            EndOfStream,
+                            ParserState.<#=parserState.Name#>,
+                            next,
+                            ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
+                            ref result
+                            );
+                        break;
 <#
         }
+#>
+                    default:
+                        result = ParserResult.Error;
+                        break;
+                }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+#>
+                    next = ParserState.<#=name#>; 
+                    Partial_StateTransition (
+                        ch,
+                        ParserState.<#=parserState.Name#>,
+                        next,
+                        ParserStateTransition.From_<#=parserState.Name#>__To_<#=name#>,
+                        ref result
+                        );
+<#
+        }
+    if (nextParserState.HandOver)
+    {
+#>
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
+<#
+    }
+#>
+                    break;
+<#
     }
 #>    
                 }
@@ -248,6 +404,8 @@ namespace M3.HRON.Generator.Parser
                 break;
             }
 
+            State = next;
+
             return result;
         }
 
@@ -257,6 +415,9 @@ namespace M3.HRON.Generator.Parser
 }
 
 <#+
+
+    const string DefaultCase    = "<<DefaultCase>>";
+    const string NoCase         = "<<NoCase>>";
 
     sealed class ParserState : BaseContainer<Root, NextParserState>
     {
@@ -271,6 +432,11 @@ namespace M3.HRON.Generator.Parser
 
         public IEnumerable<NextParserState> NextStates (ParserState defaultState)
         {
+            return AllStates (defaultState).Where (nsp => !nsp.IsNoCase);
+        }
+
+        public IEnumerable<NextParserState> AllStates (ParserState defaultState)
+        {
             foreach (var nextParserState in this.Where (nsp => !nsp.IsDefault))
             {
                 yield return nextParserState;
@@ -283,30 +449,79 @@ namespace M3.HRON.Generator.Parser
             }
             else
             {
-                yield return new NextParserState (defaultState.Name);
+                yield return Next (DefaultCase, defaultState.Name);
             }
+        }
+
+        public IEnumerable<NextParserState> ChoiceStates (ParserState defaultState)
+        {
+            return AllStates (defaultState).Where (nsp => nsp.IsChoice);
         }
 
     }
 
     sealed class NextParserState : BaseEntity<ParserState>
     {
-        public readonly string Name         ;
-        public readonly string Characters   ;
+        public readonly string[]    Names       ;
+        public readonly string      Characters  ;
+        public readonly bool        IsTerminator;
+        public readonly bool        HandOver    ;
 
-        public NextParserState (string name, string characters = null)
+        public NextParserState (
+            string[] names, 
+            string characters, 
+            bool isTerminator, 
+            bool handOver
+            )
         {
-            Name        = name          ?? S_NoName ;
-            Characters  = characters    ?? ""       ;
+            Names       = names         ?? new string [0]       ;
+            if (Names.Length < 1)
+            {
+                Names = new [] {S_NoName};
+            }
+            Characters  = characters    ?? ""                   ;
+            IsTerminator= isTerminator                          ;
+            HandOver    = handOver                              ;
+        }
+
+        public bool IsNoCase
+        {
+            get
+            {
+                return ReferenceEquals (Characters, NoCase);
+            }
+        }
+
+        public bool IsChoice 
+        {
+            get
+            {
+                return Names.Length > 1;
+            }
         }
 
         public bool IsDefault
         {
             get
             {
-                return Characters.Length == 0;
+                return ReferenceEquals (Characters, DefaultCase);
             }
         }
+    }
+
+    static NextParserState Next (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:false, handOver:false);
+    }
+
+    static NextParserState HandOver (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:false, handOver:true);
+    }
+
+    static NextParserState Terminator (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:true, handOver:false);
     }
 
     static string GetCase (char ch)
