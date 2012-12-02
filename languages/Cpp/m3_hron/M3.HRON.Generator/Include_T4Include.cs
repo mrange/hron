@@ -16,10 +16,15 @@
 // @@@ INCLUDE_FOUND: ../Common/Config.cs
 // @@@ INCLUDE_FOUND: ../Common/Log.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/SubString.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/ConsoleLog.cs
+// @@@ INCLUDE_FOUND: Config.cs
+// @@@ INCLUDE_FOUND: Log.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Array.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Log.cs
 // @@@ INCLUDE_FOUND: Generated_Log.cs
+// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
+// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Log.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs
 // ############################################################################
 // Certains directives such as #define and // Resharper comments has to be 
@@ -663,6 +668,60 @@ namespace M3.HRON.Generator
     // You must not remove this notice, or any other, from this software.
     // ----------------------------------------------------------------------------------------------
     
+    
+    
+    namespace Source.Common
+    {
+        using System;
+        using System.Globalization;
+    
+        partial class Log
+        {
+            static readonly object s_colorLock = new object ();
+            static partial void Partial_LogMessage (Level level, string message)
+            {
+                var now = DateTime.Now;
+                var finalMessage = string.Format (
+                    Config.DefaultCulture,
+                    "{0:HHmmss} {1} : {2}",
+                    now,
+                    GetLevelMessage (level),
+                    message
+                    );
+                lock (s_colorLock)
+                {
+                    var oldColor = Console.ForegroundColor;
+                    Console.ForegroundColor = GetLevelColor (level);
+                    try
+                    {
+                        Console.WriteLine (finalMessage);
+                    }
+                    finally
+                    {
+                        Console.ForegroundColor = oldColor;
+                    }
+    
+                }
+            }
+        }
+    }
+}
+
+// ############################################################################
+namespace M3.HRON.Generator
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
     namespace Source.Common
     {
         static class Array<T>
@@ -899,14 +958,15 @@ namespace M3.HRON.Generator.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-12-02T12:59:33";
+        public const string IncludeDate     = @"2012-12-02T19:44:57";
 
         public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
         public const string Include_1       = @"mrange/T4Include/master/Common/SubString.cs";
-        public const string Include_2       = @"https://raw.github.com/mrange/T4Include/master/Common/Array.cs";
-        public const string Include_3       = @"https://raw.github.com/mrange/T4Include/master/Common/Config.cs";
-        public const string Include_4       = @"https://raw.github.com/mrange/T4Include/master/Common/Log.cs";
-        public const string Include_5       = @"https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs";
+        public const string Include_2       = @"mrange/T4Include/master/Common/ConsoleLog.cs";
+        public const string Include_3       = @"https://raw.github.com/mrange/T4Include/master/Common/Array.cs";
+        public const string Include_4       = @"https://raw.github.com/mrange/T4Include/master/Common/Config.cs";
+        public const string Include_5       = @"https://raw.github.com/mrange/T4Include/master/Common/Log.cs";
+        public const string Include_6       = @"https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs";
     }
 }
 // ############################################################################
