@@ -20,6 +20,7 @@ namespace M3.HRON.Generator.Parser
     enum ParserState
     {
         Error,
+        Indention,
         TagExpected,
         ObjectTag,
         ValueTag,
@@ -29,23 +30,28 @@ namespace M3.HRON.Generator.Parser
         EndOfEmptyTag,
         EndOfValueTag,
         EndOfCommentTag,
-        ValueExpected,
-        CommentLine,
         ValueLine,
-        EndOfEmptyLine,
-        EndOfCommmentLine,
+        OtherValueLine,
+        CommentLine,
+        EmptyLine,
         EndOfValueLine,
+        EndOfCommentLine,
+        EndOfEmptyLine,
     }
 
     enum ParserStateTransition
     {
             From_Error__To_Error,
-            From_TagExpected__To_TagExpected,
+            From_Indention__To_Indention,
+            From_Indention__To_TagExpected,
+            From_Indention__To_ValueLine,
+            From_Indention__To_OtherValueLine,
+            From_Indention__To_Error,
+            From_TagExpected__To_EndOfEmptyTag,
             From_TagExpected__To_ObjectTag,
             From_TagExpected__To_ValueTag,
             From_TagExpected__To_CommentTag,
             From_TagExpected__To_EmptyTag,
-            From_TagExpected__To_EndOfEmptyTag,
             From_TagExpected__To_Error,
             From_ObjectTag__To_EndOfObjectTag,
             From_ObjectTag__To_ObjectTag,
@@ -56,72 +62,197 @@ namespace M3.HRON.Generator.Parser
             From_EmptyTag__To_Error,
             From_CommentTag__To_EndOfCommentTag,
             From_CommentTag__To_CommentTag,
-            From_EndOfObjectTag__To_EndOfObjectTag,
-            From_EndOfObjectTag__To_TagExpected,
-            From_EndOfEmptyTag__To_EndOfEmptyTag,
-            From_EndOfEmptyTag__To_TagExpected,
-            From_EndOfValueTag__To_EndOfValueTag,
-            From_EndOfValueTag__To_ValueExpected,
-            From_EndOfCommentTag__To_EndOfCommentTag,
-            From_EndOfCommentTag__To_TagExpected,
-            From_ValueExpected__To_ValueExpected,
-            From_ValueExpected__To_CommentLine,
-            From_ValueExpected__To_EndOfEmptyLine,
-            From_ValueExpected__To_ValueLine,
-            From_CommentLine__To_EndOfCommmentLine,
-            From_CommentLine__To_CommentLine,
+            From_EndOfObjectTag__To_Indention,
+            From_EndOfEmptyTag__To_Indention,
+            From_EndOfValueTag__To_Indention,
+            From_EndOfCommentTag__To_Indention,
             From_ValueLine__To_EndOfValueLine,
             From_ValueLine__To_ValueLine,
-            From_EndOfEmptyLine__To_EndOfEmptyLine,
-            From_EndOfEmptyLine__To_TagExpected,
-            From_EndOfCommmentLine__To_EndOfCommmentLine,
-            From_EndOfCommmentLine__To_ValueExpected,
-            From_EndOfValueLine__To_EndOfValueLine,
-            From_EndOfValueLine__To_TagExpected,
+            From_OtherValueLine__To_EndOfEmptyLine,
+            From_OtherValueLine__To_CommentLine,
+            From_OtherValueLine__To_EmptyLine,
+            From_OtherValueLine__To_Error,
+            From_CommentLine__To_EndOfCommentLine,
+            From_CommentLine__To_CommentLine,
+            From_EmptyLine__To_EndOfEmptyLine,
+            From_EmptyLine__To_EmptyLine,
+            From_EmptyLine__To_Error,
+            From_EndOfValueLine__To_Indention,
+            From_EndOfCommentLine__To_Indention,
+            From_EndOfEmptyLine__To_Indention,
+    }
+
+    enum ParserStateChoice
+    {
+            From_Indention__Choose_TagExpected_ValueLine_OtherValueLine_Error,
     }
 
     enum ParserResult
     {
         Error   ,
         Continue,
-        Done    ,
     }
 
     sealed partial class Scanner
     {
         ParserState State = default (ParserState);
 
-        partial void Partial_ComputeNewState (
+        partial void Partial_BeginLine (string l);
+        partial void Partial_EndLine (string l);
+
+        partial void Partial_StateChoice (
+            char                    current     ,
+            ParserStateChoice       choice      ,
+            ParserState             from        ,
+            ref ParserState         to
+            );
+
+        partial void Partial_StateTransition (
             char                    current     ,
             ParserState             from        ,
             ParserState             to          ,
             ParserStateTransition   transition  ,
-            ref ParserResult        result      ,
-            ref ParserState         newState
+            ref ParserResult        result      
             );
                 
         public ParserResult AcceptLine (string l)
         {
             l = l ?? "";
 
-            for (var iter = 0; iter < l.Length; ++iter)
+            var result = ParserResult.Continue;
+            var length = l.Length;
+
+            Partial_BeginLine (l);
+
+            for (var iter = 0; (iter < length) & (result == ParserResult.Continue); ++iter)
             {
-                switch (AcceptCharacter (l[iter]))
-                {
-                case ParserResult.Continue:
-                    break;
-                case ParserResult.Done:
-                    return ParserResult.Done;
-                case ParserResult.Error:
-                default:
-                    return ParserResult.Error;
-                }
+                result = AcceptCharacter (l[iter]);
             }
-            return ParserResult.Continue;
+
+            AcceptEndOfLine ();
+
+            Partial_EndLine (l);
+
+            return result;
         }
 
-        public ParserResult AcceptCharacter (char ch)
+        const char EndOfStream = (char)0;
+
+        ParserResult AcceptEndOfLine ()
         {
+            var next = default (ParserState);
+            var result = ParserResult.Continue; 
+            switch (State)
+            {
+            case ParserState.TagExpected:
+                next = ParserState.EndOfEmptyTag; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.TagExpected,
+                    next,
+                    ParserStateTransition.From_TagExpected__To_EndOfEmptyTag,
+                    ref result
+                    );
+
+                break;
+            case ParserState.ObjectTag:
+                next = ParserState.EndOfObjectTag; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.ObjectTag,
+                    next,
+                    ParserStateTransition.From_ObjectTag__To_EndOfObjectTag,
+                    ref result
+                    );
+
+                break;
+            case ParserState.ValueTag:
+                next = ParserState.EndOfValueTag; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.ValueTag,
+                    next,
+                    ParserStateTransition.From_ValueTag__To_EndOfValueTag,
+                    ref result
+                    );
+
+                break;
+            case ParserState.EmptyTag:
+                next = ParserState.EndOfEmptyTag; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.EmptyTag,
+                    next,
+                    ParserStateTransition.From_EmptyTag__To_EndOfEmptyTag,
+                    ref result
+                    );
+
+                break;
+            case ParserState.CommentTag:
+                next = ParserState.EndOfCommentTag; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.CommentTag,
+                    next,
+                    ParserStateTransition.From_CommentTag__To_EndOfCommentTag,
+                    ref result
+                    );
+
+                break;
+            case ParserState.ValueLine:
+                next = ParserState.EndOfValueLine; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.ValueLine,
+                    next,
+                    ParserStateTransition.From_ValueLine__To_EndOfValueLine,
+                    ref result
+                    );
+
+                break;
+            case ParserState.OtherValueLine:
+                next = ParserState.EndOfEmptyLine; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.OtherValueLine,
+                    next,
+                    ParserStateTransition.From_OtherValueLine__To_EndOfEmptyLine,
+                    ref result
+                    );
+
+                break;
+            case ParserState.CommentLine:
+                next = ParserState.EndOfCommentLine; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.CommentLine,
+                    next,
+                    ParserStateTransition.From_CommentLine__To_EndOfCommentLine,
+                    ref result
+                    );
+
+                break;
+            case ParserState.EmptyLine:
+                next = ParserState.EndOfEmptyLine; 
+                Partial_StateTransition (
+                    EndOfStream,
+                    ParserState.EmptyLine,
+                    next,
+                    ParserStateTransition.From_EmptyLine__To_EndOfEmptyLine,
+                    ref result
+                    );
+
+                break;
+            }
+
+            State = next;
+
+            return result;
+        }
+
+        ParserResult AcceptCharacter (char ch)
+        {
+            var next = default (ParserState);
             var result = ParserResult.Continue; 
             switch (State)
             {
@@ -129,14 +260,85 @@ namespace M3.HRON.Generator.Parser
                 switch (ch)
                 {
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Error; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.Error,
-                        ParserState.Error,
+                        next,
                         ParserStateTransition.From_Error__To_Error,
-                        ref result,
-                        ref State
+                        ref result
                         );
+                    break;
+    
+                }
+                break;
+            case ParserState.Indention:
+                switch (ch)
+                {
+                case '\t':
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
+                        ch,
+                        ParserState.Indention,
+                        next,
+                        ParserStateTransition.From_Indention__To_Indention,
+                        ref result
+                        );
+                    break;
+                default:
+                    Partial_StateChoice (
+                        EndOfStream,
+                        ParserStateChoice.From_Indention__Choose_TagExpected_ValueLine_OtherValueLine_Error,
+                        ParserState.Indention,
+                        ref next
+                        );
+
+                    switch (next)
+                    {
+                    case ParserState.TagExpected:
+                        Partial_StateTransition (
+                            EndOfStream,
+                            ParserState.Indention,
+                            next,
+                            ParserStateTransition.From_Indention__To_TagExpected,
+                            ref result
+                            );
+                        break;
+                    case ParserState.ValueLine:
+                        Partial_StateTransition (
+                            EndOfStream,
+                            ParserState.Indention,
+                            next,
+                            ParserStateTransition.From_Indention__To_ValueLine,
+                            ref result
+                            );
+                        break;
+                    case ParserState.OtherValueLine:
+                        Partial_StateTransition (
+                            EndOfStream,
+                            ParserState.Indention,
+                            next,
+                            ParserStateTransition.From_Indention__To_OtherValueLine,
+                            ref result
+                            );
+                        break;
+                    case ParserState.Error:
+                        Partial_StateTransition (
+                            EndOfStream,
+                            ParserState.Indention,
+                            next,
+                            ParserStateTransition.From_Indention__To_Error,
+                            ref result
+                            );
+                        break;
+                    default:
+                        result = ParserResult.Error;
+                        break;
+                }
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
                     break;
     
                 }
@@ -144,75 +346,55 @@ namespace M3.HRON.Generator.Parser
             case ParserState.TagExpected:
                 switch (ch)
                 {
-                case '\t':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.TagExpected,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_TagExpected__To_TagExpected,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '@':
-                    Partial_ComputeNewState (
+                    next = ParserState.ObjectTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.TagExpected,
-                        ParserState.ObjectTag,
+                        next,
                         ParserStateTransition.From_TagExpected__To_ObjectTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
                 case '=':
-                    Partial_ComputeNewState (
+                    next = ParserState.ValueTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.TagExpected,
-                        ParserState.ValueTag,
+                        next,
                         ParserStateTransition.From_TagExpected__To_ValueTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
                 case '#':
-                    Partial_ComputeNewState (
+                    next = ParserState.CommentTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.TagExpected,
-                        ParserState.CommentTag,
+                        next,
                         ParserStateTransition.From_TagExpected__To_CommentTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
+                case '\t':
                 case ' ':
-                    Partial_ComputeNewState (
+                    next = ParserState.EmptyTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.TagExpected,
-                        ParserState.EmptyTag,
+                        next,
                         ParserStateTransition.From_TagExpected__To_EmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.TagExpected,
-                        ParserState.EndOfEmptyTag,
-                        ParserStateTransition.From_TagExpected__To_EndOfEmptyTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Error; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.TagExpected,
-                        ParserState.Error,
+                        next,
                         ParserStateTransition.From_TagExpected__To_Error,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
@@ -221,25 +403,14 @@ namespace M3.HRON.Generator.Parser
             case ParserState.ObjectTag:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ObjectTag,
-                        ParserState.EndOfObjectTag,
-                        ParserStateTransition.From_ObjectTag__To_EndOfObjectTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.ObjectTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.ObjectTag,
-                        ParserState.ObjectTag,
+                        next,
                         ParserStateTransition.From_ObjectTag__To_ObjectTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
@@ -248,25 +419,14 @@ namespace M3.HRON.Generator.Parser
             case ParserState.ValueTag:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ValueTag,
-                        ParserState.EndOfValueTag,
-                        ParserStateTransition.From_ValueTag__To_EndOfValueTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.ValueTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.ValueTag,
-                        ParserState.ValueTag,
+                        next,
                         ParserStateTransition.From_ValueTag__To_ValueTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
@@ -275,36 +435,25 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EmptyTag:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EmptyTag,
-                        ParserState.EndOfEmptyTag,
-                        ParserStateTransition.From_EmptyTag__To_EndOfEmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '\t':
                 case ' ':
-                    Partial_ComputeNewState (
+                    next = ParserState.EmptyTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EmptyTag,
-                        ParserState.EmptyTag,
+                        next,
                         ParserStateTransition.From_EmptyTag__To_EmptyTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Error; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EmptyTag,
-                        ParserState.Error,
+                        next,
                         ParserStateTransition.From_EmptyTag__To_Error,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
@@ -313,25 +462,14 @@ namespace M3.HRON.Generator.Parser
             case ParserState.CommentTag:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.CommentTag,
-                        ParserState.EndOfCommentTag,
-                        ParserStateTransition.From_CommentTag__To_EndOfCommentTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.CommentTag; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.CommentTag,
-                        ParserState.CommentTag,
+                        next,
                         ParserStateTransition.From_CommentTag__To_CommentTag,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
@@ -340,25 +478,19 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EndOfObjectTag:
                 switch (ch)
                 {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfObjectTag,
-                        ParserState.EndOfObjectTag,
-                        ParserStateTransition.From_EndOfObjectTag__To_EndOfObjectTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EndOfObjectTag,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_EndOfObjectTag__To_TagExpected,
-                        ref result,
-                        ref State
+                        next,
+                        ParserStateTransition.From_EndOfObjectTag__To_Indention,
+                        ref result
                         );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
                     break;
     
                 }
@@ -366,25 +498,19 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EndOfEmptyTag:
                 switch (ch)
                 {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfEmptyTag,
-                        ParserState.EndOfEmptyTag,
-                        ParserStateTransition.From_EndOfEmptyTag__To_EndOfEmptyTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EndOfEmptyTag,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_EndOfEmptyTag__To_TagExpected,
-                        ref result,
-                        ref State
+                        next,
+                        ParserStateTransition.From_EndOfEmptyTag__To_Indention,
+                        ref result
                         );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
                     break;
     
                 }
@@ -392,25 +518,19 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EndOfValueTag:
                 switch (ch)
                 {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfValueTag,
-                        ParserState.EndOfValueTag,
-                        ParserStateTransition.From_EndOfValueTag__To_EndOfValueTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EndOfValueTag,
-                        ParserState.ValueExpected,
-                        ParserStateTransition.From_EndOfValueTag__To_ValueExpected,
-                        ref result,
-                        ref State
+                        next,
+                        ParserStateTransition.From_EndOfValueTag__To_Indention,
+                        ref result
                         );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
                     break;
     
                 }
@@ -418,71 +538,70 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EndOfCommentTag:
                 switch (ch)
                 {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfCommentTag,
-                        ParserState.EndOfCommentTag,
-                        ParserStateTransition.From_EndOfCommentTag__To_EndOfCommentTag,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EndOfCommentTag,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_EndOfCommentTag__To_TagExpected,
-                        ref result,
-                        ref State
+                        next,
+                        ParserStateTransition.From_EndOfCommentTag__To_Indention,
+                        ref result
+                        );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
+                    break;
+    
+                }
+                break;
+            case ParserState.ValueLine:
+                switch (ch)
+                {
+                default:
+                    next = ParserState.ValueLine; 
+                    Partial_StateTransition (
+                        ch,
+                        ParserState.ValueLine,
+                        next,
+                        ParserStateTransition.From_ValueLine__To_ValueLine,
+                        ref result
                         );
                     break;
     
                 }
                 break;
-            case ParserState.ValueExpected:
+            case ParserState.OtherValueLine:
                 switch (ch)
                 {
-                case '\t':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.ValueExpected,
-                        ParserState.ValueExpected,
-                        ParserStateTransition.From_ValueExpected__To_ValueExpected,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 case '#':
-                    Partial_ComputeNewState (
+                    next = ParserState.CommentLine; 
+                    Partial_StateTransition (
                         ch,
-                        ParserState.ValueExpected,
-                        ParserState.CommentLine,
-                        ParserStateTransition.From_ValueExpected__To_CommentLine,
-                        ref result,
-                        ref State
+                        ParserState.OtherValueLine,
+                        next,
+                        ParserStateTransition.From_OtherValueLine__To_CommentLine,
+                        ref result
                         );
                     break;
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
+                case ' ':
+                    next = ParserState.EmptyLine; 
+                    Partial_StateTransition (
                         ch,
-                        ParserState.ValueExpected,
-                        ParserState.EndOfEmptyLine,
-                        ParserStateTransition.From_ValueExpected__To_EndOfEmptyLine,
-                        ref result,
-                        ref State
+                        ParserState.OtherValueLine,
+                        next,
+                        ParserStateTransition.From_OtherValueLine__To_EmptyLine,
+                        ref result
                         );
                     break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Error; 
+                    Partial_StateTransition (
                         ch,
-                        ParserState.ValueExpected,
-                        ParserState.ValueLine,
-                        ParserStateTransition.From_ValueExpected__To_ValueLine,
-                        ref result,
-                        ref State
+                        ParserState.OtherValueLine,
+                        next,
+                        ParserStateTransition.From_OtherValueLine__To_Error,
+                        ref result
                         );
                     break;
     
@@ -491,104 +610,41 @@ namespace M3.HRON.Generator.Parser
             case ParserState.CommentLine:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.CommentLine,
-                        ParserState.EndOfCommmentLine,
-                        ParserStateTransition.From_CommentLine__To_EndOfCommmentLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.CommentLine; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.CommentLine,
-                        ParserState.CommentLine,
+                        next,
                         ParserStateTransition.From_CommentLine__To_CommentLine,
-                        ref result,
-                        ref State
+                        ref result
                         );
                     break;
     
                 }
                 break;
-            case ParserState.ValueLine:
+            case ParserState.EmptyLine:
                 switch (ch)
                 {
-                case '\r':
-                case '\n':
-                    Partial_ComputeNewState (
+                case '\t':
+                case ' ':
+                    next = ParserState.EmptyLine; 
+                    Partial_StateTransition (
                         ch,
-                        ParserState.ValueLine,
-                        ParserState.EndOfValueLine,
-                        ParserStateTransition.From_ValueLine__To_EndOfValueLine,
-                        ref result,
-                        ref State
+                        ParserState.EmptyLine,
+                        next,
+                        ParserStateTransition.From_EmptyLine__To_EmptyLine,
+                        ref result
                         );
                     break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Error; 
+                    Partial_StateTransition (
                         ch,
-                        ParserState.ValueLine,
-                        ParserState.ValueLine,
-                        ParserStateTransition.From_ValueLine__To_ValueLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
-    
-                }
-                break;
-            case ParserState.EndOfEmptyLine:
-                switch (ch)
-                {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfEmptyLine,
-                        ParserState.EndOfEmptyLine,
-                        ParserStateTransition.From_EndOfEmptyLine__To_EndOfEmptyLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
-                default:
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfEmptyLine,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_EndOfEmptyLine__To_TagExpected,
-                        ref result,
-                        ref State
-                        );
-                    break;
-    
-                }
-                break;
-            case ParserState.EndOfCommmentLine:
-                switch (ch)
-                {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfCommmentLine,
-                        ParserState.EndOfCommmentLine,
-                        ParserStateTransition.From_EndOfCommmentLine__To_EndOfCommmentLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
-                default:
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfCommmentLine,
-                        ParserState.ValueExpected,
-                        ParserStateTransition.From_EndOfCommmentLine__To_ValueExpected,
-                        ref result,
-                        ref State
+                        ParserState.EmptyLine,
+                        next,
+                        ParserStateTransition.From_EmptyLine__To_Error,
+                        ref result
                         );
                     break;
     
@@ -597,25 +653,59 @@ namespace M3.HRON.Generator.Parser
             case ParserState.EndOfValueLine:
                 switch (ch)
                 {
-                case '\n':
-                    Partial_ComputeNewState (
-                        ch,
-                        ParserState.EndOfValueLine,
-                        ParserState.EndOfValueLine,
-                        ParserStateTransition.From_EndOfValueLine__To_EndOfValueLine,
-                        ref result,
-                        ref State
-                        );
-                    break;
                 default:
-                    Partial_ComputeNewState (
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
                         ch,
                         ParserState.EndOfValueLine,
-                        ParserState.TagExpected,
-                        ParserStateTransition.From_EndOfValueLine__To_TagExpected,
-                        ref result,
-                        ref State
+                        next,
+                        ParserStateTransition.From_EndOfValueLine__To_Indention,
+                        ref result
                         );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
+                    break;
+    
+                }
+                break;
+            case ParserState.EndOfCommentLine:
+                switch (ch)
+                {
+                default:
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
+                        ch,
+                        ParserState.EndOfCommentLine,
+                        next,
+                        ParserStateTransition.From_EndOfCommentLine__To_Indention,
+                        ref result
+                        );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
+                    break;
+    
+                }
+                break;
+            case ParserState.EndOfEmptyLine:
+                switch (ch)
+                {
+                default:
+                    next = ParserState.Indention; 
+                    Partial_StateTransition (
+                        ch,
+                        ParserState.EndOfEmptyLine,
+                        next,
+                        ParserStateTransition.From_EndOfEmptyLine__To_Indention,
+                        ref result
+                        );
+                    if (result == ParserResult.Continue)
+                    {
+                        AcceptCharacter (ch);    
+                    }   
                     break;
     
                 }
@@ -624,6 +714,8 @@ namespace M3.HRON.Generator.Parser
                 result = ParserResult.Error;
                 break;
             }
+
+            State = next;
 
             return result;
         }
