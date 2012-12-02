@@ -1,4 +1,5 @@
-﻿<#@ include file="Header.ttinclude" #>
+﻿<#@ include file="CHeader.ttinclude" #>
+
 
 <#
     
@@ -6,58 +7,55 @@
         .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
 #>
 
-namespace M3.HRON.Generator.Parser
+enum ParserState
 {
-    using M3.HRON.Generator.Source.Common;
+<#
+foreach (var parserState in model)
+{
+#>
+    PS_<#=parserState.Name#>,
+<#
+}
+#>
+};
 
-    enum ParserState
-    {
+enum ParserStateTransition
+{
 <#
-    foreach (var parserState in model)
+foreach (var parserState in model)
+{
+    foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
     {
 #>
-        <#=parserState.Name#>,
+        PST_From_<#=parserState.Name#>__To_<#=name#>,
 <#
     }
+}
 #>
-    }
+};
 
-    enum ParserStateTransition
-    {
+enum ParserStateChoice
+{
 <#
-    foreach (var parserState in model)
+foreach (var parserState in model)
+{
+    foreach (var nextParserState in parserState.ChoiceStates(defaultState))
     {
-        foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
-        {
 #>
-            From_<#=parserState.Name#>__To_<#=name#>,
+        PSC_From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
 <#
-        }
     }
+}
 #>
-    }
+};
 
-    enum ParserStateChoice
-    {
-<#
-    foreach (var parserState in model)
-    {
-        foreach (var nextParserState in parserState.ChoiceStates(defaultState))
-        {
-#>
-            From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
-<#
-        }
-    }
-#>
-    }
+enum ParserResult
+{
+    PR_Error   ,
+    PR_Continue,
+};
 
-    enum ParserResult
-    {
-        Error   ,
-        Continue,
-    }
-
+/*
     sealed partial class Scanner
     {
         ParserState State = default (ParserState);
@@ -298,6 +296,6 @@ namespace M3.HRON.Generator.Parser
             return result;
         }
     }
-}
 
+*/
 <#@ include file="ParserGenerator.ttinclude"#>

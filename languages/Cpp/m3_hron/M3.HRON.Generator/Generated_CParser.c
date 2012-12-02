@@ -14,70 +14,68 @@
 
 
 
-namespace M3.HRON.Generator.Parser
+
+enum ParserState
 {
-    using M3.HRON.Generator.Source.Common;
+    PS_Error,
+    PS_Indention,
+    PS_TagExpected,
+    PS_ObjectTag,
+    PS_ValueTag,
+    PS_EmptyTag,
+    PS_CommentTag,
+    PS_EndOfObjectTag,
+    PS_EndOfEmptyTag,
+    PS_EndOfValueTag,
+    PS_EndOfCommentTag,
+    PS_ValueLine,
+    PS_EndOfValueLine,
+};
 
-    enum ParserState
-    {
-        Error,
-        Indention,
-        TagExpected,
-        ObjectTag,
-        ValueTag,
-        EmptyTag,
-        CommentTag,
-        EndOfObjectTag,
-        EndOfEmptyTag,
-        EndOfValueTag,
-        EndOfCommentTag,
-        ValueLine,
-        EndOfValueLine,
-    }
+enum ParserStateTransition
+{
+        PST_From_Error__To_Error,
+        PST_From_Indention__To_EndOfEmptyTag,
+        PST_From_Indention__To_Indention,
+        PST_From_Indention__To_TagExpected,
+        PST_From_Indention__To_ValueLine,
+        PST_From_Indention__To_Error,
+        PST_From_TagExpected__To_EndOfEmptyTag,
+        PST_From_TagExpected__To_ObjectTag,
+        PST_From_TagExpected__To_ValueTag,
+        PST_From_TagExpected__To_CommentTag,
+        PST_From_TagExpected__To_EmptyTag,
+        PST_From_TagExpected__To_Error,
+        PST_From_ObjectTag__To_EndOfObjectTag,
+        PST_From_ObjectTag__To_ObjectTag,
+        PST_From_ValueTag__To_EndOfValueTag,
+        PST_From_ValueTag__To_ValueTag,
+        PST_From_EmptyTag__To_EndOfEmptyTag,
+        PST_From_EmptyTag__To_EmptyTag,
+        PST_From_EmptyTag__To_Error,
+        PST_From_CommentTag__To_EndOfCommentTag,
+        PST_From_CommentTag__To_CommentTag,
+        PST_From_EndOfObjectTag__To_Indention,
+        PST_From_EndOfEmptyTag__To_Indention,
+        PST_From_EndOfValueTag__To_Indention,
+        PST_From_EndOfCommentTag__To_Indention,
+        PST_From_ValueLine__To_EndOfValueLine,
+        PST_From_ValueLine__To_ValueLine,
+        PST_From_EndOfValueLine__To_Indention,
+};
 
-    enum ParserStateTransition
-    {
-            From_Error__To_Error,
-            From_Indention__To_EndOfEmptyTag,
-            From_Indention__To_Indention,
-            From_Indention__To_TagExpected,
-            From_Indention__To_ValueLine,
-            From_Indention__To_Error,
-            From_TagExpected__To_EndOfEmptyTag,
-            From_TagExpected__To_ObjectTag,
-            From_TagExpected__To_ValueTag,
-            From_TagExpected__To_CommentTag,
-            From_TagExpected__To_EmptyTag,
-            From_TagExpected__To_Error,
-            From_ObjectTag__To_EndOfObjectTag,
-            From_ObjectTag__To_ObjectTag,
-            From_ValueTag__To_EndOfValueTag,
-            From_ValueTag__To_ValueTag,
-            From_EmptyTag__To_EndOfEmptyTag,
-            From_EmptyTag__To_EmptyTag,
-            From_EmptyTag__To_Error,
-            From_CommentTag__To_EndOfCommentTag,
-            From_CommentTag__To_CommentTag,
-            From_EndOfObjectTag__To_Indention,
-            From_EndOfEmptyTag__To_Indention,
-            From_EndOfValueTag__To_Indention,
-            From_EndOfCommentTag__To_Indention,
-            From_ValueLine__To_EndOfValueLine,
-            From_ValueLine__To_ValueLine,
-            From_EndOfValueLine__To_Indention,
-    }
+enum ParserStateChoice
+{
+        PSC_From_Indention__Choose_TagExpected_ValueLine_Error,
+};
 
-    enum ParserStateChoice
-    {
-            From_Indention__Choose_TagExpected_ValueLine_Error,
-    }
+enum ParserResult
+{
+    PR_Error   ,
+    PR_Continue,
+};
 
-    enum ParserResult
-    {
-        Error   ,
-        Continue,
-    }
-
+/*
     sealed partial class Scanner
     {
         ParserState State = default (ParserState);
@@ -558,6 +556,6 @@ namespace M3.HRON.Generator.Parser
             return result;
         }
     }
-}
 
+*/
 

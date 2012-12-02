@@ -13,6 +13,8 @@
 // -----------------------------------------------------------------------------
 #include "hron_parser.h"
 // -----------------------------------------------------------------------------
+#include "../M3.HRON.Generator/Generated_CParser.c"
+// -----------------------------------------------------------------------------
 #include <memory.h>
 #include <stdlib.h>
 // -----------------------------------------------------------------------------
@@ -39,7 +41,11 @@ typedef struct tag__secret__parser_state* secret__parser_state;
 static void empty_void_method ()
 {
 }
-
+enum TTTT
+{
+    XX,
+    YY,
+};
 static void empty_string_method (hron_string_type s, int begin, int end)
 {
 }

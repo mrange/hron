@@ -1,0 +1,85 @@
+﻿<#
+
+    var model = new []
+        {
+            new ParserState ("Error", isDefault:true)     
+            {
+                Next        (DefaultCase        , "Error"       ),
+            },
+
+            new ParserState ("Indention")     
+            {
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
+                Next        ("\t"       , "Indention"                   ),
+                HandOver    (DefaultCase, "TagExpected" 
+                                        , "ValueLine" 
+                                        , "Error"                       ),
+            },
+
+            new ParserState ("TagExpected")     
+            {
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
+                Next        ("@"        , "ObjectTag"           ),
+                Next        ("="        , "ValueTag"            ),
+                Next        ("#"        , "CommentTag"          ),
+                Next        ("\t "      , "EmptyTag"            ),
+            },
+
+            new ParserState ("ObjectTag")     
+            {
+                Terminator  (NoCase     , "EndOfObjectTag"      ),
+                Next        (DefaultCase, "ObjectTag"           ),
+            },
+
+            new ParserState ("ValueTag")     
+            {
+                Terminator  (NoCase     , "EndOfValueTag"       ),
+                Next        (DefaultCase, "ValueTag"            ),
+            },
+
+            new ParserState ("EmptyTag")     
+            {
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
+                Next        ("\t "      , "EmptyTag"            ),
+            },
+
+            new ParserState ("CommentTag")     
+            {
+                Terminator  (NoCase     , "EndOfCommentTag"     ),
+                Next        (DefaultCase, "CommentTag"          ),
+            },
+
+            new ParserState ("EndOfObjectTag")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("EndOfEmptyTag")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("EndOfValueTag")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("EndOfCommentTag")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+            new ParserState ("ValueLine")     
+            {
+                Terminator  (NoCase     , "EndOfValueLine"      ),
+                Next        (DefaultCase, "ValueLine"           ),
+            },
+
+            new ParserState ("EndOfValueLine")     
+            {
+                HandOver    (DefaultCase, "Indention"           ),
+            },
+
+        };
+
+#>
