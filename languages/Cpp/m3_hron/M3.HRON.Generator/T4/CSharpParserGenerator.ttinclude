@@ -42,7 +42,7 @@ namespace M3.HRON.Generator.Parser
         ParserState State = default (ParserState);
         const char EndOfStream = (char)0;
 
-        partial void Partial_BeginLine (SubString ss);
+        partial void Partial_BeginLine ();
         partial void Partial_EndLine ();
 
 <#
@@ -51,10 +51,7 @@ namespace M3.HRON.Generator.Parser
         foreach (var nextParserState in parserState.ChoiceStates(defaultState))
         {
 #>
-        partial void Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> (
-            char                    current     ,
-            ref ParserState         to
-            );
+        partial void Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> ();
 <#
         }
     }
@@ -64,24 +61,15 @@ namespace M3.HRON.Generator.Parser
     foreach (var parserState in model)
     {
 #>
-        partial void Partial_StateTransition__From_<#=parserState.Name#> (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__From_<#=parserState.Name#> ();
 
-        partial void Partial_StateTransition__To_<#=parserState.Name#> (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_<#=parserState.Name#> ();
 
 <#
         foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
         {
 #>
-            partial void Partial_StateTransition__From_<#=parserState.Name#>__To_<#=name#> (
-                char                    current     ,
-                ref ParserResult        result      
-                );
+            partial void Partial_StateTransition__From_<#=parserState.Name#>__To_<#=name#> ();
 <#
         }
     }
@@ -89,6 +77,10 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_AcceptEndOfStream ();
                 
+        ParserResult Result;
+        SubString    CurrentLine;
+        char         CurrentCharacter;
+
         public void AcceptEndOfStream ()
         {
             Partial_AcceptEndOfStream ();
@@ -96,20 +88,20 @@ namespace M3.HRON.Generator.Parser
 
         public bool AcceptLine (SubString ss)
         {
-            var result = ParserResult.Continue;
+            Result = ParserResult.Continue;
+            CurrentLine = ss;
 
-            Partial_BeginLine (ss);
+            Partial_BeginLine ();
 
             var bs = ss.BaseString;
             var begin = ss.Begin;
             var end = ss.End;
-            char ch;
 
             for (var iter = begin; iter < end; ++iter)
             {
-                ch = bs[iter];
+                CurrentCharacter = bs[iter];
 apply:
-                if (result != ParserResult.Continue)
+                if (Result != ParserResult.Continue)
                 {
                     break;
                 }
@@ -121,7 +113,7 @@ apply:
     {
 #>
                 case ParserState.<#=parserState.Name#>:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
 <#
     foreach (var nextParserState in parserState.NextStates (defaultState))
@@ -161,7 +153,7 @@ apply:
         }
 #>
                         default:
-                            result = ParserResult.Error;
+                            Result = ParserResult.Error;
                             break;
                     }
 <#
@@ -194,18 +186,18 @@ apply:
     }
 #>
                 default:
-                    result = ParserResult.Error;
+                    Result = ParserResult.Error;
                     break;
                 }
             }
 
-            if (result == ParserResult.Error)
+            if (Result == ParserResult.Error)
             {
                 return false;
             }
 
             // EndOfLine
-            ch = EndOfStream;
+            CurrentCharacter = EndOfStream;
 
             {
                 switch (State)
@@ -263,7 +255,7 @@ apply:
 
             Partial_EndLine ();
 
-            return result != ParserResult.Error;
+            return Result != ParserResult.Error;
         }
     }
 }
@@ -275,10 +267,7 @@ apply:
     void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
     {
 #>
-                    Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> (
-                        ch,
-                        ref State
-                        );
+                    Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> ();
 <#+
     }
 #>
@@ -287,18 +276,9 @@ apply:
     void OutputStateTransition (ParserState parserState, string to)
     {
 #>
-                            Partial_StateTransition__From_<#=parserState.Name#> (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_<#=parserState.Name#>__To_<#=to#> (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_<#=to#> (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_<#=parserState.Name#> ();
+                            Partial_StateTransition__From_<#=parserState.Name#>__To_<#=to#> ();
+                            Partial_StateTransition__To_<#=to#> ();
 <#+
     }
 #>
