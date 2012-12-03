@@ -55,259 +55,98 @@ namespace M3.HRON.Generator.Parser
         ParserState State = default (ParserState);
         const char EndOfStream = (char)0;
 
-        partial void Partial_BeginLine (SubString ss);
+        partial void Partial_BeginLine ();
         partial void Partial_EndLine ();
 
-        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error (
-            char                    current     ,
-            ref ParserState         to
-            );
+        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error ();
 
-        partial void Partial_StateTransition__From_Error (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__From_Error ();
 
-        partial void Partial_StateTransition__To_Error (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_Error ();
 
-            partial void Partial_StateTransition__From_Error__To_Error (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_Indention (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_Error__To_Error ();
+        partial void Partial_StateTransition__From_Indention ();
 
-        partial void Partial_StateTransition__To_Indention (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_Indention ();
 
-            partial void Partial_StateTransition__From_Indention__To_EndOfEmptyTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_Indention__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_Indention__To_TagExpected (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_Indention__To_ValueLine (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_Indention__To_Error (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_TagExpected (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_Indention__To_EndOfEmptyTag ();
+            partial void Partial_StateTransition__From_Indention__To_Indention ();
+            partial void Partial_StateTransition__From_Indention__To_TagExpected ();
+            partial void Partial_StateTransition__From_Indention__To_ValueLine ();
+            partial void Partial_StateTransition__From_Indention__To_Error ();
+        partial void Partial_StateTransition__From_TagExpected ();
 
-        partial void Partial_StateTransition__To_TagExpected (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_TagExpected ();
 
-            partial void Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_TagExpected__To_ObjectTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_TagExpected__To_ValueTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_TagExpected__To_CommentTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_TagExpected__To_EmptyTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_TagExpected__To_Error (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_ObjectTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag ();
+            partial void Partial_StateTransition__From_TagExpected__To_ObjectTag ();
+            partial void Partial_StateTransition__From_TagExpected__To_ValueTag ();
+            partial void Partial_StateTransition__From_TagExpected__To_CommentTag ();
+            partial void Partial_StateTransition__From_TagExpected__To_EmptyTag ();
+            partial void Partial_StateTransition__From_TagExpected__To_Error ();
+        partial void Partial_StateTransition__From_ObjectTag ();
 
-        partial void Partial_StateTransition__To_ObjectTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_ObjectTag ();
 
-            partial void Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_ObjectTag__To_ObjectTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_ValueTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag ();
+            partial void Partial_StateTransition__From_ObjectTag__To_ObjectTag ();
+        partial void Partial_StateTransition__From_ValueTag ();
 
-        partial void Partial_StateTransition__To_ValueTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_ValueTag ();
 
-            partial void Partial_StateTransition__From_ValueTag__To_EndOfValueTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_ValueTag__To_ValueTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EmptyTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_ValueTag__To_EndOfValueTag ();
+            partial void Partial_StateTransition__From_ValueTag__To_ValueTag ();
+        partial void Partial_StateTransition__From_EmptyTag ();
 
-        partial void Partial_StateTransition__To_EmptyTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EmptyTag ();
 
-            partial void Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_EmptyTag__To_EmptyTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_EmptyTag__To_Error (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_CommentTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag ();
+            partial void Partial_StateTransition__From_EmptyTag__To_EmptyTag ();
+            partial void Partial_StateTransition__From_EmptyTag__To_Error ();
+        partial void Partial_StateTransition__From_CommentTag ();
 
-        partial void Partial_StateTransition__To_CommentTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_CommentTag ();
 
-            partial void Partial_StateTransition__From_CommentTag__To_EndOfCommentTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_CommentTag__To_CommentTag (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EndOfObjectTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_CommentTag__To_EndOfCommentTag ();
+            partial void Partial_StateTransition__From_CommentTag__To_CommentTag ();
+        partial void Partial_StateTransition__From_EndOfObjectTag ();
 
-        partial void Partial_StateTransition__To_EndOfObjectTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EndOfObjectTag ();
 
-            partial void Partial_StateTransition__From_EndOfObjectTag__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EndOfEmptyTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_EndOfObjectTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfEmptyTag ();
 
-        partial void Partial_StateTransition__To_EndOfEmptyTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EndOfEmptyTag ();
 
-            partial void Partial_StateTransition__From_EndOfEmptyTag__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EndOfValueTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_EndOfEmptyTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfValueTag ();
 
-        partial void Partial_StateTransition__To_EndOfValueTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EndOfValueTag ();
 
-            partial void Partial_StateTransition__From_EndOfValueTag__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EndOfCommentTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_EndOfValueTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfCommentTag ();
 
-        partial void Partial_StateTransition__To_EndOfCommentTag (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EndOfCommentTag ();
 
-            partial void Partial_StateTransition__From_EndOfCommentTag__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_ValueLine (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_EndOfCommentTag__To_Indention ();
+        partial void Partial_StateTransition__From_ValueLine ();
 
-        partial void Partial_StateTransition__To_ValueLine (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_ValueLine ();
 
-            partial void Partial_StateTransition__From_ValueLine__To_EndOfValueLine (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-            partial void Partial_StateTransition__From_ValueLine__To_ValueLine (
-                char                    current     ,
-                ref ParserResult        result      
-                );
-        partial void Partial_StateTransition__From_EndOfValueLine (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+            partial void Partial_StateTransition__From_ValueLine__To_EndOfValueLine ();
+            partial void Partial_StateTransition__From_ValueLine__To_ValueLine ();
+        partial void Partial_StateTransition__From_EndOfValueLine ();
 
-        partial void Partial_StateTransition__To_EndOfValueLine (
-            char                    current     ,
-            ref ParserResult        result      
-            );
+        partial void Partial_StateTransition__To_EndOfValueLine ();
 
-            partial void Partial_StateTransition__From_EndOfValueLine__To_Indention (
-                char                    current     ,
-                ref ParserResult        result      
-                );
+            partial void Partial_StateTransition__From_EndOfValueLine__To_Indention ();
 
         partial void Partial_AcceptEndOfStream ();
                 
+        ParserResult Result;
+        SubString    CurrentLine;
+        char         CurrentCharacter;
+
         public void AcceptEndOfStream ()
         {
             Partial_AcceptEndOfStream ();
@@ -315,20 +154,20 @@ namespace M3.HRON.Generator.Parser
 
         public bool AcceptLine (SubString ss)
         {
-            var result = ParserResult.Continue;
+            Result = ParserResult.Continue;
+            CurrentLine = ss;
 
-            Partial_BeginLine (ss);
+            Partial_BeginLine ();
 
             var bs = ss.BaseString;
             var begin = ss.Begin;
             var end = ss.End;
-            char ch;
 
             for (var iter = begin; iter < end; ++iter)
             {
-                ch = bs[iter];
+                CurrentCharacter = bs[iter];
 apply:
-                if (result != ParserResult.Continue)
+                if (Result != ParserResult.Continue)
                 {
                     break;
                 }
@@ -336,94 +175,46 @@ apply:
                 switch (State)
                 {
                 case ParserState.Error:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
-                            Partial_StateTransition__From_Error (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Error__To_Error (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Error (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Error ();
+                            Partial_StateTransition__From_Error__To_Error ();
+                            Partial_StateTransition__To_Error ();
                         break;
     
                     }
                     break;
                 case ParserState.Indention:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     case '\t':
-                            Partial_StateTransition__From_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Indention__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         break;
                     default:
-                    Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error (
-                        ch,
-                        ref State
-                        );
+                    Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error ();
 
                         switch (State)
                         {
                         case ParserState.TagExpected:
-                            Partial_StateTransition__From_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Indention__To_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_TagExpected (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_TagExpected ();
+                            Partial_StateTransition__To_TagExpected ();
                             break;
                         case ParserState.ValueLine:
-                            Partial_StateTransition__From_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Indention__To_ValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ValueLine (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_ValueLine ();
+                            Partial_StateTransition__To_ValueLine ();
                             break;
                         case ParserState.Error:
-                            Partial_StateTransition__From_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Indention__To_Error (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Error (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_Error ();
+                            Partial_StateTransition__To_Error ();
                             break;
                         default:
-                            result = ParserResult.Error;
+                            Result = ParserResult.Error;
                             break;
                     }
                         goto apply;
@@ -432,441 +223,234 @@ apply:
                     }
                     break;
                 case ParserState.TagExpected:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     case '@':
                         State = ParserState.ObjectTag; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_ObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ObjectTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_ObjectTag ();
+                            Partial_StateTransition__To_ObjectTag ();
                         break;
                     case '=':
                         State = ParserState.ValueTag; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_ValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ValueTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_ValueTag ();
+                            Partial_StateTransition__To_ValueTag ();
                         break;
                     case '#':
                         State = ParserState.CommentTag; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_CommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_CommentTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_CommentTag ();
+                            Partial_StateTransition__To_CommentTag ();
                         break;
                     case '\t':
                     case ' ':
                         State = ParserState.EmptyTag; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_EmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EmptyTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_EmptyTag ();
+                            Partial_StateTransition__To_EmptyTag ();
                         break;
                     default:
                         State = ParserState.Error; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_Error (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Error (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_Error ();
+                            Partial_StateTransition__To_Error ();
                         break;
     
                     }
                     break;
                 case ParserState.ObjectTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
-                            Partial_StateTransition__From_ObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ObjectTag__To_ObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ObjectTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ObjectTag ();
+                            Partial_StateTransition__From_ObjectTag__To_ObjectTag ();
+                            Partial_StateTransition__To_ObjectTag ();
                         break;
     
                     }
                     break;
                 case ParserState.ValueTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
-                            Partial_StateTransition__From_ValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ValueTag__To_ValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ValueTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ValueTag ();
+                            Partial_StateTransition__From_ValueTag__To_ValueTag ();
+                            Partial_StateTransition__To_ValueTag ();
                         break;
     
                     }
                     break;
                 case ParserState.EmptyTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     case '\t':
                     case ' ':
-                            Partial_StateTransition__From_EmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EmptyTag__To_EmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EmptyTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EmptyTag ();
+                            Partial_StateTransition__From_EmptyTag__To_EmptyTag ();
+                            Partial_StateTransition__To_EmptyTag ();
                         break;
                     default:
                         State = ParserState.Error; 
-                            Partial_StateTransition__From_EmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EmptyTag__To_Error (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Error (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EmptyTag ();
+                            Partial_StateTransition__From_EmptyTag__To_Error ();
+                            Partial_StateTransition__To_Error ();
                         break;
     
                     }
                     break;
                 case ParserState.CommentTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
-                            Partial_StateTransition__From_CommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_CommentTag__To_CommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_CommentTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_CommentTag ();
+                            Partial_StateTransition__From_CommentTag__To_CommentTag ();
+                            Partial_StateTransition__To_CommentTag ();
                         break;
     
                     }
                     break;
                 case ParserState.EndOfObjectTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
                         State = ParserState.Indention; 
-                            Partial_StateTransition__From_EndOfObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EndOfObjectTag__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EndOfObjectTag ();
+                            Partial_StateTransition__From_EndOfObjectTag__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         goto apply;
                         break;
     
                     }
                     break;
                 case ParserState.EndOfEmptyTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
                         State = ParserState.Indention; 
-                            Partial_StateTransition__From_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EndOfEmptyTag__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EndOfEmptyTag ();
+                            Partial_StateTransition__From_EndOfEmptyTag__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         goto apply;
                         break;
     
                     }
                     break;
                 case ParserState.EndOfValueTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
                         State = ParserState.Indention; 
-                            Partial_StateTransition__From_EndOfValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EndOfValueTag__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EndOfValueTag ();
+                            Partial_StateTransition__From_EndOfValueTag__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         goto apply;
                         break;
     
                     }
                     break;
                 case ParserState.EndOfCommentTag:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
                         State = ParserState.Indention; 
-                            Partial_StateTransition__From_EndOfCommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EndOfCommentTag__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EndOfCommentTag ();
+                            Partial_StateTransition__From_EndOfCommentTag__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         goto apply;
                         break;
     
                     }
                     break;
                 case ParserState.ValueLine:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
-                            Partial_StateTransition__From_ValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ValueLine__To_ValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_ValueLine (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ValueLine ();
+                            Partial_StateTransition__From_ValueLine__To_ValueLine ();
+                            Partial_StateTransition__To_ValueLine ();
                         break;
     
                     }
                     break;
                 case ParserState.EndOfValueLine:
-                    switch (ch)
+                    switch (CurrentCharacter)
                     {
                     default:
                         State = ParserState.Indention; 
-                            Partial_StateTransition__From_EndOfValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EndOfValueLine__To_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_Indention (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EndOfValueLine ();
+                            Partial_StateTransition__From_EndOfValueLine__To_Indention ();
+                            Partial_StateTransition__To_Indention ();
                         goto apply;
                         break;
     
                     }
                     break;
                 default:
-                    result = ParserResult.Error;
+                    Result = ParserResult.Error;
                     break;
                 }
             }
 
-            if (result == ParserResult.Error)
+            if (Result == ParserResult.Error)
             {
                 return false;
             }
 
             // EndOfLine
-            ch = EndOfStream;
+            CurrentCharacter = EndOfStream;
 
             {
                 switch (State)
                 {
                 case ParserState.Indention:
                     State = ParserState.EndOfEmptyTag; 
-                            Partial_StateTransition__From_Indention (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_Indention__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_EndOfEmptyTag ();
+                            Partial_StateTransition__To_EndOfEmptyTag ();
                     break;
                 case ParserState.TagExpected:
                     State = ParserState.EndOfEmptyTag; 
-                            Partial_StateTransition__From_TagExpected (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_TagExpected ();
+                            Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag ();
+                            Partial_StateTransition__To_EndOfEmptyTag ();
                     break;
                 case ParserState.ObjectTag:
                     State = ParserState.EndOfObjectTag; 
-                            Partial_StateTransition__From_ObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfObjectTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ObjectTag ();
+                            Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag ();
+                            Partial_StateTransition__To_EndOfObjectTag ();
                     break;
                 case ParserState.ValueTag:
                     State = ParserState.EndOfValueTag; 
-                            Partial_StateTransition__From_ValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ValueTag__To_EndOfValueTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfValueTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ValueTag ();
+                            Partial_StateTransition__From_ValueTag__To_EndOfValueTag ();
+                            Partial_StateTransition__To_EndOfValueTag ();
                     break;
                 case ParserState.EmptyTag:
                     State = ParserState.EndOfEmptyTag; 
-                            Partial_StateTransition__From_EmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfEmptyTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_EmptyTag ();
+                            Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag ();
+                            Partial_StateTransition__To_EndOfEmptyTag ();
                     break;
                 case ParserState.CommentTag:
                     State = ParserState.EndOfCommentTag; 
-                            Partial_StateTransition__From_CommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_CommentTag__To_EndOfCommentTag (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfCommentTag (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_CommentTag ();
+                            Partial_StateTransition__From_CommentTag__To_EndOfCommentTag ();
+                            Partial_StateTransition__To_EndOfCommentTag ();
                     break;
                 case ParserState.ValueLine:
                     State = ParserState.EndOfValueLine; 
-                            Partial_StateTransition__From_ValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__From_ValueLine__To_EndOfValueLine (
-                                ch,
-                                ref result
-                                );
-                            Partial_StateTransition__To_EndOfValueLine (
-                                ch,
-                                ref result
-                                );
+                            Partial_StateTransition__From_ValueLine ();
+                            Partial_StateTransition__From_ValueLine__To_EndOfValueLine ();
+                            Partial_StateTransition__To_EndOfValueLine ();
                     break;
                 }
             }
 
             Partial_EndLine ();
 
-            return result != ParserResult.Error;
+            return Result != ParserResult.Error;
         }
     }
 }

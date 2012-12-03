@@ -38,7 +38,6 @@ namespace M3.HRON.Generator.Parser
         int m_indention;
         int m_expectedIndention;
         int m_lineNo;
-        SubString m_current;
         readonly IVisitor m_visitor;
         static readonly SubString s_empty = new SubString();
 
@@ -54,26 +53,25 @@ namespace M3.HRON.Generator.Parser
             PopContext();
         }
 
-        partial void Partial_BeginLine(SubString ss)
+        partial void Partial_BeginLine()
         {
             State = ParserState.Indention;
             m_indention = 0;
             ++m_lineNo;
-            m_current = ss;
         }
 
-        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error(char current, ref ParserState to)
+        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error()
         {
             if (m_isBuildingValue)
             {
-                to = m_expectedIndention > m_indention
+                State = m_expectedIndention > m_indention
                     ? ParserState.TagExpected
                     : ParserState.ValueLine
                     ;
             }
             else
             {
-                to = m_expectedIndention < m_indention
+                State = m_expectedIndention < m_indention
                     ? ParserState.Error
                     : ParserState.TagExpected
                     ;
@@ -98,36 +96,36 @@ namespace M3.HRON.Generator.Parser
 
         }
 
-        partial void Partial_StateTransition__From_Indention__To_Indention(char current, ref ParserResult result)
+        partial void Partial_StateTransition__From_Indention__To_Indention()
         {
             ++m_indention;
         }
 
-        partial void Partial_StateTransition__To_EmptyTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_EmptyTag()
         {
-            result = ParserResult.Done;            
+            Result = ParserResult.Done;            
         }
 
-        partial void Partial_StateTransition__To_CommentTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_CommentTag()
         {
-            result = ParserResult.Done;
+            Result = ParserResult.Done;
         }
 
-        partial void Partial_StateTransition__To_ValueTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_ValueTag()
         {
-            result = ParserResult.Done;
+            Result = ParserResult.Done;
         }
 
-        partial void Partial_StateTransition__To_ValueLine(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_ValueLine()
         {
-            result = ParserResult.Done;
+            Result = ParserResult.Done;
         }
 
-        partial void Partial_StateTransition__To_ObjectTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_ObjectTag()
         {
-            result = ParserResult.Done;
+            Result = ParserResult.Done;
         }
-        partial void Partial_StateTransition__To_EndOfEmptyTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_EndOfEmptyTag()
         {
             if (m_isBuildingValue)
             {
@@ -135,29 +133,29 @@ namespace M3.HRON.Generator.Parser
             }
         }
 
-        partial void Partial_StateTransition__To_EndOfObjectTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_EndOfObjectTag()
         {
             PopContext();
-            m_visitor.Object_Begin(m_current.ToSubString(m_expectedIndention + 1));
+            m_visitor.Object_Begin(CurrentLine.ToSubString(m_expectedIndention + 1));
             m_expectedIndention = m_indention + 1;
         }
 
-        partial void Partial_StateTransition__To_EndOfValueTag(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_EndOfValueTag()
         {
             PopContext();
             m_isBuildingValue = true;
-            m_visitor.Value_Begin(m_current.ToSubString(m_expectedIndention + 1));
+            m_visitor.Value_Begin(CurrentLine.ToSubString(m_expectedIndention + 1));
             m_expectedIndention = m_indention + 1;
         }
 
-        partial void Partial_StateTransition__To_EndOfValueLine(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_EndOfValueLine()
         {
-            m_visitor.Value_Line(m_current.ToSubString(m_expectedIndention));
+            m_visitor.Value_Line(CurrentLine.ToSubString(m_expectedIndention));
         }
 
-        partial void Partial_StateTransition__To_Error(char current, ref ParserResult result)
+        partial void Partial_StateTransition__To_Error()
         {
-            result = ParserResult.Error;
+            Result = ParserResult.Error;
         }
 
     }
