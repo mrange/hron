@@ -10,6 +10,8 @@
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
 
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using M3.HRON.Generator.Parser;
@@ -21,30 +23,42 @@ namespace M3.HRON.Generator
     {
         static void Main(string[] args)
         {
-            var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\helloworld.hron");
+            var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\large.hron");
             var lines = File.ReadAllLines(fullPath).Select (s => s.ToSubString()).ToArray();
 
-            var v = new Visitor();
+            var v = new EmptyVisitor();
+            ReadDocument(v, lines);
 
+
+            const int Count = 40;
+            var sw = new Stopwatch();
+            sw.Start();
+
+            for (var iter = 0; iter < Count; ++iter)
+            {
+                ReadDocument(v, lines);
+            }
+
+            sw.Stop();
+
+            Console.WriteLine ("{0:#,0} lines in {1:#,0} ms", Count * lines.Length, sw.ElapsedMilliseconds);
+        }
+
+        static void ReadDocument(IVisitor v, SubString[] lines)
+        {
+            var scanner = new Scanner(v);
             v.Document_Begin();
-            try
+            for (int index = 0; index < lines.Length; index++)
             {
-                var scanner = new Scanner(v);
-                for (int index = 0; index < lines.Length; index++)
-                {
-                    var line = lines[index];
-                    scanner.AcceptLine(line);
-                }
-                scanner.AcceptEndOfStream();
+                var line = lines[index];
+                scanner.AcceptLine(line);
             }
-            finally
-            {
-                v.Document_End();
-            }
+            scanner.AcceptEndOfStream();
+            v.Document_End();
         }
     }
 
-    sealed class Visitor : IVisitor
+    sealed class ConsoleVisitor : IVisitor
     {
         public void Document_Begin()
         {
@@ -79,6 +93,37 @@ namespace M3.HRON.Generator
         public void Value_End()
         {
             Log.Info("Value_End");
+        }
+    }
+
+    sealed class EmptyVisitor : IVisitor
+    {
+        public void Document_Begin()
+        {
+        }
+
+        public void Document_End()
+        {
+        }
+
+        public void Object_Begin(SubString name)
+        {
+        }
+
+        public void Object_End()
+        {
+        }
+
+        public void Value_Begin(SubString name)
+        {
+        }
+
+        public void Value_Line(SubString name)
+        {
+        }
+
+        public void Value_End()
+        {
         }
     }
 }
