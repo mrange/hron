@@ -104,7 +104,7 @@ namespace M3.HRON.Generator.Parser
             var end = ss.End;
             char ch;
 
-            for (var iter = begin; (iter < end) & (result == ParserResult.Continue); ++iter)
+            for (var iter = begin; iter < end; ++iter)
             {
                 ch = bs[iter];
 apply:

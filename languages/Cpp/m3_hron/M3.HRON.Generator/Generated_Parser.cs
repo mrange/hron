@@ -124,10 +124,15 @@ namespace M3.HRON.Generator.Parser
             var end = ss.End;
             char ch;
 
-            for (var iter = begin; (iter < end) & (result == ParserResult.Continue); ++iter)
+            for (var iter = begin; iter < end; ++iter)
             {
                 ch = bs[iter];
 apply:
+                if (result != ParserResult.Continue)
+                {
+                    return result;
+                }
+
                 switch (State)
                 {
                 case ParserState.Error:
@@ -200,10 +205,7 @@ apply:
                             result = ParserResult.Error;
                             break;
                     }
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -352,10 +354,7 @@ apply:
                             ParserStateTransition.From_EndOfObjectTag__To_Indention,
                             ref result
                             );
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -372,10 +371,7 @@ apply:
                             ParserStateTransition.From_EndOfEmptyTag__To_Indention,
                             ref result
                             );
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -392,10 +388,7 @@ apply:
                             ParserStateTransition.From_EndOfValueTag__To_Indention,
                             ref result
                             );
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -412,10 +405,7 @@ apply:
                             ParserStateTransition.From_EndOfCommentTag__To_Indention,
                             ref result
                             );
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -448,10 +438,7 @@ apply:
                             ParserStateTransition.From_EndOfValueLine__To_Indention,
                             ref result
                             );
-                        if (result == ParserResult.Continue)
-                        {
-                            goto apply;
-                        }   
+                        goto apply;
                         break;
     
                     }
@@ -460,6 +447,11 @@ apply:
                     result = ParserResult.Error;
                     break;
                 }
+            }
+
+            if (result != ParserResult.Continue)
+            {
+                return result;
             }
 
             // EndOfLine
