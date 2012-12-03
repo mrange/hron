@@ -5,6 +5,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference", "M3.HRO
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference.Tests", "M3.HRON.Reference.Tests\M3.HRON.Reference.Tests.fsproj", "{47BC4B21-179D-45FD-98DA-9DF5875E7095}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference.ActionLog", "M3.HRON.Reference.ActionLog\M3.HRON.Reference.ActionLog.fsproj", "{FDFAE6BE-3656-47D1-89FB-C4167E897900}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47BC4B21-179D-45FD-98DA-9DF5875E7095}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDFAE6BE-3656-47D1-89FB-C4167E897900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDFAE6BE-3656-47D1-89FB-C4167E897900}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDFAE6BE-3656-47D1-89FB-C4167E897900}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDFAE6BE-3656-47D1-89FB-C4167E897900}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
