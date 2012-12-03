@@ -31,7 +31,7 @@ namespace M3.HRON.Generator
             ReadDocument(v, lines);
 
 
-            const int Count = 40;
+            const int Count = 100;
             var sw = new Stopwatch();
             sw.Start();
 

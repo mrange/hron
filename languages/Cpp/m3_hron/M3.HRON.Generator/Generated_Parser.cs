@@ -46,6 +46,7 @@ namespace M3.HRON.Generator.Parser
     {
         Error   ,
         Continue,
+        Done    ,
     }
 
 
@@ -307,13 +308,12 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_AcceptEndOfStream ();
                 
-        public ParserResult AcceptEndOfStream ()
+        public void AcceptEndOfStream ()
         {
             Partial_AcceptEndOfStream ();
-            return ParserResult.Continue;             
         }
 
-        public ParserResult AcceptLine (SubString ss)
+        public bool AcceptLine (SubString ss)
         {
             var result = ParserResult.Continue;
 
@@ -330,7 +330,7 @@ namespace M3.HRON.Generator.Parser
 apply:
                 if (result != ParserResult.Continue)
                 {
-                    return result;
+                    break;
                 }
 
                 switch (State)
@@ -745,9 +745,9 @@ apply:
                 }
             }
 
-            if (result != ParserResult.Continue)
+            if (result == ParserResult.Error)
             {
-                return result;
+                return false;
             }
 
             // EndOfLine
@@ -866,7 +866,7 @@ apply:
 
             Partial_EndLine ();
 
-            return result;
+            return result != ParserResult.Error;
         }
     }
 }
