@@ -62,32 +62,24 @@ namespace M3.HRON.Generator.Parser
             m_current = ss;
         }
 
-        partial void Partial_StateChoice(char current, ParserStateChoice choice, ParserState from, ref ParserState to)
+        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error(char current, ref ParserState to)
         {
-            switch (choice)
+            if (m_isBuildingValue)
             {
-                case ParserStateChoice.From_Indention__Choose_TagExpected_ValueLine_Error:
-                    if (m_isBuildingValue)
-                    {
-                        to = m_expectedIndention > m_indention 
-                            ? ParserState.TagExpected
-                            : ParserState.ValueLine
-                            ;
-                    }
-                    else 
-                    {
-                        to = m_expectedIndention < m_indention 
-                            ? ParserState.Error 
-                            : ParserState.TagExpected
-                            ;
-                    }
-
-                    break;
-                default:
-                    to = ParserState.Error;
-                    break;
+                to = m_expectedIndention > m_indention
+                    ? ParserState.TagExpected
+                    : ParserState.ValueLine
+                    ;
+            }
+            else
+            {
+                to = m_expectedIndention < m_indention
+                    ? ParserState.Error
+                    : ParserState.TagExpected
+                    ;
             }
         }
+
 
         void PopContext()
         {
@@ -106,44 +98,43 @@ namespace M3.HRON.Generator.Parser
 
         }
 
-        partial void Partial_StateTransition(char current, ParserState from, ParserState to, ParserStateTransition transition, ref ParserResult result)
+        partial void Partial_StateTransition__From_Indention__To_Indention(char current, ref ParserResult result)
         {
-            switch (to)
+            ++m_indention;
+        }
+
+        partial void Partial_StateTransition__To_EndOfEmptyTag(char current, ref ParserResult result)
+        {
+            if (m_isBuildingValue)
             {
-                case ParserState.Indention:
-                    if (from == ParserState.Indention)
-                    {
-                        ++m_indention;
-                    }
-                    return;
-                case ParserState.EndOfCommentTag:
-                    return;
-                case ParserState.EndOfEmptyTag:
-                    if (m_isBuildingValue)
-                    {
-                        m_visitor.Value_Line(s_empty);
-                    }
-                    return;
-                case ParserState.EndOfObjectTag:
-                    PopContext();
-                    m_visitor.Object_Begin(m_current.ToSubString(m_expectedIndention + 1));
-                    m_expectedIndention = m_indention + 1;
-                    break;
-                case ParserState.EndOfValueTag:
-                    PopContext();
-                    m_isBuildingValue = true;
-                    m_visitor.Value_Begin(m_current.ToSubString(m_expectedIndention + 1));
-                    m_expectedIndention = m_indention + 1;
-                    break;
-                case ParserState.EndOfValueLine:
-                    m_visitor.Value_Line(m_current.ToSubString(m_expectedIndention));
-                    break;
-                case ParserState.Error:
-                    result = ParserResult.Error;
-                    return;
-                default:
-                    return;
+                m_visitor.Value_Line(s_empty);
             }
         }
+
+        partial void Partial_StateTransition__To_EndOfObjectTag(char current, ref ParserResult result)
+        {
+            PopContext();
+            m_visitor.Object_Begin(m_current.ToSubString(m_expectedIndention + 1));
+            m_expectedIndention = m_indention + 1;
+        }
+
+        partial void Partial_StateTransition__To_EndOfValueTag(char current, ref ParserResult result)
+        {
+            PopContext();
+            m_isBuildingValue = true;
+            m_visitor.Value_Begin(m_current.ToSubString(m_expectedIndention + 1));
+            m_expectedIndention = m_indention + 1;
+        }
+
+        partial void Partial_StateTransition__To_EndOfValueLine(char current, ref ParserResult result)
+        {
+            m_visitor.Value_Line(m_current.ToSubString(m_expectedIndention));
+        }
+
+        partial void Partial_StateTransition__To_Error(char current, ref ParserResult result)
+        {
+            result = ParserResult.Error;
+        }
+
     }
 }
