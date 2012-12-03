@@ -10,3 +10,5 @@ _Resharper*
 *.opensdf
 *.sdf
 *.filters
+*.psess
+*.vspx
