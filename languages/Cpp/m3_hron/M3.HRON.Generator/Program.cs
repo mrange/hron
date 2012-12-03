@@ -25,7 +25,12 @@ namespace M3.HRON.Generator
         {
             var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\large.hron");
             //var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\helloworld.hron");
-            var lines = File.ReadAllLines(fullPath).Select(s => s.ToSubString()).ToArray();
+            var lines = File
+                .ReadAllLines(fullPath)
+                .Take(int.MaxValue)
+                .Select(s => s.ToSubString())
+                .ToArray()
+                ;
 
             var v = new EmptyVisitor();
             ReadDocument(v, lines);
