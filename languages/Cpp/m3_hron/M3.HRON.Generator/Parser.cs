@@ -103,6 +103,30 @@ namespace M3.HRON.Generator.Parser
             ++m_indention;
         }
 
+        partial void Partial_StateTransition__To_EmptyTag(char current, ref ParserResult result)
+        {
+            result = ParserResult.Done;            
+        }
+
+        partial void Partial_StateTransition__To_CommentTag(char current, ref ParserResult result)
+        {
+            result = ParserResult.Done;
+        }
+
+        partial void Partial_StateTransition__To_ValueTag(char current, ref ParserResult result)
+        {
+            result = ParserResult.Done;
+        }
+
+        partial void Partial_StateTransition__To_ValueLine(char current, ref ParserResult result)
+        {
+            result = ParserResult.Done;
+        }
+
+        partial void Partial_StateTransition__To_ObjectTag(char current, ref ParserResult result)
+        {
+            result = ParserResult.Done;
+        }
         partial void Partial_StateTransition__To_EndOfEmptyTag(char current, ref ParserResult result)
         {
             if (m_isBuildingValue)
