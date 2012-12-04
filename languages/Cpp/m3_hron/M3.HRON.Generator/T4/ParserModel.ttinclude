@@ -7,6 +7,12 @@
                 Next        (DefaultCase        , "Error"       ),
             },
 
+            new ParserState ("PreProcessing")     
+            {
+                Next        ("!"        , "PreProcessorTag"             ),
+                HandOver    (DefaultCase, "Indention"                   ), 
+            },
+
             new ParserState ("Indention")     
             {
                 Terminator  (NoCase     , "EndOfEmptyTag"       ),
@@ -23,6 +29,12 @@
                 Next        ("="        , "ValueTag"            ),
                 Next        ("#"        , "CommentTag"          ),
                 Next        ("\t "      , "EmptyTag"            ),
+            },
+
+            new ParserState ("PreProcessorTag")     
+            {
+                Terminator  (NoCase     , "EndOfPreProcessorTag"),
+                Next        (DefaultCase, "PreProcessorTag"     ),
             },
 
             new ParserState ("ObjectTag")     
@@ -47,6 +59,11 @@
             {
                 Terminator  (NoCase     , "EndOfCommentTag"     ),
                 Next        (DefaultCase, "CommentTag"          ),
+            },
+
+            new ParserState ("EndOfPreProcessorTag")     
+            {
+                HandOver    (DefaultCase, "PreProcessing"       ),
             },
 
             new ParserState ("EndOfObjectTag")     

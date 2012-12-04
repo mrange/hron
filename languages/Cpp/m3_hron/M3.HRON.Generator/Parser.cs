@@ -13,21 +13,26 @@
 // ReSharper disable CheckNamespace
 // ReSharper disable InconsistentNaming
 
-using M3.HRON.Generator.Source.Common;
+
+using System;
 
 namespace M3.HRON.Generator.Parser
 {
+    using M3.HRON.Generator.Source.Common;
 
     interface IVisitor
     {
         void Document_Begin();
         void Document_End();
 
+        void Comment(SubString comment);
+        void PreProcessor(SubString preprocessor);
+
         void Object_Begin(SubString name);
         void Object_End();
 
         void Value_Begin(SubString name);
-        void Value_Line(SubString name);
+        void Value_Line(SubString line);
         void Value_End();
     }
 
@@ -44,7 +49,7 @@ namespace M3.HRON.Generator.Parser
         public Scanner(IVisitor visitor)
         {
             m_visitor = visitor;
-            State = ParserState.Indention;
+            State = ParserState.PreProcessing;
         }
 
         partial void Partial_AcceptEndOfStream()
@@ -55,7 +60,18 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_BeginLine()
         {
-            State = ParserState.Indention;
+            switch (State)
+            {
+                case ParserState.PreProcessing:
+                case ParserState.PreProcessorTag:
+                case ParserState.EndOfPreProcessorTag:
+                    State = ParserState.PreProcessing;
+                    break;
+                default:
+                    State = ParserState.Indention;
+                    break;
+            }
+
             m_indention = 0;
             ++m_lineNo;
         }
@@ -101,6 +117,11 @@ namespace M3.HRON.Generator.Parser
             ++m_indention;
         }
 
+        partial void Partial_StateTransition__To_PreProcessorTag()
+        {
+            Result = ParserResult.Done;
+        }
+
         partial void Partial_StateTransition__To_EmptyTag()
         {
             Result = ParserResult.Done;            
@@ -125,6 +146,17 @@ namespace M3.HRON.Generator.Parser
         {
             Result = ParserResult.Done;
         }
+
+        partial void Partial_StateTransition__To_EndOfPreProcessorTag()
+        {
+            m_visitor.PreProcessor(CurrentLine.ToSubString(m_expectedIndention + 1));
+        }
+
+        partial void Partial_StateTransition__To_EndOfCommentTag()
+        {
+            m_visitor.Comment(CurrentLine.ToSubString(m_expectedIndention + 1));
+        }
+
         partial void Partial_StateTransition__To_EndOfEmptyTag()
         {
             if (m_isBuildingValue)
