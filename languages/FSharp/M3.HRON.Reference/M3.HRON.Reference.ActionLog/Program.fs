@@ -37,7 +37,7 @@ let rec write_member (output : StreamWriter) (m: Member) =
 let write_hron (output : StreamWriter) (hron : HRON) =
     let (pps, ms) = hron 
     for pp in pps do
-        output.WriteLine("PreProcessor: {0}", pp)
+        output.WriteLine("PreProcessor:{0}", pp)
     for m in ms do
         write_member output m
 

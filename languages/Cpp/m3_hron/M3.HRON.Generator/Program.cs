@@ -11,7 +11,6 @@
 // ----------------------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,7 +36,11 @@ namespace M3.HRON.Generator
                 ;
 
             var actionLogs = hrons
-                .Select(p => p + ".actionlog")
+                .Select(p => Path.Combine(
+                    Path.GetDirectoryName(p), 
+                    "test-results", 
+                    "CSharp", 
+                    Path.GetFileName(p) + ".actionlog"))
                 .ToArray()
                 ;
 
@@ -50,8 +53,21 @@ namespace M3.HRON.Generator
             {
                 try
                 {
+                    var dir = Path.GetDirectoryName(testCase.actionLog);
+                    if (!Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
                     var hronLines = ReadLines(testCase.hron);
-                    var actionLogLines = ReadLines(testCase.actionLog);
+
+
+                    using (var sw = new StreamWriter(testCase.actionLog))
+                    {
+                        var v = new ActionLogVisitor(sw);
+                        ReadDocument(v, hronLines);
+                        Log.Success("Wrote action log: {0}", Path.GetFileName(testCase.actionLog));
+                    }
+
                 }
                 catch (Exception exc)
                 {
@@ -74,6 +90,8 @@ namespace M3.HRON.Generator
 
             const int Count = 100;
             var sw = new Stopwatch();
+            Log.Info("Starting performance run...");
+
             sw.Start();
 
             for (var iter = 0; iter < Count; ++iter)
@@ -83,7 +101,7 @@ namespace M3.HRON.Generator
 
             sw.Stop();
 
-            Log.Info("{0:#,0} lines in {1:#,0} ms", Count*lines.Length, sw.ElapsedMilliseconds);
+            Log.Success("{0:#,0} lines in {1:#,0} ms", Count*lines.Length, sw.ElapsedMilliseconds);
         }
 
         static SubString[] ReadLines(string fullPath)
@@ -128,9 +146,9 @@ namespace M3.HRON.Generator
             Log.Info("Comment: {0}", comment);
         }
 
-        public void PreProcessor(SubString preprocessor)
+        public void PreProcessor(SubString preProcessor)
         {
-            Log.Info("PreProcessor: {0}", preprocessor);
+            Log.Info("PreProcessor: {0}", preProcessor);
         }
 
         public void Object_Begin(SubString name)
@@ -171,12 +189,10 @@ namespace M3.HRON.Generator
 
         public void Comment(SubString comment)
         {
-            
         }
 
-        public void PreProcessor(SubString preprocessor)
+        public void PreProcessor(SubString preProcessor)
         {
-            
         }
 
         public void Object_Begin(SubString name)
@@ -202,7 +218,12 @@ namespace M3.HRON.Generator
 
     sealed class ActionLogVisitor : IVisitor
     {
-        public List<SubString> ActionLog = new List<SubString>();
+        readonly StreamWriter m_writer;
+
+        public ActionLogVisitor(StreamWriter writer)
+        {
+            m_writer = writer;
+        }
 
         public void Document_Begin()
         {
@@ -214,32 +235,37 @@ namespace M3.HRON.Generator
 
         public void Comment(SubString comment)
         {
-
+            m_writer.WriteLine("Comment:{0}", comment);
         }
 
-        public void PreProcessor(SubString preprocessor)
+        public void PreProcessor(SubString preProcessor)
         {
-
+            m_writer.WriteLine("PreProcessor:{0}", preProcessor);
         }
 
         public void Object_Begin(SubString name)
         {
+            m_writer.WriteLine("Object_Begin:{0}", name);
         }
 
         public void Object_End()
         {
+            m_writer.WriteLine("Object_End:");
         }
 
         public void Value_Begin(SubString name)
         {
+            m_writer.WriteLine("Value_Begin:{0}", name);
         }
 
         public void Value_Line(SubString name)
         {
+            m_writer.WriteLine("Value_Line:{0}", name);
         }
 
         public void Value_End()
         {
+            m_writer.WriteLine("Value_End:");
         }
     }
 }

@@ -26,7 +26,7 @@ namespace M3.HRON.Generator.Parser
         void Document_End();
 
         void Comment(SubString comment);
-        void PreProcessor(SubString preprocessor);
+        void PreProcessor(SubString preProcessor);
 
         void Object_Begin(SubString name);
         void Object_End();
