@@ -143,17 +143,17 @@ namespace M3.HRON.Generator
 
         public void Comment(SubString comment)
         {
-            Log.Info("Comment: {0}", comment);
+            Log.Info("Comment:0,{0}", comment);
         }
 
         public void PreProcessor(SubString preProcessor)
         {
-            Log.Info("PreProcessor: {0}", preProcessor);
+            Log.Info("PreProcessor:{0}", preProcessor);
         }
 
         public void Object_Begin(SubString name)
         {
-            Log.Info("Object_Begin: {0}", name);
+            Log.Info("Object_Begin:{0}", name);
         }
 
         public void Object_End()
@@ -163,12 +163,12 @@ namespace M3.HRON.Generator
 
         public void Value_Begin(SubString name)
         {
-            Log.Info("Value_Begin: {0}", name);
+            Log.Info("Value_Begin:{0}", name);
         }
 
         public void Value_Line(SubString name)
         {
-            Log.Info("Value_Line: {0}", name);
+            Log.Info("Value_Line:{0}", name);
         }
 
         public void Value_End()
@@ -235,7 +235,7 @@ namespace M3.HRON.Generator
 
         public void Comment(SubString comment)
         {
-            m_writer.WriteLine("Comment:{0}", comment);
+            m_writer.WriteLine("Comment:0,{0}", comment);
         }
 
         public void PreProcessor(SubString preProcessor)
