@@ -12,35 +12,16 @@
 
 // ReSharper disable InconsistentNaming
 
-using System.IO;
-using ParserValidator.Source.Common;
+using ParserValidator.Source.ConsoleApp;
 
 namespace ParserValidator
 {
-    using ParserValidator.Source.ConsoleApp;
 
     partial class Program
     {
         static void Main(string[] args)
         {
             Runner.Run(args);
-        }
-    }
-
-    namespace Source.ConsoleApp
-    {
-        partial class Runner
-        {
-            static partial void Partial_Run(string[] args, dynamic config)
-            {
-                var referenceDataPath = Path.GetFullPath(@"..\..\..\..\..\reference-data");
-                var testResultsPath = Path.Combine(referenceDataPath, "test-results");
-
-                Log.Info("{0} : {1}", referenceDataPath, Directory.Exists(referenceDataPath));
-                Log.Info("{0} : {1}", testResultsPath, Directory.Exists(testResultsPath));
-
-
-            }
         }
     }
 }

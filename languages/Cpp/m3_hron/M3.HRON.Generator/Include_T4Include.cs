@@ -958,7 +958,7 @@ namespace M3.HRON.Generator.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-12-02T19:44:57";
+        public const string IncludeDate     = @"2012-12-06T15:06:02";
 
         public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
         public const string Include_1       = @"mrange/T4Include/master/Common/SubString.cs";

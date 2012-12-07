@@ -81,6 +81,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_CParser.c</LastGenOutput>
     </None>
+    <None Include="packages.config" />
     <None Include="T4\CHeader.ttinclude" />
     <None Include="T4\CParserGenerator.ttinclude" />
     <None Include="T4\CSharpParserGenerator.ttinclude" />
@@ -92,7 +93,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Include_T4Include.cs</LastGenOutput>
     </None>
-    <None Include="packages.config" />
     <None Include="T4\Header.ttinclude" />
     <None Include="T4\ParserGenerator.ttinclude" />
     <None Include="T4\ParserModel.ttinclude" />

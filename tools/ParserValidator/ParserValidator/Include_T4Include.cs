@@ -54,6 +54,7 @@
 // ReSharper disable PartialMethodWithSinglePart
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable RedundantCaseLabel
+// ReSharper disable RedundantIfElseBlock
 // ReSharper disable RedundantNameQualifier
 // ############################################################################
 
@@ -370,7 +371,7 @@ namespace ParserValidator
                                 streamReader.ReadLines().Select(x => x.ToSubString()),
                                 out config,
                                 out parserErrors
-                                     ))
+                                ))
                             {
                                 throw new ExitCodeException(ExitCode.InvalidConfigFile);
                             }
@@ -378,7 +379,7 @@ namespace ParserValidator
                     }
                     else
                     {
-                        config = new object();
+                        config = HRONObject.Empty;
                     }
     
                     Log.Info("Initial setup is done, executing main program");
@@ -1205,6 +1206,8 @@ namespace ParserValidator
     
         sealed partial class HRONObject : BaseHRONEntity
         {
+            public static HRONObject Empty = new HRONObject (null);
+    
             public partial struct Member
             {
                 readonly string m_name;
@@ -2744,7 +2747,7 @@ namespace ParserValidator.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-12-05T07:33:25";
+        public const string IncludeDate     = @"2012-12-07T07:30:38";
 
         public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
         public const string Include_1       = @"mrange/T4Include/master/ConsoleApp/Runner.cs";
