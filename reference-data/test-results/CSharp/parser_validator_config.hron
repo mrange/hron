@@ -1,0 +1,21 @@
+# Controls the parser validation step for CSharp parser
+=PreProcessor
+	ValidateAll
+=Object_Begin
+	ValidateAll
+=Object_End
+	ValidateExistence
+=Value_Begin
+	ValidateAll
+=Value_End
+	ValidateExistence
+=Comment
+	ValidateContent
+=Empty
+	ValidateExistence
+=ContentLine
+	ValidateAll
+=EmptyLine
+	Ignore
+=CommentLine
+	Ignore

@@ -32,6 +32,7 @@
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Extensions/BasicExtensions.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs
 // @@@ INCLUDE_FOUND: HRONSerializer.cs
+// @@@ INCLUDE_FOUND: ../Extensions/EnumParseExtensions.cs
 // @@@ INCLUDE_FOUND: ../Extensions/ParseExtensions.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Log.cs
@@ -40,11 +41,14 @@
 // @@@ INCLUDE_FOUND: ../Common/Array.cs
 // @@@ INCLUDE_FOUND: ../Common/Config.cs
 // @@@ INCLUDE_FOUND: ../Common/SubString.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/EnumParseExtensions.cs
+// @@@ INCLUDE_FOUND: ../Reflection/StaticReflection.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/ParseExtensions.cs
 // @@@ INCLUDE_FOUND: ../Common/Config.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Array.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/SubString.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Reflection/StaticReflection.cs
 // @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // ############################################################################
 // Certains directives such as #define and // Resharper comments has to be 
@@ -127,7 +131,7 @@ namespace ParserValidator
                 return defaultValue;
             }
     
-            public static string DefaultTo(this string v, string defaultValue = null)
+            public static string DefaultTo (this string v, string defaultValue = null)
             {
                 return !v.IsNullOrEmpty () ? v : (defaultValue ?? "");
             }
@@ -236,12 +240,12 @@ namespace ParserValidator
                 return value is TTo ? (TTo) value : defaultValue;
             }
     
-            public static string Concatenate(this IEnumerable<string> values, string delimiter = null, int capacity = 16)
+            public static string Concatenate (this IEnumerable<string> values, string delimiter = null, int capacity = 16)
             {
                 values = values ?? Array<string>.Empty;
                 delimiter = delimiter ?? ", ";
     
-                return string.Join(delimiter, values);
+                return string.Join (delimiter, values);
             }
     
             public static string GetResourceString (this Assembly assembly, string name, string defaultValue = null)
@@ -253,7 +257,7 @@ namespace ParserValidator
                     return defaultValue;
                 }
     
-                var stream = assembly.GetManifestResourceStream(name ?? "");
+                var stream = assembly.GetManifestResourceStream (name ?? "");
                 if (stream == null)
                 {
                     return defaultValue;
@@ -262,11 +266,11 @@ namespace ParserValidator
                 using (stream)
                 using (var streamReader = new StreamReader (stream))
                 {
-                    return streamReader.ReadToEnd();
+                    return streamReader.ReadToEnd ();
                 }
             }
     
-            public static IEnumerable<string> ReadLines(this TextReader textReader)
+            public static IEnumerable<string> ReadLines (this TextReader textReader)
             {
                 if (textReader == null)
                 {
@@ -275,7 +279,7 @@ namespace ParserValidator
     
                 string line;
     
-                while ((line = textReader.ReadLine()) != null)
+                while ((line = textReader.ReadLine ()) != null)
                 {
                     yield return line;
                 }
@@ -561,6 +565,7 @@ namespace ParserValidator
     
         static partial class Log
         {
+            static partial void Partial_LogLevel (Level level);
             static partial void Partial_LogMessage (Level level, string message);
             static partial void Partial_ExceptionOnLog (Level level, string format, object[] args, Exception exc);
     
@@ -568,6 +573,7 @@ namespace ParserValidator
             {
                 try
                 {
+                    Partial_LogLevel (level);
                     Partial_LogMessage (level, GetMessage (format, args));
                 }
                 catch (Exception exc)
@@ -1087,6 +1093,12 @@ namespace ParserValidator
                 return m_entities.Length > 0;
             }
     
+            public override IEnumerable<string> GetDynamicMemberNames ()
+            {
+                var entity = m_entities.FirstOrEmpty ();
+                return entity.GetMemberNames ();
+            }
+    
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
             {
                 if (indexes.Length == 1 && indexes[0] is int)
@@ -1142,17 +1154,17 @@ namespace ParserValidator
                     result = m_entities;
                     return true;
                 }
-                else if (returnType.CanParse())
+                else if (BaseHRONEntity.IsParseable (returnType))
                 {
-                    result = m_entities.FirstOrEmpty().GetValue().Parse(Config.DefaultCulture, returnType, returnType.GetDefaultValue());
+                    result = BaseHRONEntity.Parse (returnType, m_entities.FirstOrEmpty().GetValue());
                     return true;                
                 }
                 else if (returnType.IsArray)
                 {
                     var elementType = returnType.GetElementType();
-                    if (elementType.CanParse())
+                    if (BaseHRONEntity.IsParseable (elementType))
                     {
-                        var values = m_entities.Select(entity => entity.GetValue().Parse(Config.DefaultCulture, elementType, elementType.GetDefaultValue())).ToArray();
+                        var values = m_entities.Select (entity => BaseHRONEntity.Parse (elementType, entity.GetValue())).ToArray();
                         var array = Array.CreateInstance(elementType, values.Length);
                         values.CopyTo(array, 0);
                         result = array;
@@ -1172,6 +1184,29 @@ namespace ParserValidator
     
             public abstract void Apply(SubString name, IHRONVisitor visitor);
             public abstract void ToString(StringBuilder sb);
+    
+            internal static bool IsParseable (Type type)
+            {
+                return type.CanParseEnumValue() || type.CanParse();
+            }
+    
+            public override IEnumerable<string> GetDynamicMemberNames ()
+            {
+                return GetMemberNames ();
+            }
+    
+            internal static object Parse(Type type, string value)
+            {
+                value = value ?? "";
+    
+                if (type.CanParseEnumValue())                    
+                {
+                    return value.ParseEnumValue(type) ?? type.GetDefaultEnumValue ();
+                }
+    
+                return value.Parse (Config.DefaultCulture, type, type.GetParsedDefaultValue());
+            }
+    
     
             public override string ToString()
             {
@@ -1194,9 +1229,9 @@ namespace ParserValidator
                     result = GetValue();
                     return true;
                 }
-                else if (returnType.CanParse())
+                else if (IsParseable(returnType))
                 {
-                    result = GetValue().Parse(Config.DefaultCulture, returnType, returnType.GetDefaultValue ());
+                    result = Parse(returnType, GetValue());
                     return true;
                 }
                 return base.TryConvert(binder, out result);
@@ -1216,7 +1251,7 @@ namespace ParserValidator
                 public Member(string name, IHRONEntity value)
                     : this()
                 {
-                    m_name = name;
+                    m_name = name.Trim ();
                     m_value = value;
                 }
     
@@ -2106,6 +2141,154 @@ namespace ParserValidator
 // ############################################################################
 namespace ParserValidator
 {
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    
+    namespace Source.Extensions
+    {
+        using System;
+        using System.Collections.Concurrent;
+        using System.Reflection;
+    
+        using Source.Reflection;
+    
+        static partial class EnumParseExtensions
+        {
+            enum Dummy {}
+    
+            sealed partial class EnumParser
+            {
+                public Func<string, object> ParseEnum   ;
+                public Func<object>         DefaultEnum ;
+            }
+    
+            static readonly MethodInfo s_parseEnum = StaticReflection.GetMethodInfo (() => ParseEnum<Dummy>(default (string)));
+            static readonly MethodInfo s_genericParseEnum = s_parseEnum.GetGenericMethodDefinition ();
+    
+            static readonly MethodInfo s_defaultEnum = StaticReflection.GetMethodInfo (() => DefaultEnum<Dummy>());
+            static readonly MethodInfo s_genericDefaultEnum = s_defaultEnum.GetGenericMethodDefinition ();
+    
+            static readonly ConcurrentDictionary<Type, EnumParser> s_enumParsers = new ConcurrentDictionary<Type, EnumParser>();
+            static readonly Func<Type, EnumParser> s_createParser = type => CreateParser (type);
+    
+            static EnumParser CreateParser (Type type)
+            {
+                if (!type.IsEnum)
+                {
+                    return null;
+                }
+    
+                return new EnumParser
+                           {
+                               ParseEnum    = (Func<string, object>)Delegate.CreateDelegate (
+                                                    typeof (Func<string, object>),
+                                                    s_genericParseEnum.MakeGenericMethod (type)
+                                                    ),
+                               DefaultEnum  = (Func<object>)Delegate.CreateDelegate (
+                                                   typeof (Func<object>),
+                                                   s_genericDefaultEnum.MakeGenericMethod (type)
+                                                   ), 
+                           };
+            }
+    
+            static object ParseEnum<TEnum>(string value)
+                where TEnum : struct
+            {
+                TEnum result;
+                return Enum.TryParse (value, true, out result)
+                    ? (object)result
+                    : null
+                    ;
+            }
+    
+            static object DefaultEnum<TEnum>()
+                where TEnum : struct
+            {
+                return default (TEnum);
+            }
+    
+            public static bool TryParseEnumValue (this string s, Type type, out object value)
+            {
+                value = null;
+                if (string.IsNullOrEmpty (s))
+                {
+                    return false;
+                }
+    
+                var enumParser = TryGetParser (type);
+                if (enumParser == null)
+                {
+                    return false;
+    
+                }
+                
+    
+                value = enumParser.ParseEnum (s);
+    
+                return value != null;
+            }
+    
+            public static bool CanParseEnumValue (this Type type)
+            {
+                var enumParser = TryGetParser (type);
+    
+                return enumParser != null;
+            }
+    
+            static EnumParser TryGetParser (Type type)
+            {
+                if (type == null)
+                {
+                    return null;
+                }
+    
+                var enumParser = s_enumParsers.GetOrAdd (type, s_createParser);
+    
+                return enumParser;
+            }
+    
+            public static object ParseEnumValue (this string s, Type type)
+            {
+                object value;
+                return s.TryParseEnumValue (type, out value)
+                    ? value
+                    : null
+                    ;
+            }
+    
+            public static object GetDefaultEnumValue (this Type type)
+            {
+                var enumParser = TryGetParser (type);
+                return enumParser != null ? enumParser.DefaultEnum () : null;
+            }
+    
+            public static TEnum ParseEnumValue<TEnum>(this string s, TEnum defaultValue) 
+                where TEnum : struct
+            {
+                TEnum value;
+                return Enum.TryParse (s, true, out value)
+                    ? value
+                    : defaultValue
+                    ;
+            }
+    
+        }
+    }
+}
+
+// ############################################################################
+namespace ParserValidator
+{
     
     
     
@@ -2271,7 +2454,7 @@ namespace ParserValidator
                 return s_parsers.ContainsKey (type);
             }
     
-            public static object GetDefaultValue (this Type type)
+            public static object GetParsedDefaultValue (this Type type)
             {
                 type = type ?? typeof (object);
     
@@ -2739,6 +2922,60 @@ namespace ParserValidator
     
     
 }
+
+// ############################################################################
+namespace ParserValidator
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    namespace Source.Reflection
+    {
+        using System;
+        using System.Linq.Expressions;
+        using System.Reflection;
+    
+        static partial class StaticReflection
+        {
+            public static MethodInfo GetMethodInfo (Expression<Action> expr)
+            {
+                return ((MethodCallExpression)expr.Body).Method;
+            }
+    
+            public static MemberInfo GetMemberInfo<TReturn> (Expression<Func<TReturn>> expr)
+            {
+                return ((MemberExpression)expr.Body).Member;
+            }
+    
+            public static ConstructorInfo GetConstructorInfo<TReturn> (Expression<Func<TReturn>> expr)
+            {
+                return ((NewExpression)expr.Body).Constructor;
+            }
+        }
+    
+        static partial class StaticReflection<T>
+        {
+            public static MethodInfo GetMethodInfo (Expression<Action<T>> expr)
+            {
+                return ((MethodCallExpression)expr.Body).Method;
+            }
+    
+            public static MemberInfo GetMemberInfo<TReturn>(Expression<Func<T, TReturn>> expr)
+            {
+                return ((MemberExpression)expr.Body).Member;
+            }
+        }
+    }
+}
 // ############################################################################
 
 // ############################################################################
@@ -2747,7 +2984,7 @@ namespace ParserValidator.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-12-07T07:30:38";
+        public const string IncludeDate     = @"2012-12-08T11:14:28";
 
         public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
         public const string Include_1       = @"mrange/T4Include/master/ConsoleApp/Runner.cs";
@@ -2759,7 +2996,9 @@ namespace ParserValidator.Include
         public const string Include_7       = @"https://raw.github.com/mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs";
         public const string Include_8       = @"https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs";
         public const string Include_9       = @"https://raw.github.com/mrange/T4Include/master/Hron/HRONSerializer.cs";
-        public const string Include_10       = @"https://raw.github.com/mrange/T4Include/master/Extensions/ParseExtensions.cs";
+        public const string Include_10       = @"https://raw.github.com/mrange/T4Include/master/Extensions/EnumParseExtensions.cs";
+        public const string Include_11       = @"https://raw.github.com/mrange/T4Include/master/Extensions/ParseExtensions.cs";
+        public const string Include_12       = @"https://raw.github.com/mrange/T4Include/master/Reflection/StaticReflection.cs";
     }
 }
 // ############################################################################
