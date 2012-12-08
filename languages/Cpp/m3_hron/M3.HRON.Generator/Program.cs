@@ -260,7 +260,7 @@ namespace M3.HRON.Generator
 
         public void Value_Line(SubString name)
         {
-            m_writer.WriteLine("Value_Line:{0}", name);
+            m_writer.WriteLine("ContentLine:{0}", name);
         }
 
         public void Value_End()

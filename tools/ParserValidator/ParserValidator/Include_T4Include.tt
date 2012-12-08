@@ -8,6 +8,7 @@
             Include (@"mrange/T4Include/master/Extensions/BasicExtensions.cs"),
             Include (@"mrange/T4Include/master/ConsoleApp/Runner.cs"),
             Include (@"mrange/T4Include/master/Common/ConsoleLog.cs"),
+            Include (@"mrange/T4Include/master/Reflection/ClassDescriptor.cs"),
 
             // Uncomment below to include dapper
             // Include (@"SamSaffron/dapper-dot-net/master/Dapper/SqlMapper.cs"),

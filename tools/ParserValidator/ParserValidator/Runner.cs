@@ -22,10 +22,7 @@ using System.Text.RegularExpressions;
 using ParserValidator.Source.Common;
 using ParserValidator.Source.Extensions;
 using ParserValidator.Source.HRON;
-
-namespace ParserValidator.Source.Common
-{
-}
+using ParserValidator.Source.Reflection;
 
 namespace ParserValidator.Source.ConsoleApp
 {
@@ -90,12 +87,11 @@ namespace ParserValidator.Source.ConsoleApp
         public TestRunOption ContentLine    ;
         public TestRunOption EmptyLine      ;
         public TestRunOption CommentLine    ;
-
-
     }
 
     partial class Runner
     {
+        static readonly ClassDescriptor s_classDescriptor = typeof (TestRunConfiguration).GetClassDescriptor();
 
         static readonly Regex s_actionLogEntry = new Regex(
             @"^(?<entry>\w+)\:(?<data>.*)$",
@@ -185,30 +181,7 @@ namespace ParserValidator.Source.ConsoleApp
 
                 try
                 {
-                    var referenceLines = File.ReadAllLines(referenceDataActionLog.ActionLogPath);
-                    var resultLines = File.ReadAllLines(testResultActionLog.ActionLogPath);
-
-                    var referenceLineNo = 0;
-                    var resultLineNo = 0;
-
-                    while (referenceLineNo < referenceLines.Length && resultLineNo < resultLines.Length)
-                    {
-                        try
-                        {
-                            var referenceLine = referenceLines[referenceLineNo];
-                            var resultLine = resultLines[resultLineNo];
-
-                            var matchReferenceLine = s_actionLogEntry.Match(referenceLine);
-                            var matchResultLine = s_actionLogEntry.Match(resultLine);
-                        }
-                        finally
-                        {
-                            ++referenceLineNo;
-                            ++resultLineNo;
-                        }
-                    }
-
-                    Log.Success("Success");
+                    ProcessActionLog(referenceDataActionLog, testResult, testResultActionLog);
                 }
                 catch (ExitCodeException)
                 {
@@ -218,6 +191,77 @@ namespace ParserValidator.Source.ConsoleApp
                 {
                     Log.Warning("Error while processing result action log: {0}", exc.Message);
                 }
+            }
+        }
+
+        static void ProcessActionLog(
+            ReferenceData referenceDataActionLog,
+            TestResult testResult,
+            TestResultActionLog testResultActionLog
+            )
+        {
+            var config = s_classDescriptor
+                .Members
+                .Where(m => m.HasPublicGetter && m.MemberType == typeof (TestRunOption))
+                .ToDictionary(m => m.Name, m => (TestRunOption)m.Getter(testResult.Configuration))
+                ;
+
+            var referenceLines = File.ReadAllLines(referenceDataActionLog.ActionLogPath);
+            var resultLines = File.ReadAllLines(testResultActionLog.ActionLogPath);
+
+            var referenceLineNo = 0;
+            var resultLineNo = 0;
+            
+            while (referenceLineNo < referenceLines.Length && resultLineNo < resultLines.Length)
+            {
+                var referenceLine = referenceLines[referenceLineNo];
+                var resultLine = resultLines[resultLineNo];
+
+                var matchReferenceLine = s_actionLogEntry.Match(referenceLine);
+                var matchResultLine = s_actionLogEntry.Match(resultLine);
+
+                var success = true;
+
+                if (!matchReferenceLine.Success)
+                {
+                    success = false;
+                    ++referenceLineNo;
+                    Log.Error("Reference@{0} - Invalid formatted line");
+                }
+
+                if (!matchResultLine.Success)
+                {
+                    success = false;
+                    ++resultLineNo;
+                    Log.Error("Result@{0} - Invalid formatted line");
+                }
+
+                if (!success)
+                {
+                    continue;
+                }
+
+                var referenceEntry = matchReferenceLine.Groups["entry"].Value;
+                var referenceData = matchReferenceLine.Groups["data"].Value;
+
+                var resultEntry = matchResultLine.Groups["entry"].Value;
+                var resultData = matchResultLine.Groups["data"].Value;
+
+                if (referenceEntry == resultEntry && referenceData == resultData)
+                {
+                    // All is good
+                    ++referenceLineNo;
+                    ++resultLineNo;
+                    continue;
+                }
+
+                Log.Error(
+                    "General validation failure: Reference@{0}, Result{1}", 
+                    referenceLineNo, 
+                    resultLineNo
+                    );
+
+                success = false;
             }
         }
 
