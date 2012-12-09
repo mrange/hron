@@ -1,8 +1,9 @@
 # Controls the parser validation step for CSharp parser
-=EmptyContentLinesAndEmptyLinesAreConsideredEquivalent
-	true
-=CommentsAndCommentLinesAreConsideredEquivalent
-	true
+@Equivalence
+	=EmptyContentLinesAndEmptyLines
+		true
+	=CommentsAndCommentLines
+		true
 =PreProcessor
 	ValidateAll
 =Object_Begin

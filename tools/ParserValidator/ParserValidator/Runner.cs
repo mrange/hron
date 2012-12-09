@@ -71,10 +71,15 @@ namespace ParserValidator.Source.ConsoleApp
         Ignore              ,
     }
 
+    struct Equivalence
+    {
+        public bool EmptyContentLinesAndEmptyLines  ;
+        public bool CommentsAndCommentLines         ;
+    }
     sealed partial class TestRunConfiguration
     {
-        public bool          EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  ;
-        public bool          CommentsAndCommentLinesAreConsideredEquivalent         ;
+        public Equivalence   Equivalence = new Equivalence();
+
         public TestRunOption PreProcessor   ;
 
         public TestRunOption Object_Begin   ;
@@ -360,7 +365,7 @@ namespace ParserValidator.Source.ConsoleApp
                 var hasIdenticalTag = 
                         referenceTag == resultTag
                     ||  (
-                            testResult.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent 
+                            testResult.Configuration.Equivalence.EmptyContentLinesAndEmptyLines
                             && IsComment(referenceTag)
                             && IsComment(resultTag)
                         );
@@ -471,7 +476,7 @@ namespace ParserValidator.Source.ConsoleApp
 
             var result = false;
 
-            if (config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent)
+            if (config.Equivalence.EmptyContentLinesAndEmptyLines)
             {
                 result |= IsEmpty(referenceTag, referenceData) && IsEmpty(resultTag, resultData);
             }
@@ -567,8 +572,8 @@ namespace ParserValidator.Source.ConsoleApp
                         return result;
                     }
 
-                    result.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  = config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  ;
-                    result.Configuration.CommentsAndCommentLinesAreConsideredEquivalent         = config.CommentsAndCommentLinesAreConsideredEquivalent         ;
+                    result.Configuration.Equivalence.EmptyContentLinesAndEmptyLines     = config.Equivalence.EmptyContentLinesAndEmptyLines ;
+                    result.Configuration.Equivalence.CommentsAndCommentLines            = config.Equivalence.CommentsAndCommentLines        ;
                     result.Configuration.PreProcessor   = config.PreProcessor   ;
                     result.Configuration.Object_Begin   = config.Object_Begin   ;
                     result.Configuration.Object_End     = config.Object_End     ;
