@@ -166,9 +166,9 @@ namespace M3.HRON.Generator
             Log.Info("Value_Begin:{0}", name);
         }
 
-        public void Value_Line(SubString name)
+        public void Value_Line(SubString content)
         {
-            Log.Info("Value_Line:{0}", name);
+            Log.Info("Value_Line:{0}", content);
         }
 
         public void Value_End()
@@ -207,7 +207,7 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Value_Line(SubString name)
+        public void Value_Line(SubString content)
         {
         }
 
@@ -258,9 +258,9 @@ namespace M3.HRON.Generator
             m_writer.WriteLine("Value_Begin:{0}", name);
         }
 
-        public void Value_Line(SubString name)
+        public void Value_Line(SubString content)
         {
-            m_writer.WriteLine("ContentLine:{0}", name);
+            m_writer.WriteLine("ContentLine:{0}", content);
         }
 
         public void Value_End()

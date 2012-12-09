@@ -73,6 +73,7 @@ namespace ParserValidator.Source.ConsoleApp
 
     sealed partial class TestRunConfiguration
     {
+        public bool          EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  ;
         public TestRunOption PreProcessor   ;
 
         public TestRunOption Object_Begin   ;
@@ -93,13 +94,17 @@ namespace ParserValidator.Source.ConsoleApp
     {
         static readonly ClassDescriptor s_classDescriptor = typeof (TestRunConfiguration).GetClassDescriptor();
 
-        static readonly Regex s_actionLogEntry = new Regex(
-            @"^(?<entry>\w+)\:(?<data>.*)$",
-            RegexOptions.Compiled | RegexOptions.CultureInvariant
-            );
+        static int MaxErrors = 10;
 
         static partial void Partial_Run(string[] args, dynamic config)
         {
+            {
+                int maxErrors = config.ParserValidator.MaxErrors;
+                if (maxErrors > 0)
+                {
+                    MaxErrors = maxErrors;
+                }
+            }
             try
             {
                 var referenceDataPath = Path.GetFullPath(@"..\..\..\..\..\reference-data");
@@ -194,6 +199,111 @@ namespace ParserValidator.Source.ConsoleApp
             }
         }
 
+        sealed partial class ActionLog
+        {
+            static readonly Regex s_actionLogEntry = new Regex(
+                @"^(?<tag>\w+)\:(?<data>.*)$",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant
+                );
+
+            public readonly string      Name        ;
+            public readonly string[]    Lines       ;
+            public int                  LineNo      ;
+
+            public int                  ErrorCount  ;
+
+            public ActionLog(string name, string[] lines)
+            {
+                Name  = name ?? "NoName"; 
+                Lines = lines ?? Array<string>.Empty;
+                
+            }
+
+            public bool Advance()
+            {
+                if (HasContent)
+                {
+                    ++LineNo;
+                }
+
+                return HasContent;
+            }
+
+            public bool HasContent
+            {
+                get { return LineNo > -1 && LineNo < Lines.Length; }
+            }
+
+            public string Current
+            {
+                get { return HasContent ? Lines[LineNo] : ""; }
+            }
+
+            public Match GetMatch()
+            {
+                return s_actionLogEntry.Match(Current);
+            }
+
+            public bool ReportFailure(string tag, string failure, bool skipLine)
+            {
+                ++ErrorCount;
+                Log.Error(
+                    "{0}@{1} - {2} - {3}{4}",
+                    Name,
+                    LineNo + 1, 
+                    tag,
+                    failure ?? "Unknown",
+                    skipLine ? "- Skipping line" : ""
+                    );
+                if (skipLine)
+                {
+                    return Advance();
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            public bool ReportAllIsGood(string tag)
+            {
+                return Advance();
+            }
+        }
+
+        sealed partial class ValidateState
+        {
+            public readonly ActionLog   Reference   ;
+            public readonly ActionLog   Result      ;
+
+            public ValidateState(string[] referenceLines, string[] resultLines)
+            {
+                Reference   = new ActionLog ("Reference", referenceLines);
+                Result      = new ActionLog ("Result", resultLines);
+            }
+
+            public bool ReportAllIsGood(string tag)
+            {
+                return Reference.ReportAllIsGood(tag) & Result.ReportAllIsGood(tag);
+            }
+
+            public bool ReportFailure(string referenceTag, string resultTag, string validationFailure, bool skipReferenceLine, bool skipResultLine)
+            {
+                return Reference.ReportFailure(referenceTag, validationFailure, skipReferenceLine) & Result.ReportFailure(resultTag, validationFailure, skipResultLine);
+            }
+
+            public bool HasContent
+            {
+                get { return Reference.HasContent && Result.HasContent; }
+            }
+
+            public int ErrorCount
+            {
+                get { return Math.Max(Reference.ErrorCount, Result.ErrorCount); }
+            }
+
+        }
+
         static void ProcessActionLog(
             ReferenceData referenceDataActionLog,
             TestResult testResult,
@@ -209,59 +319,110 @@ namespace ParserValidator.Source.ConsoleApp
             var referenceLines = File.ReadAllLines(referenceDataActionLog.ActionLogPath);
             var resultLines = File.ReadAllLines(testResultActionLog.ActionLogPath);
 
-            var referenceLineNo = 0;
-            var resultLineNo = 0;
-            
-            while (referenceLineNo < referenceLines.Length && resultLineNo < resultLines.Length)
+            var state = new ValidateState (referenceLines, resultLines);
+
+            while (state.HasContent && state.ErrorCount < MaxErrors)
             {
-                var referenceLine = referenceLines[referenceLineNo];
-                var resultLine = resultLines[resultLineNo];
-
-                var matchReferenceLine = s_actionLogEntry.Match(referenceLine);
-                var matchResultLine = s_actionLogEntry.Match(resultLine);
-
-                var success = true;
+                var matchReferenceLine  = state.Reference.GetMatch();
+                var matchResultLine     = state.Result.GetMatch();
 
                 if (!matchReferenceLine.Success)
                 {
-                    success = false;
-                    ++referenceLineNo;
-                    Log.Error("Reference@{0} - Invalid formatted line");
+                    state.Reference.ReportFailure("UnknownTag", "Invalid formatted line", skipLine: true);
                 }
 
                 if (!matchResultLine.Success)
                 {
-                    success = false;
-                    ++resultLineNo;
-                    Log.Error("Result@{0} - Invalid formatted line");
+                    state.Result.ReportFailure("UnknownTag", "Invalid formatted line", skipLine: true);
                 }
 
-                if (!success)
-                {
-                    continue;
-                }
-
-                var referenceEntry = matchReferenceLine.Groups["entry"].Value;
+                var referenceTag = matchReferenceLine.Groups["tag"].Value;
                 var referenceData = matchReferenceLine.Groups["data"].Value;
 
-                var resultEntry = matchResultLine.Groups["entry"].Value;
+                var resultTag = matchResultLine.Groups["tag"].Value;
                 var resultData = matchResultLine.Groups["data"].Value;
 
-                if (referenceEntry == resultEntry && referenceData == resultData)
+                var isIdentical = IsIdentical(testResult.Configuration, referenceTag, resultTag, referenceData, resultData); 
+
+                if (isIdentical)
                 {
-                    // All is good
-                    ++referenceLineNo;
-                    ++resultLineNo;
+                    state.ReportAllIsGood(referenceTag);
                     continue;
                 }
 
-                Log.Error(
-                    "General validation failure: Reference@{0}, Result{1}", 
-                    referenceLineNo, 
-                    resultLineNo
-                    );
+                var referenceOption = config.Lookup(referenceTag);
 
-                success = false;
+                var hasIdenticalTag = referenceTag == resultTag;
+                var hasSameContent = false;
+                var hasSameIndent = false;
+
+
+                switch (referenceOption)
+                {
+                    case TestRunOption.ValidateExistence:
+                        if (hasIdenticalTag)
+                        {
+                            state.ReportAllIsGood(referenceTag);
+                            continue;
+                        }
+                        else
+                        {
+                            state.ReportFailure(referenceTag, resultTag, "Validation failure (missing tag)", skipReferenceLine: true, skipResultLine: false);
+                            continue;
+                        }
+                        break;
+                    case TestRunOption.ValidateContent:
+                        // TODO:
+                    case TestRunOption.Ignore:
+                        if (hasIdenticalTag)
+                        {
+                            state.ReportAllIsGood(referenceTag);
+                            continue;
+                        }
+                        else
+                        {
+                            state.Reference.ReportAllIsGood(referenceTag);
+                            continue;
+                        }
+                        continue;
+                    case TestRunOption.ValidateAll:
+                    default:
+                        state.ReportFailure(referenceTag, resultTag, "Validation failure (mismatch)", skipReferenceLine: true, skipResultLine:true);
+                        break;
+                }
+
+            }
+        }
+
+        static bool IsIdentical(TestRunConfiguration config, string referenceTag, string resultTag, string referenceData, string resultData)
+        {
+            if (referenceTag == resultTag && referenceData == resultData)
+            {
+                return true;
+            }
+
+            if (!config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent)
+            {
+                return false;
+            }
+
+            var isReferenceEmpty = IsEmpty(referenceTag, referenceData);
+            var isResultEmpty = IsEmpty(resultTag, resultData);
+
+            return isReferenceEmpty && isResultEmpty;
+        }
+
+        static bool IsEmpty(string tag, string data)
+        {
+            switch (tag)
+            {
+                case "EmptyLine":
+                case "Empty":
+                    return true;
+                case "ContentLine":
+                    return string.IsNullOrWhiteSpace(data);
+                default:
+                    return false;
             }
         }
 
@@ -339,6 +500,7 @@ namespace ParserValidator.Source.ConsoleApp
                         return result;
                     }
 
+                    result.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent = config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent;
                     result.Configuration.PreProcessor   = config.PreProcessor   ;
                     result.Configuration.Object_Begin   = config.Object_Begin   ;
                     result.Configuration.Object_End     = config.Object_End     ;

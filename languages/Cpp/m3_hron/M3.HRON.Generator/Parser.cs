@@ -32,7 +32,7 @@ namespace M3.HRON.Generator.Parser
         void Object_End();
 
         void Value_Begin(SubString name);
-        void Value_Line(SubString line);
+        void Value_Line(SubString content);
         void Value_End();
     }
 
