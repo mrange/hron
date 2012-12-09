@@ -74,7 +74,7 @@ namespace M3.HRON.Generator.Parser
             ++m_lineNo;
         }
 
-        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error()
+        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error()
         {
             if (m_isBuildingValue)
             {
@@ -86,7 +86,7 @@ namespace M3.HRON.Generator.Parser
             else
             {
                 State = m_expectedIndention < m_indention
-                    ? ParserState.Error
+                    ? ParserState.NoContentTagExpected
                     : ParserState.TagExpected
                     ;
             }
@@ -147,12 +147,12 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_EndOfPreProcessorTag()
         {
-            m_visitor.PreProcessor(CurrentLine.ToSubString(m_expectedIndention + 1));
+            m_visitor.PreProcessor(CurrentLine.ToSubString(m_indention + 1));
         }
 
         partial void Partial_StateTransition__To_EndOfCommentTag()
         {
-            m_visitor.Comment(CurrentLine.ToSubString(m_expectedIndention + 1));
+            m_visitor.Comment(CurrentLine.ToSubString(m_indention + 1));
         }
 
         partial void Partial_StateTransition__To_EndOfEmptyTag()
@@ -166,7 +166,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__To_EndOfObjectTag()
         {
             PopContext();
-            m_visitor.Object_Begin(CurrentLine.ToSubString(m_expectedIndention + 1));
+            m_visitor.Object_Begin(CurrentLine.ToSubString(m_indention + 1));
             m_expectedIndention = m_indention + 1;
         }
 
@@ -174,7 +174,7 @@ namespace M3.HRON.Generator.Parser
         {
             PopContext();
             m_isBuildingValue = true;
-            m_visitor.Value_Begin(CurrentLine.ToSubString(m_expectedIndention + 1));
+            m_visitor.Value_Begin(CurrentLine.ToSubString(m_indention + 1));
             m_expectedIndention = m_indention + 1;
         }
 

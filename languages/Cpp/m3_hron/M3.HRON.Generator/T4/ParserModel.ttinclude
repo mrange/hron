@@ -18,6 +18,7 @@
                 Terminator  (NoCase     , "EndOfEmptyTag"       ),
                 Next        ("\t"       , "Indention"                   ),
                 HandOver    (DefaultCase, "TagExpected" 
+                                        , "NoContentTagExpected"        
                                         , "ValueLine" 
                                         , "Error"                       ),
             },
@@ -27,6 +28,13 @@
                 Terminator  (NoCase     , "EndOfEmptyTag"       ),
                 Next        ("@"        , "ObjectTag"           ),
                 Next        ("="        , "ValueTag"            ),
+                Next        ("#"        , "CommentTag"          ),
+                Next        ("\t "      , "EmptyTag"            ),
+            },
+
+            new ParserState ("NoContentTagExpected")     
+            {
+                Terminator  (NoCase     , "EndOfEmptyTag"       ),
                 Next        ("#"        , "CommentTag"          ),
                 Next        ("\t "      , "EmptyTag"            ),
             },

@@ -31,6 +31,7 @@ namespace M3.HRON.Generator.Parser
         PreProcessing,
         Indention,
         TagExpected,
+        NoContentTagExpected,
         PreProcessorTag,
         ObjectTag,
         ValueTag,
@@ -61,7 +62,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_BeginLine ();
         partial void Partial_EndLine ();
 
-        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error ();
+        partial void Partial_StateChoice__From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error ();
 
         partial void Partial_StateTransition__From_Error ();
 
@@ -81,6 +82,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__From_Indention__To_EndOfEmptyTag ();
         partial void Partial_StateTransition__From_Indention__To_Indention ();
         partial void Partial_StateTransition__From_Indention__To_TagExpected ();
+        partial void Partial_StateTransition__From_Indention__To_NoContentTagExpected ();
         partial void Partial_StateTransition__From_Indention__To_ValueLine ();
         partial void Partial_StateTransition__From_Indention__To_Error ();
         partial void Partial_StateTransition__From_TagExpected ();
@@ -93,6 +95,14 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__From_TagExpected__To_CommentTag ();
         partial void Partial_StateTransition__From_TagExpected__To_EmptyTag ();
         partial void Partial_StateTransition__From_TagExpected__To_Error ();
+        partial void Partial_StateTransition__From_NoContentTagExpected ();
+
+        partial void Partial_StateTransition__To_NoContentTagExpected ();
+
+        partial void Partial_StateTransition__From_NoContentTagExpected__To_EndOfEmptyTag ();
+        partial void Partial_StateTransition__From_NoContentTagExpected__To_CommentTag ();
+        partial void Partial_StateTransition__From_NoContentTagExpected__To_EmptyTag ();
+        partial void Partial_StateTransition__From_NoContentTagExpected__To_Error ();
         partial void Partial_StateTransition__From_PreProcessorTag ();
 
         partial void Partial_StateTransition__To_PreProcessorTag ();
@@ -233,7 +243,7 @@ apply:
                             Partial_StateTransition__To_Indention ();
                         break;
                     default:
-                    Partial_StateChoice__From_Indention__Choose_TagExpected_ValueLine_Error ();
+                    Partial_StateChoice__From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error ();
 
                         switch (State)
                         {
@@ -241,6 +251,11 @@ apply:
                             Partial_StateTransition__From_Indention ();
                             Partial_StateTransition__From_Indention__To_TagExpected ();
                             Partial_StateTransition__To_TagExpected ();
+                            break;
+                        case ParserState.NoContentTagExpected:
+                            Partial_StateTransition__From_Indention ();
+                            Partial_StateTransition__From_Indention__To_NoContentTagExpected ();
+                            Partial_StateTransition__To_NoContentTagExpected ();
                             break;
                         case ParserState.ValueLine:
                             Partial_StateTransition__From_Indention ();
@@ -293,6 +308,31 @@ apply:
                         State = ParserState.Error; 
                             Partial_StateTransition__From_TagExpected ();
                             Partial_StateTransition__From_TagExpected__To_Error ();
+                            Partial_StateTransition__To_Error ();
+                        break;
+    
+                    }
+                    break;
+                case ParserState.NoContentTagExpected:
+                    switch (CurrentCharacter)
+                    {
+                    case '#':
+                        State = ParserState.CommentTag; 
+                            Partial_StateTransition__From_NoContentTagExpected ();
+                            Partial_StateTransition__From_NoContentTagExpected__To_CommentTag ();
+                            Partial_StateTransition__To_CommentTag ();
+                        break;
+                    case '\t':
+                    case ' ':
+                        State = ParserState.EmptyTag; 
+                            Partial_StateTransition__From_NoContentTagExpected ();
+                            Partial_StateTransition__From_NoContentTagExpected__To_EmptyTag ();
+                            Partial_StateTransition__To_EmptyTag ();
+                        break;
+                    default:
+                        State = ParserState.Error; 
+                            Partial_StateTransition__From_NoContentTagExpected ();
+                            Partial_StateTransition__From_NoContentTagExpected__To_Error ();
                             Partial_StateTransition__To_Error ();
                         break;
     
@@ -476,6 +516,12 @@ apply:
                     State = ParserState.EndOfEmptyTag; 
                             Partial_StateTransition__From_TagExpected ();
                             Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag ();
+                            Partial_StateTransition__To_EndOfEmptyTag ();
+                    break;
+                case ParserState.NoContentTagExpected:
+                    State = ParserState.EndOfEmptyTag; 
+                            Partial_StateTransition__From_NoContentTagExpected ();
+                            Partial_StateTransition__From_NoContentTagExpected__To_EndOfEmptyTag ();
                             Partial_StateTransition__To_EndOfEmptyTag ();
                     break;
                 case ParserState.PreProcessorTag:
