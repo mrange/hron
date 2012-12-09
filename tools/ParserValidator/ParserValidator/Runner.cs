@@ -74,6 +74,7 @@ namespace ParserValidator.Source.ConsoleApp
     sealed partial class TestRunConfiguration
     {
         public bool          EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  ;
+        public bool          CommentsAndCommentLinesAreConsideredEquivalent         ;
         public TestRunOption PreProcessor   ;
 
         public TestRunOption Object_Begin   ;
@@ -304,6 +305,10 @@ namespace ParserValidator.Source.ConsoleApp
 
         }
 
+        static readonly Regex s_commentContent = new Regex(
+            @"^(?<indention>\d+),(?<content>.*)$",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant
+            );
         static void ProcessActionLog(
             ReferenceData referenceDataActionLog,
             TestResult testResult,
@@ -352,10 +357,13 @@ namespace ParserValidator.Source.ConsoleApp
 
                 var referenceOption = config.Lookup(referenceTag);
 
-                var hasIdenticalTag = referenceTag == resultTag;
-                var hasSameContent = false;
-                var hasSameIndent = false;
-
+                var hasIdenticalTag = 
+                        referenceTag == resultTag
+                    ||  (
+                            testResult.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent 
+                            && IsComment(referenceTag)
+                            && IsComment(resultTag)
+                        );
 
                 switch (referenceOption)
                 {
@@ -370,9 +378,44 @@ namespace ParserValidator.Source.ConsoleApp
                             state.ReportFailure(referenceTag, resultTag, "Validation failure (missing tag)", skipReferenceLine: true, skipResultLine: false);
                             continue;
                         }
-                        break;
                     case TestRunOption.ValidateContent:
-                        // TODO:
+                        if (hasIdenticalTag)
+                        {
+                            if (IsComment(referenceTag))
+                            {
+                                var referenceCommentContent = GetCommentContent(referenceData);
+                                var resultCommentContent = GetCommentContent(resultData);
+
+                                if (referenceCommentContent.Item2 != resultCommentContent.Item2)
+                                {
+                                    state.ReportFailure(referenceTag, resultTag, "Validation failure (content)", skipReferenceLine: true, skipResultLine: true);
+                                }
+                                else
+                                {
+                                    state.ReportAllIsGood(referenceTag);
+                                }
+
+                                continue;
+                            }
+                            else
+                            {
+                                if (referenceData != resultData)
+                                {
+                                    state.ReportFailure(referenceTag, resultTag, "Validation failure (content)", skipReferenceLine: true, skipResultLine: true);
+                                    continue;
+                                }
+                                else
+                                {
+                                    state.ReportAllIsGood(referenceTag);
+                                    continue;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            state.ReportFailure(referenceTag, resultTag, "Validation failure (missing tag)", skipReferenceLine: true, skipResultLine: false);
+                            continue;
+                        }
                     case TestRunOption.Ignore:
                         if (hasIdenticalTag)
                         {
@@ -388,9 +431,34 @@ namespace ParserValidator.Source.ConsoleApp
                     case TestRunOption.ValidateAll:
                     default:
                         state.ReportFailure(referenceTag, resultTag, "Validation failure (mismatch)", skipReferenceLine: true, skipResultLine:true);
-                        break;
+                        continue;
                 }
+            }
+        }
 
+        static Tuple<int, string> GetCommentContent(string content)
+        {
+            content = content ?? "";
+
+            var match = s_commentContent.Match(content);
+            return match.Success
+                       ? Tuple.Create(
+                           match.Groups["indention"].Value.Parse(0),
+                           match.Groups["content"].Value)
+                       : Tuple.Create(
+                           0,
+                           content);
+        }
+
+        static bool IsComment(string tag)
+        {
+            switch (tag)
+            {
+                case "Comment":
+                case "CommentLine":
+                    return true;
+                default:
+                    return false;
             }
         }
 
@@ -401,15 +469,14 @@ namespace ParserValidator.Source.ConsoleApp
                 return true;
             }
 
-            if (!config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent)
+            var result = false;
+
+            if (config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent)
             {
-                return false;
+                result |= IsEmpty(referenceTag, referenceData) && IsEmpty(resultTag, resultData);
             }
 
-            var isReferenceEmpty = IsEmpty(referenceTag, referenceData);
-            var isResultEmpty = IsEmpty(resultTag, resultData);
-
-            return isReferenceEmpty && isResultEmpty;
+            return result;
         }
 
         static bool IsEmpty(string tag, string data)
@@ -500,7 +567,8 @@ namespace ParserValidator.Source.ConsoleApp
                         return result;
                     }
 
-                    result.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent = config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent;
+                    result.Configuration.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  = config.EmptyContentLinesAndEmptyLinesAreConsideredEquivalent  ;
+                    result.Configuration.CommentsAndCommentLinesAreConsideredEquivalent         = config.CommentsAndCommentLinesAreConsideredEquivalent         ;
                     result.Configuration.PreProcessor   = config.PreProcessor   ;
                     result.Configuration.Object_Begin   = config.Object_Begin   ;
                     result.Configuration.Object_End     = config.Object_End     ;

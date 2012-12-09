@@ -1,6 +1,8 @@
 # Controls the parser validation step for CSharp parser
 =EmptyContentLinesAndEmptyLinesAreConsideredEquivalent
 	true
+=CommentsAndCommentLinesAreConsideredEquivalent
+	true
 =PreProcessor
 	ValidateAll
 =Object_Begin
@@ -14,10 +16,10 @@
 =Comment
 	ValidateContent
 =Empty
-	ValidateExistence
+	Ignore
 =ContentLine
 	ValidateAll
 =EmptyLine
-	Ignore
+	ValidateExistence
 =CommentLine
-	Ignore
+	ValidateContent
