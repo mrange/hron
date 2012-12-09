@@ -69,7 +69,7 @@ namespace M3.HRON.Generator.Parser
         foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
         {
 #>
-            partial void Partial_StateTransition__From_<#=parserState.Name#>__To_<#=name#> ();
+        partial void Partial_StateTransition__From_<#=parserState.Name#>__To_<#=name#> ();
 <#
         }
     }

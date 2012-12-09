@@ -67,99 +67,99 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_Error ();
 
-            partial void Partial_StateTransition__From_Error__To_Error ();
+        partial void Partial_StateTransition__From_Error__To_Error ();
         partial void Partial_StateTransition__From_PreProcessing ();
 
         partial void Partial_StateTransition__To_PreProcessing ();
 
-            partial void Partial_StateTransition__From_PreProcessing__To_PreProcessorTag ();
-            partial void Partial_StateTransition__From_PreProcessing__To_Indention ();
+        partial void Partial_StateTransition__From_PreProcessing__To_PreProcessorTag ();
+        partial void Partial_StateTransition__From_PreProcessing__To_Indention ();
         partial void Partial_StateTransition__From_Indention ();
 
         partial void Partial_StateTransition__To_Indention ();
 
-            partial void Partial_StateTransition__From_Indention__To_EndOfEmptyTag ();
-            partial void Partial_StateTransition__From_Indention__To_Indention ();
-            partial void Partial_StateTransition__From_Indention__To_TagExpected ();
-            partial void Partial_StateTransition__From_Indention__To_ValueLine ();
-            partial void Partial_StateTransition__From_Indention__To_Error ();
+        partial void Partial_StateTransition__From_Indention__To_EndOfEmptyTag ();
+        partial void Partial_StateTransition__From_Indention__To_Indention ();
+        partial void Partial_StateTransition__From_Indention__To_TagExpected ();
+        partial void Partial_StateTransition__From_Indention__To_ValueLine ();
+        partial void Partial_StateTransition__From_Indention__To_Error ();
         partial void Partial_StateTransition__From_TagExpected ();
 
         partial void Partial_StateTransition__To_TagExpected ();
 
-            partial void Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag ();
-            partial void Partial_StateTransition__From_TagExpected__To_ObjectTag ();
-            partial void Partial_StateTransition__From_TagExpected__To_ValueTag ();
-            partial void Partial_StateTransition__From_TagExpected__To_CommentTag ();
-            partial void Partial_StateTransition__From_TagExpected__To_EmptyTag ();
-            partial void Partial_StateTransition__From_TagExpected__To_Error ();
+        partial void Partial_StateTransition__From_TagExpected__To_EndOfEmptyTag ();
+        partial void Partial_StateTransition__From_TagExpected__To_ObjectTag ();
+        partial void Partial_StateTransition__From_TagExpected__To_ValueTag ();
+        partial void Partial_StateTransition__From_TagExpected__To_CommentTag ();
+        partial void Partial_StateTransition__From_TagExpected__To_EmptyTag ();
+        partial void Partial_StateTransition__From_TagExpected__To_Error ();
         partial void Partial_StateTransition__From_PreProcessorTag ();
 
         partial void Partial_StateTransition__To_PreProcessorTag ();
 
-            partial void Partial_StateTransition__From_PreProcessorTag__To_EndOfPreProcessorTag ();
-            partial void Partial_StateTransition__From_PreProcessorTag__To_PreProcessorTag ();
+        partial void Partial_StateTransition__From_PreProcessorTag__To_EndOfPreProcessorTag ();
+        partial void Partial_StateTransition__From_PreProcessorTag__To_PreProcessorTag ();
         partial void Partial_StateTransition__From_ObjectTag ();
 
         partial void Partial_StateTransition__To_ObjectTag ();
 
-            partial void Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag ();
-            partial void Partial_StateTransition__From_ObjectTag__To_ObjectTag ();
+        partial void Partial_StateTransition__From_ObjectTag__To_EndOfObjectTag ();
+        partial void Partial_StateTransition__From_ObjectTag__To_ObjectTag ();
         partial void Partial_StateTransition__From_ValueTag ();
 
         partial void Partial_StateTransition__To_ValueTag ();
 
-            partial void Partial_StateTransition__From_ValueTag__To_EndOfValueTag ();
-            partial void Partial_StateTransition__From_ValueTag__To_ValueTag ();
+        partial void Partial_StateTransition__From_ValueTag__To_EndOfValueTag ();
+        partial void Partial_StateTransition__From_ValueTag__To_ValueTag ();
         partial void Partial_StateTransition__From_EmptyTag ();
 
         partial void Partial_StateTransition__To_EmptyTag ();
 
-            partial void Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag ();
-            partial void Partial_StateTransition__From_EmptyTag__To_EmptyTag ();
-            partial void Partial_StateTransition__From_EmptyTag__To_Error ();
+        partial void Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag ();
+        partial void Partial_StateTransition__From_EmptyTag__To_EmptyTag ();
+        partial void Partial_StateTransition__From_EmptyTag__To_Error ();
         partial void Partial_StateTransition__From_CommentTag ();
 
         partial void Partial_StateTransition__To_CommentTag ();
 
-            partial void Partial_StateTransition__From_CommentTag__To_EndOfCommentTag ();
-            partial void Partial_StateTransition__From_CommentTag__To_CommentTag ();
+        partial void Partial_StateTransition__From_CommentTag__To_EndOfCommentTag ();
+        partial void Partial_StateTransition__From_CommentTag__To_CommentTag ();
         partial void Partial_StateTransition__From_EndOfPreProcessorTag ();
 
         partial void Partial_StateTransition__To_EndOfPreProcessorTag ();
 
-            partial void Partial_StateTransition__From_EndOfPreProcessorTag__To_PreProcessing ();
+        partial void Partial_StateTransition__From_EndOfPreProcessorTag__To_PreProcessing ();
         partial void Partial_StateTransition__From_EndOfObjectTag ();
 
         partial void Partial_StateTransition__To_EndOfObjectTag ();
 
-            partial void Partial_StateTransition__From_EndOfObjectTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfObjectTag__To_Indention ();
         partial void Partial_StateTransition__From_EndOfEmptyTag ();
 
         partial void Partial_StateTransition__To_EndOfEmptyTag ();
 
-            partial void Partial_StateTransition__From_EndOfEmptyTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfEmptyTag__To_Indention ();
         partial void Partial_StateTransition__From_EndOfValueTag ();
 
         partial void Partial_StateTransition__To_EndOfValueTag ();
 
-            partial void Partial_StateTransition__From_EndOfValueTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfValueTag__To_Indention ();
         partial void Partial_StateTransition__From_EndOfCommentTag ();
 
         partial void Partial_StateTransition__To_EndOfCommentTag ();
 
-            partial void Partial_StateTransition__From_EndOfCommentTag__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfCommentTag__To_Indention ();
         partial void Partial_StateTransition__From_ValueLine ();
 
         partial void Partial_StateTransition__To_ValueLine ();
 
-            partial void Partial_StateTransition__From_ValueLine__To_EndOfValueLine ();
-            partial void Partial_StateTransition__From_ValueLine__To_ValueLine ();
+        partial void Partial_StateTransition__From_ValueLine__To_EndOfValueLine ();
+        partial void Partial_StateTransition__From_ValueLine__To_ValueLine ();
         partial void Partial_StateTransition__From_EndOfValueLine ();
 
         partial void Partial_StateTransition__To_EndOfValueLine ();
 
-            partial void Partial_StateTransition__From_EndOfValueLine__To_Indention ();
+        partial void Partial_StateTransition__From_EndOfValueLine__To_Indention ();
 
         partial void Partial_AcceptEndOfStream ();
                 

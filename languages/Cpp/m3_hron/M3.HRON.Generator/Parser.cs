@@ -14,8 +14,6 @@
 // ReSharper disable InconsistentNaming
 
 
-using System;
-
 namespace M3.HRON.Generator.Parser
 {
     using M3.HRON.Generator.Source.Common;
