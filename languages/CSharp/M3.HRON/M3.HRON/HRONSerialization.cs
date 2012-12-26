@@ -13,6 +13,8 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialTypeWithSinglePart
 
+using M3.HRON.Generator.Source.Extensions;
+
 namespace M3.HRON
 {
     using System;
@@ -188,6 +190,79 @@ namespace M3.HRON
             StringBuilder.AppendFormat("# ERROR - {0}({1}) : {2}", parseError, lineNo, line);
             StringBuilder.AppendLine();
             ++ErrorCount;
+        }
+    }
+
+    public sealed class HRONWritingVisitor : IHRONVisitor
+    {
+        readonly WritingVisitor m_visitor = new WritingVisitor();
+
+        public int ErrorCount
+        {
+            get { return m_visitor.ErrorCount; }
+        }
+        public StringBuilder StringBuilder
+        {
+            get { return m_visitor.StringBuilder; }
+        }
+
+        public void Document_Begin()
+        {
+            m_visitor.Document_Begin();
+        }
+
+        public void Document_End()
+        {
+            m_visitor.Document_End();
+        }
+
+        public void PreProcessor(string line)
+        {
+            m_visitor.PreProcessor(line.ToSubString());
+        }
+
+        public void Empty(string line)
+        {
+            m_visitor.Empty(line.ToSubString());
+        }
+
+        public void Comment(int indent, string comment)
+        {
+            m_visitor.Comment(Math.Max(indent, 0), comment.ToSubString());
+        }
+
+        public void Value_Begin(string name)
+        {
+            m_visitor.Value_Begin(name.ToSubString());
+        }
+
+        public void Value_Line(string value)
+        {
+            m_visitor.Value_Line(value.ToSubString());
+        }
+
+        public void Value_End()
+        {
+            m_visitor.Value_End();
+        }
+
+        public void Object_Begin(string name)
+        {
+            m_visitor.Object_Begin(name.ToSubString());
+        }
+
+        public void Object_End()
+        {
+            m_visitor.Object_End();
+        }
+
+        public void Error(int lineNo, string line, string parseError)
+        {
+            m_visitor.Error(
+                Math.Max(lineNo, 0), 
+                line.ToSubString(),
+                parseError.ParseEnumValue(Scanner.Error.General)
+                );
         }
     }
 
