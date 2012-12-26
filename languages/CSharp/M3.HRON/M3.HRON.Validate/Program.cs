@@ -10,13 +10,13 @@
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Linq;
-using M3.HRON.Validate.Source.Common;
-
 namespace M3.HRON.Validate
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using M3.HRON.Validate.Source.Common;
+
     using Source.ConsoleApp;
 
     class Program
@@ -98,7 +98,7 @@ namespace M3.HRON.Validate
             }
         }
 
-        sealed class ActionLogVisitor : IVisitor
+        sealed class ActionLogVisitor : IHRONVisitor
         {
             readonly StreamWriter m_writer;
 

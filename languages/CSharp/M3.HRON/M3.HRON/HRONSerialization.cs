@@ -13,19 +13,19 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialTypeWithSinglePart
 
-using System.Text;
-using M3.HRON.Generator.Parser;
-using M3.HRON.Generator.Source.Common;
-
 namespace M3.HRON
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Globalization;
-    using System.Linq;
+    using System.Text;
 
-    public partial interface IVisitor
+    using M3.HRON.Generator.Parser;
+    using M3.HRON.Generator.Source.Common;
+
+
+    public partial interface IHRONVisitor
     {
         void Document_Begin();
         void Document_End();
@@ -46,12 +46,12 @@ namespace M3.HRON
         void Error(int lineNo, string line, string parseError);
     }
 
-    sealed partial class TranslatingVisitor : M3.HRON.Generator.Parser.IVisitor
+    sealed partial class TranslatingVisitor : IScannerVisitor
     {
-        public readonly IVisitor Visitor;
+        public readonly IHRONVisitor Visitor;
         public int ErrorCount;
 
-        public TranslatingVisitor(IVisitor visitor)
+        public TranslatingVisitor(IHRONVisitor visitor)
         {
             Visitor = visitor;
         }
@@ -113,7 +113,7 @@ namespace M3.HRON
         }
     }
 
-    sealed partial class WritingVisitor : M3.HRON.Generator.Parser.IVisitor
+    sealed partial class WritingVisitor : IScannerVisitor
     {
         int m_indent;
         public int ErrorCount;
@@ -243,7 +243,7 @@ namespace M3.HRON
             return visitor.StringBuilder.ToString();
         }
 
-        static bool TryParse<T>(T input, IVisitor visitor, Action<T, Scanner> action)
+        static bool TryParse<T>(T input, IHRONVisitor visitor, Action<T, Scanner> action)
         {
             if (visitor == null)
             {
@@ -254,9 +254,18 @@ namespace M3.HRON
 
             translatingVisitor.Document_Begin();
 
+            Parse(input, translatingVisitor, action);
+
+            return translatingVisitor.ErrorCount == 0;
+        }
+
+        static void Parse<T>(T input, IScannerVisitor visitor, Action<T, Scanner> action)
+        {
+            visitor.Document_Begin();
+
             try
             {
-                var scanner = new Scanner(translatingVisitor);
+                var scanner = new Scanner(visitor);
 
                 action(input, scanner);
 
@@ -264,14 +273,11 @@ namespace M3.HRON
             }
             finally
             {
-                translatingVisitor.Document_End();
+                visitor.Document_End();
             }
-
-            return translatingVisitor.ErrorCount == 0;
-            
         }
 
-        public static bool TryParse(string input, IVisitor visitor)
+        public static bool TryParse(string input, IHRONVisitor visitor)
         {
             return TryParse(
                 input,
@@ -285,7 +291,7 @@ namespace M3.HRON
                     });
         }
 
-        public static bool TryParse(IEnumerable<string> input, IVisitor visitor)
+        public static bool TryParse(IEnumerable<string> input, IHRONVisitor visitor)
         {
             return TryParse(
                 input,
@@ -300,53 +306,12 @@ namespace M3.HRON
                     });
         }
 
-        public static bool TryParse(TextReader textReader, IVisitor visitor)
+        public static bool TryParse(TextReader textReader, IHRONVisitor visitor)
         {
             return TryParse(
-                textReader,
-                visitor,
-                (i, s) =>
-                    {
-                        string line;
-                        while ((line = textReader.ReadLine()) != null)
-                        {
-                            s.AcceptLine(line.ToSubString());
-                        }
-                    });
-        }
-/*
-        public static bool TryParseAsDynamic(string input, out object dynamicValue)
-        {
-            HRONDynamicParseError[] errors;
-            return HRONSerializer.TryParseDynamic(
-                int.MaxValue,
-                input.ReadLines(),
-                out dynamicValue,
-                out errors
+                textReader.ReadLines(), 
+                visitor
                 );
         }
-
-        public static bool TryParseAsDynamic(IEnumerable<string> input, out object dynamicValue)
-        {
-            HRONDynamicParseError[] errors;
-            return HRONSerializer.TryParseDynamic(
-                int.MaxValue,
-                (input ?? Array<string>.Empty).Select(s => s.ToSubString()),
-                out dynamicValue,
-                out errors
-                );
-        }
-
-        public static bool TryParseAsDynamic(TextReader textReader, out object dynamicValue)
-        {
-            HRONDynamicParseError[] errors;
-            return HRONSerializer.TryParseDynamic(
-                int.MaxValue,
-                textReader.ReadLines().Select(s => s.ToSubString()),
-                out dynamicValue,
-                out errors
-                );
-        }
-*/
     }
 }

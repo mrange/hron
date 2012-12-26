@@ -18,7 +18,7 @@ namespace M3.HRON.Generator.Parser
 {
     using M3.HRON.Generator.Source.Common;
 
-    interface IVisitor
+    interface IScannerVisitor
     {
         void Document_Begin();
         void Document_End();
@@ -52,10 +52,10 @@ namespace M3.HRON.Generator.Parser
         int m_indention;
         int m_expectedIndention;
         int m_lineNo;
-        readonly IVisitor m_visitor;
+        readonly IScannerVisitor m_visitor;
         static readonly SubString s_empty = new SubString();
 
-        public Scanner(IVisitor visitor)
+        public Scanner(IScannerVisitor visitor)
         {
             m_visitor = visitor;
             State = ParserState.PreProcessing;

@@ -40,6 +40,7 @@
     <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Parser.cs">
       <Link>Parser.cs</Link>
     </Compile>
+    <Compile Include="HRONDynamicSerialization.cs" />
     <Compile Include="HRONSerialization.cs" />
     <Compile Include="HRONSerializationExtensions.cs" />
     <Compile Include="Include_T4Include.cs">

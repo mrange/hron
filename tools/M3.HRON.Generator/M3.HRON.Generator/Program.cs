@@ -115,7 +115,7 @@ namespace M3.HRON.Generator
             return lines;
         }
 
-        static void ReadDocument(IVisitor v, SubString[] lines)
+        static void ReadDocument(IScannerVisitor v, SubString[] lines)
         {
             var scanner = new Scanner(v);
             v.Document_Begin();
@@ -129,7 +129,7 @@ namespace M3.HRON.Generator
         }
     }
 
-    sealed class LogVisitor : IVisitor
+    sealed class LogVisitor : IScannerVisitor
     {
         public void Document_Begin()
         {
@@ -187,7 +187,7 @@ namespace M3.HRON.Generator
         }
     }
 
-    sealed class EmptyVisitor : IVisitor
+    sealed class EmptyVisitor : IScannerVisitor
     {
         public void Document_Begin()
         {
@@ -234,7 +234,7 @@ namespace M3.HRON.Generator
         }
     }
 
-    sealed class ActionLogVisitor : IVisitor
+    sealed class ActionLogVisitor : IScannerVisitor
     {
         readonly StreamWriter m_writer;
 

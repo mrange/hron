@@ -8,6 +8,8 @@
             // Include the basic extension from T4Include
             Include (@"mrange/T4Include/master/Common/SubString.cs"),
             Include (@"mrange/T4Include/master/Common/Array.cs"),
+            Include (@"mrange/T4Include/master/Extensions/ParseExtensions.cs"),
+            Include (@"mrange/T4Include/master/Extensions/EnumParseExtensions.cs"),
 
             // Uncomment below to include dapper
             // Include (@"SamSaffron/dapper-dot-net/master/Dapper/SqlMapper.cs"),
