@@ -43,7 +43,9 @@ namespace M3.HRON.Generator.Parser
     {
         public enum Error
         {
-
+            General     ,
+            WrongTag    ,
+            NonEmptyTag ,
         }
 
         bool m_isBuildingValue;
@@ -199,6 +201,19 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__To_Error()
         {
             Result = ParserResult.Error;
+            m_visitor.Error(m_lineNo, CurrentLine, Error.General);
+        }
+
+        partial void Partial_StateTransition__To_WrongTagError()
+        {
+            Result = ParserResult.Error;
+            m_visitor.Error(m_lineNo, CurrentLine, Error.WrongTag);
+        }
+
+        partial void Partial_StateTransition__To_NonEmptyTagError()
+        {
+            Result = ParserResult.Error;
+            m_visitor.Error(m_lineNo, CurrentLine, Error.NonEmptyTag);
         }
 
     }

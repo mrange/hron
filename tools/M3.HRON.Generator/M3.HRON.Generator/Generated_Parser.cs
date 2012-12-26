@@ -28,6 +28,8 @@ namespace M3.HRON.Generator.Parser
     enum ParserState
     {
         Error,
+        WrongTagError,
+        NonEmptyTagError,
         PreProcessing,
         Indention,
         TagExpected,
@@ -69,6 +71,16 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__To_Error ();
 
         partial void Partial_StateTransition__From_Error__To_Error ();
+        partial void Partial_StateTransition__From_WrongTagError ();
+
+        partial void Partial_StateTransition__To_WrongTagError ();
+
+        partial void Partial_StateTransition__From_WrongTagError__To_Error ();
+        partial void Partial_StateTransition__From_NonEmptyTagError ();
+
+        partial void Partial_StateTransition__To_NonEmptyTagError ();
+
+        partial void Partial_StateTransition__From_NonEmptyTagError__To_Error ();
         partial void Partial_StateTransition__From_PreProcessing ();
 
         partial void Partial_StateTransition__To_PreProcessing ();
@@ -94,7 +106,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__From_TagExpected__To_ValueTag ();
         partial void Partial_StateTransition__From_TagExpected__To_CommentTag ();
         partial void Partial_StateTransition__From_TagExpected__To_EmptyTag ();
-        partial void Partial_StateTransition__From_TagExpected__To_Error ();
+        partial void Partial_StateTransition__From_TagExpected__To_WrongTagError ();
         partial void Partial_StateTransition__From_NoContentTagExpected ();
 
         partial void Partial_StateTransition__To_NoContentTagExpected ();
@@ -102,7 +114,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__From_NoContentTagExpected__To_EndOfEmptyTag ();
         partial void Partial_StateTransition__From_NoContentTagExpected__To_CommentTag ();
         partial void Partial_StateTransition__From_NoContentTagExpected__To_EmptyTag ();
-        partial void Partial_StateTransition__From_NoContentTagExpected__To_Error ();
+        partial void Partial_StateTransition__From_NoContentTagExpected__To_WrongTagError ();
         partial void Partial_StateTransition__From_PreProcessorTag ();
 
         partial void Partial_StateTransition__To_PreProcessorTag ();
@@ -127,7 +139,7 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__From_EmptyTag__To_EndOfEmptyTag ();
         partial void Partial_StateTransition__From_EmptyTag__To_EmptyTag ();
-        partial void Partial_StateTransition__From_EmptyTag__To_Error ();
+        partial void Partial_StateTransition__From_EmptyTag__To_NonEmptyTagError ();
         partial void Partial_StateTransition__From_CommentTag ();
 
         partial void Partial_StateTransition__To_CommentTag ();
@@ -210,6 +222,30 @@ apply:
                     default:
                             Partial_StateTransition__From_Error ();
                             Partial_StateTransition__From_Error__To_Error ();
+                            Partial_StateTransition__To_Error ();
+                        break;
+    
+                    }
+                    break;
+                case ParserState.WrongTagError:
+                    switch (CurrentCharacter)
+                    {
+                    default:
+                        State = ParserState.Error; 
+                            Partial_StateTransition__From_WrongTagError ();
+                            Partial_StateTransition__From_WrongTagError__To_Error ();
+                            Partial_StateTransition__To_Error ();
+                        break;
+    
+                    }
+                    break;
+                case ParserState.NonEmptyTagError:
+                    switch (CurrentCharacter)
+                    {
+                    default:
+                        State = ParserState.Error; 
+                            Partial_StateTransition__From_NonEmptyTagError ();
+                            Partial_StateTransition__From_NonEmptyTagError__To_Error ();
                             Partial_StateTransition__To_Error ();
                         break;
     
@@ -305,10 +341,10 @@ apply:
                             Partial_StateTransition__To_EmptyTag ();
                         break;
                     default:
-                        State = ParserState.Error; 
+                        State = ParserState.WrongTagError; 
                             Partial_StateTransition__From_TagExpected ();
-                            Partial_StateTransition__From_TagExpected__To_Error ();
-                            Partial_StateTransition__To_Error ();
+                            Partial_StateTransition__From_TagExpected__To_WrongTagError ();
+                            Partial_StateTransition__To_WrongTagError ();
                         break;
     
                     }
@@ -330,10 +366,10 @@ apply:
                             Partial_StateTransition__To_EmptyTag ();
                         break;
                     default:
-                        State = ParserState.Error; 
+                        State = ParserState.WrongTagError; 
                             Partial_StateTransition__From_NoContentTagExpected ();
-                            Partial_StateTransition__From_NoContentTagExpected__To_Error ();
-                            Partial_StateTransition__To_Error ();
+                            Partial_StateTransition__From_NoContentTagExpected__To_WrongTagError ();
+                            Partial_StateTransition__To_WrongTagError ();
                         break;
     
                     }
@@ -381,10 +417,10 @@ apply:
                             Partial_StateTransition__To_EmptyTag ();
                         break;
                     default:
-                        State = ParserState.Error; 
+                        State = ParserState.NonEmptyTagError; 
                             Partial_StateTransition__From_EmptyTag ();
-                            Partial_StateTransition__From_EmptyTag__To_Error ();
-                            Partial_StateTransition__To_Error ();
+                            Partial_StateTransition__From_EmptyTag__To_NonEmptyTagError ();
+                            Partial_StateTransition__To_NonEmptyTagError ();
                         break;
     
                     }
