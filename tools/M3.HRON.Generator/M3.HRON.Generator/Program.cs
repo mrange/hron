@@ -141,9 +141,14 @@ namespace M3.HRON.Generator
             Log.Info("Document_End");
         }
 
-        public void Comment(SubString comment)
+        public void Empty(SubString line)
         {
-            Log.Info("Comment:0,{0}", comment);
+            Log.Info("Empty:{0}", line);
+        }
+
+        public void Comment(int indent, SubString comment)
+        {
+            Log.Info("Comment:{0},{1}", indent, comment);
         }
 
         public void PreProcessor(SubString preProcessor)
@@ -175,6 +180,11 @@ namespace M3.HRON.Generator
         {
             Log.Info("Value_End");
         }
+
+        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        {
+            Log.Info("Error:{0},{1},{2}", parseError, lineNo, line);
+        }
     }
 
     sealed class EmptyVisitor : IVisitor
@@ -187,11 +197,15 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Comment(SubString comment)
+        public void PreProcessor(SubString preProcessor)
         {
         }
 
-        public void PreProcessor(SubString preProcessor)
+        public void Empty(SubString line)
+        {
+        }
+
+        public void Comment(int indent, SubString comment)
         {
         }
 
@@ -214,6 +228,10 @@ namespace M3.HRON.Generator
         public void Value_End()
         {
         }
+
+        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        {
+        }
     }
 
     sealed class ActionLogVisitor : IVisitor
@@ -233,9 +251,14 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Comment(SubString comment)
+        public void Empty(SubString line)
         {
-            m_writer.WriteLine("Comment:0,{0}", comment);
+            m_writer.WriteLine("Empty:{0}", line);
+        }
+
+        public void Comment(int indent, SubString comment)
+        {
+            m_writer.WriteLine("Comment:{0},{1}", indent, comment);
         }
 
         public void PreProcessor(SubString preProcessor)
@@ -266,6 +289,11 @@ namespace M3.HRON.Generator
         public void Value_End()
         {
             m_writer.WriteLine("Value_End:");
+        }
+
+        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        {
+            m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, line);
         }
     }
 }

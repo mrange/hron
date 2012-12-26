@@ -4,15 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EAD19435-BA50-45A3-A342-7ADA23A394E1}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>M3.HRON</RootNamespace>
-    <AssemblyName>M3.HRON</AssemblyName>
+    <RootNamespace>M3.HRON.Validate</RootNamespace>
+    <AssemblyName>M3.HRON.Validate</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +23,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,32 +34,36 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Generated_Parser.cs">
-      <Link>Generated_Parser.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Parser.cs">
-      <Link>Parser.cs</Link>
-    </Compile>
-    <Compile Include="HRONSerialization.cs" />
-    <Compile Include="HRONSerializationExtensions.cs" />
     <Compile Include="Include_T4Include.cs">
       <DependentUpon>Include_T4Include.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="Include_T4Include.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Include_T4Include.cs</LastGenOutput>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\M3.HRON\M3.HRON.csproj">
+      <Project>{EAD19435-BA50-45A3-A342-7ADA23A394E1}</Project>
+      <Name>M3.HRON</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

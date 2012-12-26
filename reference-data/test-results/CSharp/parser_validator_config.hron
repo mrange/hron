@@ -15,9 +15,9 @@
 =Value_End
 	ValidateExistence
 =Comment
-	ValidateContent
+	ValidateAll
 =Empty
-	Ignore
+	ValidateAll
 =ContentLine
 	ValidateAll
 =EmptyLine

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>T4Include</id>
-    <version>1.0.5</version>
+    <version>1.1.0</version>
     <title>T4Include</title>
     <authors>Mårten Rånge</authors>
     <owners>Mårten Rånge</owners>
@@ -11,11 +11,15 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>T4Include provides small and useful functions intended to be referenced by source, this nuget package includes the necessary files to reference local files and web files by source</description>
     <summary>T4Include allows reference local files and web files by source</summary>
-    <releaseNotes>* 1.0.5   - Refined sample to point to correct release
+    <releaseNotes>* 1.1.0   - T4Include now supports suppressing of the outer namespace
+        * 1.0.7   - Refined sample to point to correct release
+        * 1.0.6   - Added IncludeProject.ttinclude
+        * 1.0.5   - Refined sample to point to correct release
         * 1.0.4   - Bug fixes when including files that use "using" that isn't inside a namespace
         * 1.0.3   - Refined sample content
         * 1.0.2   - Added sample content
         * 1.0.1   - Initial release</releaseNotes>
     <tags>include T4</tags>
+    <references />
   </metadata>
 </package>

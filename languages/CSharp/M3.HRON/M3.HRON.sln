@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Sample", "M3.HRON.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Tests", "M3.HRON.Tests\M3.HRON.Tests.csproj", "{DE737E1A-D112-4707-8E60-09C480E5E497}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Validate", "M3.HRON.Validate\M3.HRON.Validate.csproj", "{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,13 +20,15 @@ Global
 		{EAD19435-BA50-45A3-A342-7ADA23A394E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAD19435-BA50-45A3-A342-7ADA23A394E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{36370996-5E29-426E-9227-0A8127BEC883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{36370996-5E29-426E-9227-0A8127BEC883}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36370996-5E29-426E-9227-0A8127BEC883}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36370996-5E29-426E-9227-0A8127BEC883}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DE737E1A-D112-4707-8E60-09C480E5E497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE737E1A-D112-4707-8E60-09C480E5E497}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE737E1A-D112-4707-8E60-09C480E5E497}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE737E1A-D112-4707-8E60-09C480E5E497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

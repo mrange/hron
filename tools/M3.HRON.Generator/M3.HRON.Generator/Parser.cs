@@ -23,8 +23,11 @@ namespace M3.HRON.Generator.Parser
         void Document_Begin();
         void Document_End();
 
-        void Comment(SubString comment);
         void PreProcessor(SubString preProcessor);
+
+        void Empty(SubString line);
+
+        void Comment(int indent, SubString comment);
 
         void Object_Begin(SubString name);
         void Object_End();
@@ -32,10 +35,16 @@ namespace M3.HRON.Generator.Parser
         void Value_Begin(SubString name);
         void Value_Line(SubString content);
         void Value_End();
+
+        void Error(int lineNo, SubString line, Scanner.Error parseError);
     }
 
     partial class Scanner
     {
+        public enum Error
+        {
+
+        }
 
         bool m_isBuildingValue;
         int m_indention;
@@ -152,7 +161,7 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_EndOfCommentTag()
         {
-            m_visitor.Comment(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Comment(m_indention, CurrentLine.ToSubString(m_indention + 1));
         }
 
         partial void Partial_StateTransition__To_EndOfEmptyTag()
@@ -160,6 +169,10 @@ namespace M3.HRON.Generator.Parser
             if (m_isBuildingValue)
             {
                 m_visitor.Value_Line(s_empty);
+            }
+            else
+            {
+                m_visitor.Empty(CurrentLine);
             }
         }
 

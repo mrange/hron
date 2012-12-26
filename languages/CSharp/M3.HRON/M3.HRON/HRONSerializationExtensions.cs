@@ -17,6 +17,7 @@ namespace M3.HRON
 
     public static partial class HRONSerializationExtensions
     {
+/*
         public static dynamic ParseAsHRON(this string input, object defaultValue = null)
         {
             object dynamicValue;
@@ -48,6 +49,6 @@ namespace M3.HRON
         {
             return HRONSerialization.SerializeKeyValuePairs(keyValuePairs);
         }
-
+*/
     }
 }
