@@ -13,8 +13,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialTypeWithSinglePart
 
-using M3.HRON.Generator.Source.Extensions;
-
 namespace M3.HRON
 {
     using System;
@@ -25,7 +23,7 @@ namespace M3.HRON
 
     using M3.HRON.Generator.Parser;
     using M3.HRON.Generator.Source.Common;
-
+    using M3.HRON.Generator.Source.Extensions;
 
     public partial interface IHRONVisitor
     {
