@@ -22,23 +22,27 @@ typedef void (*accept_void_method_type)     ();
 
 typedef void (*accept_string_method_type)   (hron_string_type, int ,int);
 
-typedef void (*accept_error_method_type)    (int lint_no, hron_string_type message);
+typedef void (*accept_error_method_type)    (int lint_no, hron_string_type line, hron_string_type message);
 // -----------------------------------------------------------------------------
 struct tag__hron__visitor
 {
     accept_void_method_type     document__begin    ;
     accept_void_method_type     document__end      ;
 
+    accept_string_method_type   preprocessor       ;
+    accept_string_method_type   comment            ;
+    accept_string_method_type   empty              ;
+
     accept_string_method_type   object__begin      ;
-    accept_string_method_type   object__end        ;
+    accept_void_method_type     object__end        ;
 
     accept_string_method_type   value__begin       ;
     accept_string_method_type   value__line        ;
-    accept_string_method_type   value__end         ;
+    accept_void_method_type     value__end         ;
 
     accept_error_method_type    error              ;
 };
-typedef struct tag__hron__visitor*  hron__visitor   ;
+typedef struct tag__hron__visitor  hron__visitor   ;
 // -----------------------------------------------------------------------------
 typedef void*       hron__parser_state              ;
 // -----------------------------------------------------------------------------

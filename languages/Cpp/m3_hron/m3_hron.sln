@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m3_hron", "m3_hron\m3_hron.vcxproj", "{442E1D93-4361-41AB-951C-EEE789C8FE4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Generator", "M3.HRON.Generator\M3.HRON.Generator.csproj", "{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,21 +23,8 @@ Global
 		{442E1D93-4361-41AB-951C-EEE789C8FE4A}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{442E1D93-4361-41AB-951C-EEE789C8FE4A}.Release|Win32.ActiveCfg = Release|Win32
 		{442E1D93-4361-41AB-951C-EEE789C8FE4A}.Release|Win32.Build.0 = Release|Win32
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{2A0B7B30-B070-4EC5-9414-7ED7A26DB94A}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
