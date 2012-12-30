@@ -63,11 +63,13 @@ typedef enum    tag__scanner_result             scanner_result          ;
 
 struct tag__secret__scanner_state
 {
-    scanner_result          result          ;
-    scanner_state           state           ;
-    hron_string_type        current_line    ;
-    hron_char_type          current_char    ;
-    secret__parser_state    parser_state    ;
+    scanner_result          result              ;
+    scanner_state           state               ;
+    hron_string_type        current_line        ;
+    int                     current_line_begin  ;
+    int                     current_line_end    ;
+    hron_char_type          current_char        ;
+    secret__parser_state    parser_state        ;
 };
 
 typedef struct  tag__secret__scanner_state      secret__scanner_state   ;
@@ -103,23 +105,25 @@ static void scanner_init (
     ss->parser_state    = *ps           ;
 }
 
-scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs)
+scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs, int begin, int end)
 {
-    assert(ss);
-    assert(hs);
+    int iter;
 
-    ss->current_line = hs;
-    ss->current_char = *(ss->current_line);
+    assert (ss);
+    assert (hs);
+    assert (begin >= 0);
+    assert (end >= begin);
+
+    ss->current_line        = hs                    ;
+    ss->current_line_begin  = begin                 ;
+    ss->current_line_end    = end                   ;
+    ss->current_char        = ss->current_line[iter];
     
     scanner_begin_line (ss);
 
-    if (!ss->current_char)
+    for (iter = begin; iter < end; ++iter)
     {
-        goto end;
-    }
-
-    do 
-    {
+        ss->current_char = ss->current_line[iter];
 apply:
         if (ss->result != SR_Continue)
         {
@@ -210,7 +214,6 @@ apply:
             break;
         }        
     }
-    while (ss->current_char = *(++ss->current_line));
 
     if (ss->result == SR_Error)
     {

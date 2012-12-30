@@ -49,7 +49,7 @@ typedef void*       hron__parser_state              ;
 hron__parser_state  hron__initialize    (hron__visitor*     visitor   );
 void                hron__finalize      (hron__parser_state parser_state);
 
-void                hron__accept_line   (hron__parser_state parser_state, hron_string_type);
+void                hron__accept_line   (hron__parser_state parser_state, hron_string_type line, int begin, int end);
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------

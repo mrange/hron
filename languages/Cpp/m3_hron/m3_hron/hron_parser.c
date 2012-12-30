@@ -131,13 +131,13 @@ static void scanner_statetransition (
             ss->result = SR_Done;
             break;
         case SS_EndOfValueLine:
-            ss->parser_state.value__line(ss->current_line, ss->parser_state.expected_indent, INT_MAX);
+            ss->parser_state.value__line(ss->current_line, ss->parser_state.expected_indent, ss->current_line_end);
             break;
         case SS_EndOfPreProcessorTag:
-            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, INT_MAX);
+            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfCommentTag:
-            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, INT_MAX);
+            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfEmptyTag:
             if (ss->parser_state.is_building_value)
@@ -146,18 +146,18 @@ static void scanner_statetransition (
             }
             else
             {
-                ss->parser_state.empty(ss->current_line, 0, INT_MAX);
+                ss->parser_state.empty(ss->current_line, 0, ss->current_line_end);
             }
             break;
         case SS_EndOfObjectTag:
             pop_context(ss);
-            ss->parser_state.object__begin(ss->current_line, ss->parser_state.indention + 1, INT_MAX);
+            ss->parser_state.object__begin(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             ss->parser_state.expected_indent = ss->parser_state.indention + 1;
             break;
         case SS_EndOfValueTag:
             pop_context(ss);
             ss->parser_state.is_building_value = 1;
-            ss->parser_state.value__begin(ss->current_line, ss->parser_state.indention + 1, INT_MAX);
+            ss->parser_state.value__begin(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             ss->parser_state.expected_indent = ss->parser_state.indention + 1;
             break;
         case SS_Error:
@@ -244,7 +244,7 @@ void                hron__finalize      (hron__parser_state parser_state)
     free(ss);
 }
 // -----------------------------------------------------------------------------
-void                hron__accept_line   (hron__parser_state parser_state, hron_string_type line)
+void                hron__accept_line   (hron__parser_state parser_state, hron_string_type line, int begin, int end)
 {
     secret__scanner_state * ss  = parser_state;
     if (!ss)
@@ -257,7 +257,17 @@ void                hron__accept_line   (hron__parser_state parser_state, hron_s
         line = empty; 
     }
 
-    scanner_accept_line (ss, line);
+    if (begin < 0)
+    {
+        begin = 0;
+    }
+    
+    if (end < begin)
+    {
+        end = begin;
+    }
+
+    scanner_accept_line (ss, line, begin, end);
 }
 // -----------------------------------------------------------------------------
 
