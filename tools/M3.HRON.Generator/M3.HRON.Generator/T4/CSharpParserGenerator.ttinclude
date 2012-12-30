@@ -1,4 +1,4 @@
-﻿<#@ include file="Header.ttinclude" #>
+﻿<#@ include file="CSharpHeader.ttinclude" #>
 
 #pragma warning disable 0162
 // ReSharper disable CheckNamespace
