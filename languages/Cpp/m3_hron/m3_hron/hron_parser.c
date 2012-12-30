@@ -13,7 +13,7 @@
 // -----------------------------------------------------------------------------
 #include "hron_parser.h"
 // -----------------------------------------------------------------------------
-#include<assert.h>
+#include <assert.h>
 #include <memory.h>
 #include <stdlib.h>
 // -----------------------------------------------------------------------------
@@ -271,4 +271,124 @@ void                hron__accept_line   (hron__parser_state parser_state, hron_s
 }
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+
+enum tag__read_line_state
+{
+    RLS_NewLine     ,
+    RLS_Inline      ,
+    RLS_ConsumedCR  ,
+};
+
+typedef enum tag__read_line_state read_line_state; 
+
+void                hron__read_lines    (hron_string_type line, int begin, int end, accept_string_method_type visitor)
+{
+    int iter;
+    int start;
+    int count;
+    read_line_state state;
+    HRON_CHAR_TYPE ch;
+
+    if (!line)
+    {
+        line = empty; 
+    }
+
+    if (begin < 0)
+    {
+        begin = 0;
+    }
+    
+    if (end < begin)
+    {
+        end = begin;
+    }
+
+    if (!visitor)
+    {
+        return;
+    }
+
+    start = begin;
+    count = 0;
+    state = RLS_NewLine;
+
+    for (iter = begin; iter < end; ++iter)
+    {
+        ch = line[iter];
+        switch (state)
+        {
+            case RLS_ConsumedCR:
+                visitor(line, start, count);
+                switch (ch)
+                {
+                    case '\r':
+                        start = iter;
+                        count = 0;
+                        state = RLS_ConsumedCR;
+                        break;
+                    case '\n':
+                        state = RLS_NewLine;
+                        break;
+                    default:
+                        start = iter;
+                        count = 1;
+                        state = RLS_Inline;
+                        break;
+                }
+    
+                break;
+            case RLS_NewLine:
+                start       = iter;
+                count       = 0;
+                switch (ch)
+                {
+                    case '\r':
+                        state = RLS_ConsumedCR;
+                        break;
+                    case '\n':
+                        visitor(line, start, count);
+                        state = RLS_NewLine;
+                        break;
+                    default:
+                        state = RLS_Inline;
+                        ++count;
+                        break;
+                }
+                break;
+            case RLS_Inline:
+            default:
+                switch (ch)
+                {
+                    case '\r':
+                        state = RLS_ConsumedCR;
+                        break;
+                    case '\n':
+                        visitor(line, start, count);
+                        state = RLS_NewLine;
+                        break;
+                    default:
+                        ++count;
+                        break;
+                }
+                break;
+        }
+
+        switch (state)
+        {
+            case RLS_NewLine:
+                visitor(line, 0, 0);
+                break;
+            case RLS_ConsumedCR:
+                visitor(line, start, count);
+                visitor(line, 0, 0);
+                break;
+            case RLS_Inline:
+            default:
+                visitor(line, start, count);
+                break;
+        }
+    }
+}
 // -----------------------------------------------------------------------------
