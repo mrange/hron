@@ -15,8 +15,8 @@
 #   define HRON_CHAR_TYPE   char
 #endif
 // -----------------------------------------------------------------------------
-typedef HRON_CHAR_TYPE      hron_char_type  ;
-typedef hron_char_type*     hron_string_type;
+typedef HRON_CHAR_TYPE          hron_char_type  ;
+typedef hron_char_type const *  hron_string_type;
 // -----------------------------------------------------------------------------
 typedef void (*accept_void_method_type)     ();
 
@@ -26,6 +26,8 @@ typedef void (*accept_error_method_type)    (int lint_no, hron_string_type line,
 // -----------------------------------------------------------------------------
 struct tag__hron__visitor
 {
+    void *                      payload            ;
+
     accept_void_method_type     document__begin    ;
     accept_void_method_type     document__end      ;
 

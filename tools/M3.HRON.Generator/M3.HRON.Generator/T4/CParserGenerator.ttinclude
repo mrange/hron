@@ -114,6 +114,8 @@ scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type
     assert (begin >= 0);
     assert (end >= begin);
 
+    iter = begin;
+
     ss->current_line        = hs                    ;
     ss->current_line_begin  = begin                 ;
     ss->current_line_end    = end                   ;
