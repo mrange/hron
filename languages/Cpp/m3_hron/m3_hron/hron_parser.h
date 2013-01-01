@@ -18,11 +18,13 @@
 typedef HRON_CHAR_TYPE          hron_char_type  ;
 typedef hron_char_type const *  hron_string_type;
 // -----------------------------------------------------------------------------
-typedef void (*accept_void_method_type)     ();
+typedef void (*read_lines_method_type)      (hron_string_type, int ,int);
 
-typedef void (*accept_string_method_type)   (hron_string_type, int ,int);
+typedef void (*accept_void_method_type)     (void *);
 
-typedef void (*accept_error_method_type)    (int lint_no, hron_string_type line, hron_string_type message);
+typedef void (*accept_string_method_type)   (void *, hron_string_type, int ,int);
+
+typedef void (*accept_error_method_type)    (void *, int, hron_string_type, hron_string_type);
 // -----------------------------------------------------------------------------
 struct tag__hron__visitor
 {
@@ -53,7 +55,7 @@ void                hron__finalize      (hron__parser_state parser_state);
 
 void                hron__accept_line   (hron__parser_state parser_state, hron_string_type line, int begin, int end);
 
-void                hron__read_lines    (hron_string_type line, int begin, int end, accept_string_method_type visitor); 
+void                hron__read_lines    (hron_string_type line, int begin, int end, read_lines_method_type visitor); 
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------

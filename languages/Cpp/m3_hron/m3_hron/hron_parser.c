@@ -24,6 +24,8 @@ struct tag__secret__parser_state
     int                         line_no            ;
     int                         is_building_value  ;
 
+    void *                      payload            ;
+
     accept_void_method_type     document__begin    ;
     accept_void_method_type     document__end      ;
 
@@ -45,14 +47,14 @@ typedef struct tag__secret__parser_state secret__parser_state;
 // -----------------------------------------------------------------------------
 #include "../../../../tools/M3.HRON.Generator/M3.HRON.Generator/Generated_CParser.c"
 // -----------------------------------------------------------------------------
-static void empty_void_method ()
+static void empty_void_method (void* pl)
 {
 }
-static void empty_string_method (hron_string_type s, int begin, int end)
+static void empty_string_method (void* pl, hron_string_type s, int begin, int end)
 {
 }
 
-static void empty_error_method (int lint_no, hron_string_type line, hron_string_type message)
+static void empty_error_method (void* pl, int lint_no, hron_string_type line, hron_string_type message)
 {
 }
 // -----------------------------------------------------------------------------
@@ -61,14 +63,14 @@ void pop_context(secret__scanner_state * ss)
     if (ss->parser_state.is_building_value && ss->parser_state.indention < ss->parser_state.expected_indent)
     {
         --ss->parser_state.expected_indent;
-        ss->parser_state.value__end();
+        ss->parser_state.value__end(ss->parser_state.payload);
         ss->parser_state.is_building_value = 0;
     }
 
     while (ss->parser_state.indention < ss->parser_state.expected_indent)
     {
         ss->parser_state.expected_indent;
-        ss->parser_state.object__end();
+        ss->parser_state.object__end(ss->parser_state.payload);
     }
 
 }
@@ -131,46 +133,46 @@ static void scanner_statetransition (
             ss->result = SR_Done;
             break;
         case SS_EndOfValueLine:
-            ss->parser_state.value__line(ss->current_line, ss->parser_state.expected_indent, ss->current_line_end);
+            ss->parser_state.value__line(ss->parser_state.payload, ss->current_line, ss->parser_state.expected_indent, ss->current_line_end);
             break;
         case SS_EndOfPreProcessorTag:
-            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
+            ss->parser_state.preprocessor(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfCommentTag:
-            ss->parser_state.preprocessor(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
+            ss->parser_state.preprocessor(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfEmptyTag:
             if (ss->parser_state.is_building_value)
             {
-                ss->parser_state.value__line(empty, 0, 0);
+                ss->parser_state.value__line(ss->parser_state.payload, empty, 0, 0);
             }
             else
             {
-                ss->parser_state.empty(ss->current_line, 0, ss->current_line_end);
+                ss->parser_state.empty(ss->parser_state.payload, ss->current_line, 0, ss->current_line_end);
             }
             break;
         case SS_EndOfObjectTag:
             pop_context(ss);
-            ss->parser_state.object__begin(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
+            ss->parser_state.object__begin(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             ss->parser_state.expected_indent = ss->parser_state.indention + 1;
             break;
         case SS_EndOfValueTag:
             pop_context(ss);
             ss->parser_state.is_building_value = 1;
-            ss->parser_state.value__begin(ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
+            ss->parser_state.value__begin(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             ss->parser_state.expected_indent = ss->parser_state.indention + 1;
             break;
         case SS_Error:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.line_no, ss->current_line, "General");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "General");
             break;
         case SS_WrongTagError:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.line_no, ss->current_line, "WrongTag");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "WrongTag");
             break;
         case SS_NonEmptyTagError:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.line_no, ss->current_line, "NonEmptyTag");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "NonEmptyTag");
             break;
     }
 
@@ -199,6 +201,8 @@ hron__parser_state  hron__initialize    (hron__visitor*     visitor   )
 
     memset(&ps, 0, sizeof (struct tag__secret__parser_state));
 
+    ps.payload = visitor->payload;
+
     HRON_COALESCE_EMPTY_METHOD(document__begin);
     HRON_COALESCE_EMPTY_METHOD(document__end);
 
@@ -223,7 +227,7 @@ hron__parser_state  hron__initialize    (hron__visitor*     visitor   )
 
     scanner_init (ss, SS_PreProcessorTag, &ps);
 
-    ss->parser_state.document__begin ();
+    ss->parser_state.document__begin (ss->parser_state.payload);
 
     return ss;
 }
@@ -239,7 +243,7 @@ void                hron__finalize      (hron__parser_state parser_state)
     ss->parser_state.indention = 0;
     pop_context (ss);
 
-    ss->parser_state.document__end ();
+    ss->parser_state.document__end (ss->parser_state.payload);
 
     free(ss);
 }
@@ -282,7 +286,7 @@ enum tag__read_line_state
 
 typedef enum tag__read_line_state read_line_state; 
 
-void                hron__read_lines    (hron_string_type line, int begin, int end, accept_string_method_type visitor)
+void                hron__read_lines    (hron_string_type line, int begin, int end, read_lines_method_type visitor)
 {
     int iter;
     int start;

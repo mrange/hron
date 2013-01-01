@@ -77,12 +77,19 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Generated_JSParser.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Generated_JSParser.js</LastGenOutput>
+    </None>
     <None Include="Generated_CParser.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_CParser.c</LastGenOutput>
     </None>
     <None Include="packages.config" />
     <None Include="T4\CHeader.ttinclude" />
+    <None Include="T4\CSharpHeader.ttinclude" />
+    <None Include="T4\JSHeader.ttinclude" />
+    <None Include="T4\JSParserGenerator.ttinclude" />
     <None Include="T4\CParserGenerator.ttinclude" />
     <None Include="T4\CSharpParserGenerator.ttinclude" />
     <None Include="Generated_Parser.tt">
@@ -105,6 +112,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Generated_CParser.tt</DependentUpon>
+    </Content>
+    <Content Include="Generated_JSParser.js">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Generated_JSParser.tt</DependentUpon>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

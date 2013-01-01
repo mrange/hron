@@ -109,6 +109,26 @@ namespace
 
         return result;
     }
+
+    struct visitor_state
+    {
+        std::ofstream   output  ;
+    };
+
+    void object__begin (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Object_Begin:" << std::string (s + b, s + e) << std::endl;
+    }
+
+    void object__end (void * payload)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Object_End:" << std::endl;
+    }
+
 }
 // -----------------------------------------------------------------------------
 int main()
@@ -130,7 +150,12 @@ int main()
 
         auto reference_datum = get__reference_datum (reference_datum_path);
 
+        visitor_state vs;
         hron__visitor v = {};
+        v.payload = &vs;
+
+        v.object__begin     = object__begin     ;
+        v.object__end       = object__end       ; 
 
         for(auto reference_data : reference_datum)
         {
