@@ -69,7 +69,7 @@ void pop_context(secret__scanner_state * ss)
 
     while (ss->parser_state.indention < ss->parser_state.expected_indent)
     {
-        ss->parser_state.expected_indent;
+        --ss->parser_state.expected_indent;
         ss->parser_state.object__end(ss->parser_state.payload);
     }
 
@@ -103,6 +103,20 @@ static void scanner_statechoice (
     )
 {
     assert(ss);
+    if (ss->parser_state.is_building_value)
+    {
+        ss->state = ss->parser_state.expected_indent > ss->parser_state.indention
+            ? SS_TagExpected
+            : SS_ValueLine
+            ;
+    }
+    else
+    {
+        ss->state = ss->parser_state.expected_indent < ss->parser_state.indention
+            ? SS_NoContentTagExpected
+            : SS_TagExpected
+            ;
+    }
 }
 
 hron_string_type empty = "";
@@ -271,6 +285,7 @@ void                hron__accept_line   (hron__parser_state parser_state, hron_s
         end = begin;
     }
 
+    ss->result = SR_Continue;
     scanner_accept_line (ss, line, begin, end);
 }
 // -----------------------------------------------------------------------------

@@ -129,6 +129,15 @@ namespace
         vs.output << "Object_End:" << std::endl;
     }
 
+    static bool test_bom (std::ifstream & input)
+    {
+        return 
+                input.get() == 0xEF
+            &&  input.get() == 0xBB
+            &&  input.get() == 0xBF
+            ;
+    }
+
 }
 // -----------------------------------------------------------------------------
 int main()
@@ -136,16 +145,16 @@ int main()
     try
     {
         auto reference_datum_path = get__reference_datum_path ();
-        auto action_log_path = reference_datum_path + L"test-results\\C\\";
+        auto action_logs_path = reference_datum_path + L"test-results\\C\\";
 
         if (!directory_exists (reference_datum_path))
         {
             wprintf(L"Exiting due to missing reference datum directory (%s)\r\n", reference_datum_path.c_str ());
         }
 
-        if (!directory_exists (action_log_path))
+        if (!directory_exists (action_logs_path))
         {
-            wprintf(L"Exiting due to missing action log directory (%s)\r\n", reference_datum_path.c_str ());
+            wprintf(L"Exiting due to missing action log directory (%s)\r\n", action_logs_path.c_str ());
         }
 
         auto reference_datum = get__reference_datum (reference_datum_path);
@@ -162,14 +171,23 @@ int main()
             wprintf(L"Processing %s\r\n", reference_data.c_str());
 
             auto reference_data_path = reference_datum_path + reference_data;
+            auto action_log_path = action_logs_path + reference_data + L".actionlog";
 
             std::ifstream hron (reference_data_path);
 
             if (!hron)
             {
-                wprintf(L"Failed to open stream%s\r\n");
+                wprintf(L"Failed to open stream\r\n");
                 continue;
             }
+
+            if (!test_bom (hron))
+            {
+                wprintf(L"Failed to open stream, need to be UTF-8\r\n");
+                continue;
+            }
+
+            vs.output = std::ofstream(action_log_path);
 
             auto parser_state = hron__initialize(&v);
             if (parser_state)
