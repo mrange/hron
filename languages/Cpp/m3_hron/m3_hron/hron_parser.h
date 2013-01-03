@@ -24,7 +24,7 @@ typedef void (*accept_void_method_type)     (void *);
 
 typedef void (*accept_string_method_type)   (void *, hron_string_type, int ,int);
 
-typedef void (*accept_error_method_type)    (void *, int, hron_string_type, hron_string_type);
+typedef void (*accept_error_method_type)    (void *, int, hron_string_type, int ,int, hron_string_type);
 // -----------------------------------------------------------------------------
 struct tag__hron__visitor
 {

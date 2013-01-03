@@ -17,6 +17,8 @@
 #include <memory.h>
 #include <stdlib.h>
 // -----------------------------------------------------------------------------
+#define HRON_UNUSED(p) p
+// -----------------------------------------------------------------------------
 struct tag__secret__parser_state
 {
     int                         expected_indent    ;
@@ -49,13 +51,24 @@ typedef struct tag__secret__parser_state secret__parser_state;
 // -----------------------------------------------------------------------------
 static void empty_void_method (void* pl)
 {
+    HRON_UNUSED(pl);
 }
 static void empty_string_method (void* pl, hron_string_type s, int begin, int end)
 {
+    HRON_UNUSED(pl);
+    HRON_UNUSED(s);
+    HRON_UNUSED(begin);
+    HRON_UNUSED(end);
 }
 
-static void empty_error_method (void* pl, int lint_no, hron_string_type line, hron_string_type message)
+static void empty_error_method (void* pl, int line_no, hron_string_type line, int begin, int end, hron_string_type message)
 {
+    HRON_UNUSED(pl);
+    HRON_UNUSED(line_no);
+    HRON_UNUSED(line);
+    HRON_UNUSED(begin);
+    HRON_UNUSED(end);
+    HRON_UNUSED(message);
 }
 // -----------------------------------------------------------------------------
 void pop_context(secret__scanner_state * ss)
@@ -95,6 +108,7 @@ static void scanner_begin_line (secret__scanner_state * ss)
 
 static void scanner_end_line (secret__scanner_state * ss)
 {
+    HRON_UNUSED(ss);
 }
 
 static void scanner_statechoice (
@@ -103,19 +117,24 @@ static void scanner_statechoice (
     )
 {
     assert(ss);
-    if (ss->parser_state.is_building_value)
+    switch (choice)
     {
-        ss->state = ss->parser_state.expected_indent > ss->parser_state.indention
-            ? SS_TagExpected
-            : SS_ValueLine
-            ;
-    }
-    else
-    {
-        ss->state = ss->parser_state.expected_indent < ss->parser_state.indention
-            ? SS_NoContentTagExpected
-            : SS_TagExpected
-            ;
+    case SSC_From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error:
+        if (ss->parser_state.is_building_value)
+        {
+            ss->state = ss->parser_state.expected_indent > ss->parser_state.indention
+                ? SS_TagExpected
+                : SS_ValueLine
+                ;
+        }
+        else
+        {
+            ss->state = ss->parser_state.expected_indent < ss->parser_state.indention
+                ? SS_NoContentTagExpected
+                : SS_TagExpected
+                ;
+        }
+        break;
     }
 }
 
@@ -153,7 +172,7 @@ static void scanner_statetransition (
             ss->parser_state.preprocessor(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfCommentTag:
-            ss->parser_state.preprocessor(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
+            ss->parser_state.comment(ss->parser_state.payload, ss->current_line, ss->parser_state.indention + 1, ss->current_line_end);
             break;
         case SS_EndOfEmptyTag:
             if (ss->parser_state.is_building_value)
@@ -178,15 +197,15 @@ static void scanner_statetransition (
             break;
         case SS_Error:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "General");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, ss->current_line_begin, ss->current_line_end, "General");
             break;
         case SS_WrongTagError:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "WrongTag");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, ss->current_line_begin, ss->current_line_end, "WrongTag");
             break;
         case SS_NonEmptyTagError:
             ss->result = SS_Error;
-            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, "NonEmptyTag");
+            ss->parser_state.error(ss->parser_state.payload, ss->parser_state.line_no, ss->current_line, ss->current_line_begin, ss->current_line_end, "NonEmptyTag");
             break;
     }
 

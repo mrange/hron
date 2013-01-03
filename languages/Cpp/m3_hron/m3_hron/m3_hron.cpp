@@ -23,6 +23,7 @@ extern "C"
     #include "hron_parser.h"
 }
 // -----------------------------------------------------------------------------
+#pragma warning(disable:4512)
 namespace
 {
 
@@ -83,8 +84,17 @@ namespace
 
     std::wstring get__reference_datum_path ()
     {
-        // TODO:
-        return L"C:\\temp\\GitHub\\hron\\reference-data\\";
+        wchar_t raw_path[MAX_PATH] = {};
+        GetModuleFileNameW(nullptr, raw_path, MAX_PATH);
+
+        std::wstring path (raw_path);
+        auto f = path.find_last_of (L'\\');
+        if (f != std::wstring::npos)
+        {
+            path = path.substr(0, f + 1) + L"..\\..\\..\\..\\..\\reference-data\\";
+        }
+
+        return path;
     }
 
     std::vector<std::wstring> get__reference_datum (std::wstring const & reference_data_path)
@@ -115,6 +125,34 @@ namespace
         std::ofstream   output  ;
     };
 
+    void error (void* payload, int line_no, hron_string_type line, int b, int e, hron_string_type message)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Error:" << std::string (line + b, line + e) << std::endl;
+    }
+
+    void preprocessor (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "PreProcessor:" << std::string (s + b, s + e) << std::endl;
+    }
+
+    void empty (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Empty:" << std::string (s + b, s + e) << std::endl;
+    }
+
+    void comment (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Comment:0," << std::string (s + b, s + e) << std::endl;
+    }
+
     void object__begin (void * payload, hron_string_type s, int b, int e)
     {
         visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
@@ -129,12 +167,37 @@ namespace
         vs.output << "Object_End:" << std::endl;
     }
 
+    void value__begin (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Value_Begin:" << std::string (s + b, s + e) << std::endl;
+    }
+
+    void value__line (void * payload, hron_string_type s, int b, int e)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Value_Line:" << std::string (s + b, s + e) << std::endl;
+    }
+
+
+    void value__end (void * payload)
+    {
+        visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
+
+        vs.output << "Value_End:" << std::endl;
+    }
+
     static bool test_bom (std::ifstream & input)
     {
         return 
-                input.get() == 0xEF
-            &&  input.get() == 0xBB
-            &&  input.get() == 0xBF
+                input.peek () != 0xEF
+            ||  (
+                    input.get() == 0xEF
+                &&  input.get() == 0xBB
+                &&  input.get() == 0xBF
+                )
             ;
     }
 
@@ -162,9 +225,18 @@ int main()
         visitor_state vs;
         hron__visitor v = {};
         v.payload = &vs;
+        v.error             = error             ;
+
+        v.preprocessor      = preprocessor      ;
+        v.empty             = empty             ;
+        v.comment           = comment           ;
 
         v.object__begin     = object__begin     ;
-        v.object__end       = object__end       ; 
+        v.object__end       = object__end       ;
+
+        v.value__begin      = value__begin      ;
+        v.value__line       = value__line       ;
+        v.value__end        = value__end        ;
 
         for(auto reference_data : reference_datum)
         {
@@ -201,7 +273,6 @@ int main()
                     hron__accept_line (parser_state, line.c_str (), 0, line.size ());
                 }
             }
-            break;
         }
 
 
