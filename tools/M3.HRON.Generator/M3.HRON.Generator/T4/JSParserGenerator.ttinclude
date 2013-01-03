@@ -1,0 +1,56 @@
+﻿<#@ include file="JSHeader.ttinclude" #>
+
+<#
+    
+    var defaultState = model
+        .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
+
+    var psLookup = model.Select((ps, i) => new {ps, i}).ToDictionary(kv => kv.ps, kv => kv.i);
+
+#>
+
+function hronScanner(ps, initialState) {
+    this.SR_Error       = 0;
+    this.SR_Continue    = 1;
+    this.SR_Done        = 2;
+
+<#
+    foreach (var parserState in model)
+    {
+#>
+    this.SS_<#=parserState.Name#> = <#=psLookup[parserState]#>;
+<#
+    }
+#>
+    this.result         = this.SR_Continue;
+    this.state          = this[initialState];
+    this.currentLine    = "";
+    this.currentChar    = "";
+    this.parserState    = ps;
+
+    this.acceptLine     = function(line) {
+        if (!line) line = "";
+
+        this.currentLine = line;
+        this.currentChar = line[0];
+
+        var begin = 0;
+        var end = line.length;
+
+        if (this.parserState.lineBegin) this.parserState.lineBegin(this);
+
+        for (var iter = begin; iter < end; ++iter) {
+            this.currentChar = this.currentLine[iter];
+
+            switch (this.state)
+            {
+            }
+        }
+
+        if (this.parserState.lineEnd) this.parserState.lineEnd(this);
+    };
+}
+
+
+<#@ include file="ParserGenerator.ttinclude"#>
+

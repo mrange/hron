@@ -17,6 +17,11 @@ namespace M3.HRON.Sample
 
     using Source.Common;
 
+    enum UserType
+    {
+        User        ,
+        SuperUser   ,
+    }
 
     partial class Program
     {
@@ -45,11 +50,14 @@ namespace M3.HRON.Sample
                     string userName         = databaseConnection.User.UserName;
                     string password         = databaseConnection.User.Password;
 
+                    UserType userType       = databaseConnection.User.Type;
+
                     Log.HighLight   ("Database connection   : {0}", name);
                     Log.Info        ("Connection string     : {0}", connectionString);
                     Log.Info        ("TimeOut               : {0}", timeOut);
                     Log.Info        ("UserName              : {0}", userName);
                     Log.Info        ("Password              : {0}", password);
+                    Log.Info        ("UserType              : {0}", userType);
                 }
 
             }
@@ -114,6 +122,8 @@ namespace M3.HRON.Sample
 			ATestUser
 		=Password
 			123
+		=Type
+			SuperUser
 @DataBaseConnection
 	=Name
 		PartnerDB

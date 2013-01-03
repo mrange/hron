@@ -1,0 +1,311 @@
+﻿<#@ include file="CHeader.ttinclude" #>
+
+
+<#
+    
+    var defaultState = model
+        .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
+#>
+
+enum tag__scanner_state
+{
+<#
+foreach (var parserState in model)
+{
+#>
+    SS_<#=parserState.Name#>,
+<#
+}
+#>
+};
+
+enum tag__scanner_state_transition
+{
+<#
+foreach (var parserState in model)
+{
+    foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
+    {
+#>
+    SST_From_<#=parserState.Name#>__To_<#=name#>,
+<#
+    }
+}
+#>
+};
+
+enum tag__scanner_state_choice
+{
+<#
+foreach (var parserState in model)
+{
+    foreach (var nextParserState in parserState.ChoiceStates(defaultState))
+    {
+#>
+    SSC_From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
+<#
+    }
+}
+#>
+};
+
+enum tag__scanner_result
+{
+    SR_Error   ,
+    SR_Continue,
+    SR_Done    ,
+};
+
+typedef enum    tag__scanner_state              scanner_state           ;    
+typedef enum    tag__scanner_state_transition   scanner_state_transition;    
+typedef enum    tag__scanner_state_choice       scanner_state_choice    ;    
+typedef enum    tag__scanner_result             scanner_result          ;    
+
+struct tag__secret__scanner_state
+{
+    scanner_result          result              ;
+    scanner_state           state               ;
+    hron_string_type        current_line        ;
+    int                     current_line_begin  ;
+    int                     current_line_end    ;
+    hron_char_type          current_char        ;
+    secret__parser_state    parser_state        ;
+};
+
+typedef struct  tag__secret__scanner_state      secret__scanner_state   ;
+
+static void scanner_begin_line (secret__scanner_state * ss);
+
+static void scanner_end_line (secret__scanner_state * ss);
+
+static void scanner_statechoice (
+        secret__scanner_state *     ss
+    ,   scanner_state_choice        choice
+    );
+
+static void scanner_statetransition (
+        secret__scanner_state *     ss
+    ,   scanner_state               from
+    ,   scanner_state               to
+    ,   scanner_state_transition    sst
+    );
+
+static void scanner_init (
+        secret__scanner_state * ss
+    ,   scanner_state           initial_state
+    ,   secret__parser_state *  ps
+    )
+{
+    assert (ss);
+    assert (ps);
+
+    memset (ss, 0, sizeof (secret__scanner_state));
+    ss->result          = SR_Continue   ;
+    ss->state           = initial_state ;
+    ss->parser_state    = *ps           ;
+}
+
+scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs, int begin, int end)
+{
+    int iter;
+
+    assert (ss);
+    assert (hs);
+    assert (begin >= 0);
+    assert (end >= begin);
+
+    iter = begin;
+
+    ss->current_line        = hs                    ;
+    ss->current_line_begin  = begin                 ;
+    ss->current_line_end    = end                   ;
+    ss->current_char        = ss->current_line[iter];
+    
+    scanner_begin_line (ss);
+
+    for (iter = begin; iter < end; ++iter)
+    {
+        ss->current_char = ss->current_line[iter];
+apply:
+        if (ss->result != SR_Continue)
+        {
+            break;
+        } 
+        
+        switch (ss->state)
+        {
+<#
+    foreach (var parserState in model)
+    {
+#>
+        case SS_<#=parserState.Name#>:
+            switch (ss->current_char)
+            {
+<#
+    foreach (var nextParserState in parserState.NextStates (defaultState))
+    {
+        if (nextParserState.IsDefaultCase)
+        {
+#>
+            default:
+<#
+        }
+        else
+        {
+            foreach (var ch in nextParserState.Characters)
+            {
+#>
+            case <#=GetCase(ch)#>:
+<#
+            }
+        }
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+                switch (ss->state)
+                {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                case SS_<#=name#>:
+<#
+                        OutputStateTransition (parserState, name);
+#>
+                    break;
+<#
+        }
+#>
+                    default:
+                        ss->result = SR_Error;
+                        break;
+                    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+            if (name != parserState.Name)
+            {
+#>
+                    ss->state = SS_<#=name#>; 
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+    if (nextParserState.HandOver)
+    {
+#>
+                    goto apply;
+<#
+    }
+#>
+                    break;
+<#
+    }
+#>    
+                }
+            break;
+<#
+    }
+#>
+        default:
+            ss->result = SR_Error;
+            break;
+        }        
+    }
+
+    if (ss->result == SR_Error)
+    {
+        goto end;
+    } 
+        
+    switch (ss->state)
+    {
+<#
+    foreach (var parserState in model.Where (ps => ps.Any (nps => nps.IsTerminator)))
+    {
+#>
+    case SS_<#=parserState.Name#>:
+<#
+        var nextParserState = parserState.First (nps => nps.IsTerminator);
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+        switch (ss->state)
+        {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+        case SS_<#=name#>:
+<#
+            OutputStateTransition (parserState, name);
+#>
+            break;
+<#
+        }
+#>
+        default:
+            ss->result = SR_Error;
+            break;
+    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+            if (name != parserState.Name)
+            {
+#>
+            ss->state = SS_<#=name#>; 
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+#>
+        break;
+<#
+    }
+#>
+    }
+
+end:
+    scanner_end_line (ss);
+
+    return ss->result;
+}
+
+
+<#@ include file="ParserGenerator.ttinclude"#>
+
+<#+
+    void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
+    {
+#>
+                    scanner_statechoice (
+                            ss
+                        ,   SSC_From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
+                        );
+<#+
+    }
+#>
+
+<#+
+    void OutputStateTransition (ParserState parserState, string to)
+    {
+#>
+                            scanner_statetransition (
+                                    ss
+                                ,   SS_<#=parserState.Name#>
+                                ,   SS_<#=to#>
+                                ,   SST_From_<#=parserState.Name#>__To_<#=to#>
+                                );
+<#+
+    }
+#>
+

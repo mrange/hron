@@ -1,0 +1,284 @@
+﻿<#@ include file="CSharpHeader.ttinclude" #>
+
+#pragma warning disable 0162
+// ReSharper disable CheckNamespace
+// ReSharper disable CSharpWarnings::CS0162
+// ReSharper disable HeuristicUnreachableCode
+// ReSharper disable InconsistentNaming
+// ReSharper disable PartialMethodWithSinglePart
+
+<#
+    
+    var defaultState = model
+        .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
+#>
+
+namespace M3.HRON.Generator.Parser
+{
+    using M3.HRON.Generator.Source.Common;
+
+    enum ParserState
+    {
+<#
+    foreach (var parserState in model)
+    {
+#>
+        <#=parserState.Name#>,
+<#
+    }
+#>
+    }
+
+    enum ParserResult
+    {
+        Error   ,
+        Continue,
+        Done    ,
+    }
+
+
+    sealed partial class Scanner
+    {
+        ParserState State = default (ParserState);
+        const char EndOfStream = (char)0;
+
+        partial void Partial_BeginLine ();
+        partial void Partial_EndLine ();
+
+<#
+    foreach (var parserState in model)
+    {
+        foreach (var nextParserState in parserState.ChoiceStates(defaultState))
+        {
+#>
+        partial void Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> ();
+<#
+        }
+    }
+#>
+
+<#
+    foreach (var parserState in model)
+    {
+#>
+        partial void Partial_StateTransition__From_<#=parserState.Name#> ();
+
+        partial void Partial_StateTransition__To_<#=parserState.Name#> ();
+
+<#
+        foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
+        {
+#>
+        partial void Partial_StateTransition__From_<#=parserState.Name#>__To_<#=name#> ();
+<#
+        }
+    }
+#>
+
+        partial void Partial_AcceptEndOfStream ();
+                
+        ParserResult Result;
+        SubString    CurrentLine;
+        char         CurrentCharacter;
+
+        public void AcceptEndOfStream ()
+        {
+            Partial_AcceptEndOfStream ();
+        }
+
+        public bool AcceptLine (SubString ss)
+        {
+            Result = ParserResult.Continue;
+            CurrentLine = ss;
+
+            Partial_BeginLine ();
+
+            var bs = ss.BaseString;
+            var begin = ss.Begin;
+            var end = ss.End;
+
+            for (var iter = begin; iter < end; ++iter)
+            {
+                CurrentCharacter = bs[iter];
+apply:
+                if (Result != ParserResult.Continue)
+                {
+                    break;
+                }
+
+                switch (State)
+                {
+<#
+    foreach (var parserState in model)
+    {
+#>
+                case ParserState.<#=parserState.Name#>:
+                    switch (CurrentCharacter)
+                    {
+<#
+    foreach (var nextParserState in parserState.NextStates (defaultState))
+    {
+        if (nextParserState.IsDefaultCase)
+        {
+#>
+                    default:
+<#
+        }
+        else
+        {
+            foreach (var ch in nextParserState.Characters)
+            {
+#>
+                    case <#=GetCase(ch)#>:
+<#
+            }
+        }
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+                        switch (State)
+                        {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                        case ParserState.<#=name#>:
+<#
+                        OutputStateTransition (parserState, name);
+#>
+                            break;
+<#
+        }
+#>
+                        default:
+                            Result = ParserResult.Error;
+                            break;
+                    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+            if (name != parserState.Name)
+            {
+#>
+                        State = ParserState.<#=name#>; 
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+    if (nextParserState.HandOver)
+    {
+#>
+                        goto apply;
+<#
+    }
+#>
+                        break;
+<#
+    }
+#>    
+                    }
+                    break;
+<#
+    }
+#>
+                default:
+                    Result = ParserResult.Error;
+                    break;
+                }
+            }
+
+            if (Result == ParserResult.Error)
+            {
+                return false;
+            }
+
+            // EndOfLine
+            CurrentCharacter = EndOfStream;
+
+            {
+                switch (State)
+                {
+<#
+    foreach (var parserState in model.Where (ps => ps.Any (nps => nps.IsTerminator)))
+    {
+#>
+                case ParserState.<#=parserState.Name#>:
+<#
+        var nextParserState = parserState.First (nps => nps.IsTerminator);
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+                    switch (State)
+                    {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                    case ParserState.<#=name#>:
+<#
+            OutputStateTransition (parserState, name);
+#>
+                        break;
+<#
+        }
+#>
+                        default:
+                            result = ParserResult.Error;
+                            break;
+                    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0]; 
+            if (name != parserState.Name)
+            {
+#>
+                    State = ParserState.<#=name#>; 
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+#>
+                    break;
+<#
+    }
+#>
+                }
+            }
+
+            Partial_EndLine ();
+
+            return Result != ParserResult.Error;
+        }
+    }
+}
+
+
+<#@ include file="ParserGenerator.ttinclude"#>
+
+<#+
+    void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
+    {
+#>
+                    Partial_StateChoice__From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#> ();
+<#+
+    }
+#>
+
+<#+
+    void OutputStateTransition (ParserState parserState, string to)
+    {
+#>
+                            Partial_StateTransition__From_<#=parserState.Name#> ();
+                            Partial_StateTransition__From_<#=parserState.Name#>__To_<#=to#> ();
+                            Partial_StateTransition__To_<#=to#> ();
+<#+
+    }
+#>

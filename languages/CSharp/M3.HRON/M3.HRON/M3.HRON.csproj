@@ -34,12 +34,19 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Generated_Parser.cs">
+      <Link>Generated_Parser.cs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Parser.cs">
+      <Link>Parser.cs</Link>
+    </Compile>
+    <Compile Include="HRONDynamicSerialization.cs" />
     <Compile Include="HRONSerialization.cs" />
     <Compile Include="HRONSerializationExtensions.cs" />
     <Compile Include="Include_T4Include.cs">
+      <DependentUpon>Include_T4Include.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Include_T4Include.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

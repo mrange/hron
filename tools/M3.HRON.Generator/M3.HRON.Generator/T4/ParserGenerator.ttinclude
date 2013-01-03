@@ -1,0 +1,155 @@
+﻿
+<#+
+
+    const string DefaultCase    = "<<DefaultCase>>";
+    const string NoCase         = "<<NoCase>>";
+
+    sealed class ParserState : BaseContainer<Root, NextParserState>
+    {
+        public readonly string  Name        ;
+        public readonly bool    IsDefault   ;
+
+        public ParserState (string name, bool isDefault = false)
+        {
+            Name        = name ?? S_NoName  ;
+            IsDefault   = isDefault         ; 
+        }
+
+        public bool OnlyHasDefault 
+        {
+            get
+            {
+                var count = this.Count ();
+                if (count == 0)
+                {
+                    return true;
+                }
+
+                if (count == 1)
+                {
+                    return this.First().IsDefaultCase;
+                }
+
+                return false;
+            }
+        }
+
+        public IEnumerable<NextParserState> NextStates (ParserState defaultState)
+        {
+            return AllStates (defaultState).Where (nsp => !nsp.IsNoCase);
+        }
+
+        public IEnumerable<NextParserState> AllStates (ParserState defaultState)
+        {
+            foreach (var nextParserState in this.Where (nsp => !nsp.IsDefaultCase))
+            {
+                yield return nextParserState;
+            }
+
+            var defaultCase = this.FirstOrDefault (nsp => nsp.IsDefaultCase);
+            if (defaultCase != null)
+            {
+                yield return defaultCase;
+            }
+            else
+            {
+                yield return Next (DefaultCase, defaultState.Name);
+            }
+        }
+
+        public IEnumerable<NextParserState> ChoiceStates (ParserState defaultState)
+        {
+            return AllStates (defaultState).Where (nsp => nsp.IsChoice);
+        }
+
+    }
+
+    sealed class NextParserState : BaseEntity<ParserState>
+    {
+        public readonly string[]    Names       ;
+        public readonly string      Characters  ;
+        public readonly bool        IsTerminator;
+        public readonly bool        HandOver    ;
+
+        public NextParserState (
+            string[] names, 
+            string characters, 
+            bool isTerminator, 
+            bool handOver
+            )
+        {
+            Names       = names         ?? new string [0]       ;
+            if (Names.Length < 1)
+            {
+                Names = new [] {S_NoName};
+            }
+            Characters  = characters    ?? ""                   ;
+            IsTerminator= isTerminator                          ;
+            HandOver    = handOver                              ;
+        }
+
+        public bool IsDefaultHandOver
+        {
+            get
+            {
+                return HandOver && (IsNoCase || IsDefaultCase);
+            }
+        }
+
+        public bool IsNoCase
+        {
+            get
+            {
+                return ReferenceEquals (Characters, NoCase);
+            }
+        }
+
+        public bool IsChoice 
+        {
+            get
+            {
+                return Names.Length > 1;
+            }
+        }
+
+        public bool IsDefaultCase
+        {
+            get
+            {
+                return ReferenceEquals (Characters, DefaultCase);
+            }
+        }
+    }
+
+    static NextParserState Next (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:false, handOver:false);
+    }
+
+    static NextParserState HandOver (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:false, handOver:true);
+    }
+
+    static NextParserState Terminator (string characters, params string[] names)
+    {
+        return new NextParserState (names, characters, isTerminator:true, handOver:false);
+    }
+
+    static string GetCase (char ch)
+    {
+        switch (ch)
+        {
+        case '\t':
+            return "'\\t'";
+        case '\r':
+            return "'\\r'";
+        case '\n':
+            return "'\\n'";
+        default:
+            return "'" + ch + "'";
+        }
+    }
+
+
+#>

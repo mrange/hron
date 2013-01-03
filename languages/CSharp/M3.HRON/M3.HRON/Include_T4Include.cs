@@ -11,29 +11,14 @@
 
 
 // ############################################################################
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/BasicExtensions.cs
-// @@@ INCLUDE_FOUND: ../Common/Array.cs
-// @@@ INCLUDE_FOUND: ../Common/Config.cs
-// @@@ INCLUDE_FOUND: ../Common/Log.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Hron/HRONSerializer.cs
-// @@@ INCLUDE_FOUND: ../Common/Array.cs
-// @@@ INCLUDE_FOUND: ../Common/Config.cs
-// @@@ INCLUDE_FOUND: ../Common/SubString.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs
-// @@@ INCLUDE_FOUND: HRONSerializer.cs
-// @@@ INCLUDE_FOUND: ../Extensions/ParseExtensions.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Array.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Config.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Log.cs
-// @@@ INCLUDE_FOUND: Generated_Log.cs
-// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Array.cs
-// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/SubString.cs
-// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Hron/HRONSerializer.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Array.cs
 // @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/ParseExtensions.cs
 // @@@ INCLUDE_FOUND: ../Common/Config.cs
-// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs
-// @@@ SKIPPING (Already seen): https://raw.github.com/mrange/T4Include/master/Common/Config.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Extensions/EnumParseExtensions.cs
+// @@@ INCLUDE_FOUND: ../Reflection/StaticReflection.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Common/Config.cs
+// @@@ INCLUDING: https://raw.github.com/mrange/T4Include/master/Reflection/StaticReflection.cs
 // ############################################################################
 // Certains directives such as #define and // Resharper comments has to be 
 // moved to top in order to work properly    
@@ -42,1328 +27,10 @@
 // ReSharper disable PartialMethodWithSinglePart
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable RedundantCaseLabel
-// ReSharper disable RedundantNameQualifier
 // ############################################################################
 
 // ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    
-    
-    namespace Source.Extensions
-    {
-        using System;
-        using System.Collections.Generic;
-        using System.Globalization;
-        using System.IO;
-        using System.Reflection;
-    
-        using Source.Common;
-    
-        static partial class BasicExtensions
-        {
-            public static bool IsNullOrWhiteSpace (this string v)
-            {
-                return string.IsNullOrWhiteSpace (v);
-            }
-    
-            public static bool IsNullOrEmpty (this string v)
-            {
-                return string.IsNullOrEmpty (v);
-            }
-    
-            public static T FirstOrReturn<T>(this T[] values, T defaultValue)
-            {
-                if (values == null)
-                {
-                    return defaultValue;
-                }
-    
-                if (values.Length == 0)
-                {
-                    return defaultValue;
-                }
-    
-                return values[0];
-            }
-    
-            public static T FirstOrReturn<T>(this IEnumerable<T> values, T defaultValue)
-            {
-                if (values == null)
-                {
-                    return defaultValue;
-                }
-    
-                foreach (var value in values)
-                {
-                    return value;
-                }
-    
-                return defaultValue;
-            }
-    
-            public static string DefaultTo(this string v, string defaultValue = null)
-            {
-                return !v.IsNullOrEmpty () ? v : (defaultValue ?? "");
-            }
-    
-            public static IEnumerable<T> DefaultTo<T>(
-                this IEnumerable<T> values, 
-                IEnumerable<T> defaultValue = null
-                )
-            {
-                return values ?? defaultValue ?? Array<T>.Empty;
-            }
-    
-            public static T[] DefaultTo<T>(this T[] values, T[] defaultValue = null)
-            {
-                return values ?? defaultValue ?? Array<T>.Empty;
-            }
-    
-            public static T DefaultTo<T>(this T v, T defaultValue = default (T))
-                where T : struct, IEquatable<T>
-            {
-                return !v.Equals (default (T)) ? v : defaultValue;
-            }
-    
-            public static string FormatWith (this string format, CultureInfo cultureInfo, params object[] args)
-            {
-                return string.Format (cultureInfo, format ?? "", args.DefaultTo ());
-            }
-    
-            public static string FormatWith (this string format, params object[] args)
-            {
-                return format.FormatWith (Config.DefaultCulture, args);
-            }
-    
-            public static TValue Lookup<TKey, TValue>(
-                this IDictionary<TKey, TValue> dictionary, 
-                TKey key, 
-                TValue defaultValue = default (TValue))
-            {
-                if (dictionary == null)
-                {
-                    return defaultValue;
-                }
-    
-                TValue value;
-                return dictionary.TryGetValue (key, out value) ? value : defaultValue;
-            }
-    
-            public static TValue GetOrAdd<TKey, TValue>(
-                this IDictionary<TKey, TValue> dictionary, 
-                TKey key, 
-                TValue defaultValue = default (TValue))
-            {
-                if (dictionary == null)
-                {
-                    return defaultValue;
-                }
-    
-                TValue value;
-                if (!dictionary.TryGetValue (key, out value))
-                {
-                    value = defaultValue;
-                    dictionary[key] = value;
-                }
-    
-                return value;
-            }
-    
-            public static TValue GetOrAdd<TKey, TValue>(
-                this IDictionary<TKey, TValue> dictionary,
-                TKey key,
-                Func<TValue> valueCreator
-                )
-            {
-                if (dictionary == null)
-                {
-                    return valueCreator ();
-                }
-    
-                TValue value;
-                if (!dictionary.TryGetValue (key, out value))
-                {
-                    value = valueCreator ();
-                    dictionary[key] = value;
-                }
-    
-                return value;
-            }
-    
-            public static void DisposeNoThrow (this IDisposable disposable)
-            {
-                try
-                {
-                    if (disposable != null)
-                    {
-                        disposable.Dispose ();
-                    }
-                }
-                catch (Exception exc)
-                {
-                    Log.Exception ("DisposeNoThrow: Dispose threw: {0}", exc);
-                }
-            }
-    
-            public static TTo CastTo<TTo> (this object value, TTo defaultValue)
-            {
-                return value is TTo ? (TTo) value : defaultValue;
-            }
-    
-            public static string Concatenate(this IEnumerable<string> values, string delimiter = null, int capacity = 16)
-            {
-                values = values ?? Array<string>.Empty;
-                delimiter = delimiter ?? ", ";
-    
-                return string.Join(delimiter, values);
-            }
-    
-            public static string GetResourceString (this Assembly assembly, string name, string defaultValue = null)
-            {
-                defaultValue = defaultValue ?? "";
-    
-                if (assembly == null)
-                {
-                    return defaultValue;
-                }
-    
-                var stream = assembly.GetManifestResourceStream(name ?? "");
-                if (stream == null)
-                {
-                    return defaultValue;
-                }
-    
-                using (stream)
-                using (var streamReader = new StreamReader (stream))
-                {
-                    return streamReader.ReadToEnd();
-                }
-            }
-    
-            public static IEnumerable<string> ReadLines(this TextReader textReader)
-            {
-                if (textReader == null)
-                {
-                    yield break;
-                }
-    
-                string line;
-    
-                while ((line = textReader.ReadLine()) != null)
-                {
-                    yield return line;
-                }
-            }
-    
-            public static IEnumerable<Type> GetInheritanceChain (this Type type)
-            {
-                while (type != null)
-                {
-                    yield return type;
-                    type = type.BaseType;
-                }
-            }
-        }
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    
-    
-    
-    namespace Source.HRON
-    {
-        using System.Collections.Generic;
-        using System.Text;
-        using Source.Common;
-    
-        partial interface IHRONVisitor
-        {
-            void Empty (SubString line);
-    
-            void Comment(int indent, SubString comment);
-    
-            void Value_Begin(SubString name);
-            void Value_Line(SubString value);
-            void Value_End(SubString name);
-    
-            void Object_Begin(SubString name);
-            void Object_End(SubString name);
-    
-            void Error(int lineNo, SubString line, HRONSerializer.ParseError parseError);
-        }
-    
-        abstract partial class BaseHRONWriterVisitor : IHRONVisitor
-        {
-            readonly    StringBuilder   m_sb    = new StringBuilder();
-            bool                        m_first = true  ;
-            int                         m_indent        ;
-    
-            protected abstract void Write       (StringBuilder line);
-            protected abstract void WriteLine   ();
-            void                    WriteLine   (StringBuilder line)
-            {
-                if (m_first)
-                {
-                    m_first = false;
-                }
-                else
-                {
-                    WriteLine ();
-                }
-    
-                Write (line);
-            }
-    
-            public void Empty (SubString line)
-            {
-                m_sb.Clear();
-                m_sb.AppendSubString(line);
-                WriteLine(m_sb);
-            }
-    
-            public void Comment(int indent, SubString comment)
-            {
-                m_sb.Clear();
-                m_sb.Append('\t', indent);
-                m_sb.Append('#');
-                m_sb.AppendSubString(comment);
-                WriteLine(m_sb);
-            }
-    
-            public void Value_Begin(SubString name)
-            {
-                m_sb.Clear();
-                m_sb.Append('\t', m_indent);
-                m_sb.Append('=');
-                m_sb.Append(name);
-                ++m_indent;
-                WriteLine(m_sb);
-            }
-    
-            public void Value_Line(SubString value)
-            {
-                m_sb.Clear();
-                m_sb.Append('\t', m_indent);
-                m_sb.AppendSubString(value);
-                WriteLine(m_sb);
-            }
-    
-            public void Value_End(SubString name)
-            {
-                --m_indent;
-            }
-    
-            public void Object_Begin(SubString name)
-            {
-                m_sb.Clear();
-                m_sb.Append('\t', m_indent);
-                m_sb.Append('@');
-                m_sb.AppendSubString(name);
-                WriteLine(m_sb);
-                ++m_indent;
-            }
-    
-            public void Object_End(SubString name)
-            {
-                --m_indent;
-            }
-    
-            public void Error(int lineNo, SubString line, HRONSerializer.ParseError parseError)
-            {
-                m_sb.Clear();
-                m_sb.AppendFormat(Config.DefaultCulture, "# Error at line {0}: {1}", lineNo, parseError);
-                WriteLine(m_sb);
-            }
-    
-        }
-    
-        sealed partial class HRONWriterVisitor : BaseHRONWriterVisitor
-        {
-            readonly StringBuilder m_sb = new StringBuilder(128);
-    
-            public string Value
-            {
-                get
-                {
-                    return m_sb.ToString();                
-                }
-            }
-    
-            protected override void Write(StringBuilder line)
-            {
-                m_sb.Append(line.ToString());
-            }
-    
-            protected override void WriteLine()
-            {
-                m_sb.AppendLine();
-            }
-        }
-    
-        static partial class HRONSerializer
-        {
-            enum ParseState
-            {
-                ExpectingTag    ,
-                ExpectingValue  ,
-            }
-    
-            public enum ParseError
-            {
-                ProgrammingError                ,
-                IndentIncreasedMoreThanExpected ,
-                TagIsNotCorrectlyFormatted      ,
-            }
-    
-            public static void Parse (
-                int maxErrorCount,
-                IEnumerable<SubString> lines,
-                IHRONVisitor visitor
-                )
-            {
-                if (visitor == null)
-                {
-                    return;
-                }
-    
-                var errorCount = 0;
-    
-                lines = lines ?? Array<SubString>.Empty;
-    
-                var state = ParseState.ExpectingTag;
-                var expectedIndent = 0;
-                var lineNo = 0;
-                var context = new Stack<SubString>();
-    
-                foreach (var line in lines)
-                {
-                    ++lineNo;
-    
-                    var lineLength      = line.Length;
-                    var begin           = line.Begin;
-                    var end             = line.End;
-    
-                    var currentIndent   = 0;
-                    var baseString      = line.BaseString;
-    
-                    for (var iter = begin; iter < end; ++iter)
-                    {
-                        var ch = baseString[iter];
-                        if (ch == '\t')
-                        {
-                            ++currentIndent;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-    
-                    bool isComment;
-                    switch (state)
-                    {
-                        case ParseState.ExpectingTag:
-                            isComment = currentIndent < lineLength
-                                && baseString[currentIndent + begin] == '#'
-                                ;
-                            break;
-                        case ParseState.ExpectingValue:
-                        default:
-                            isComment = currentIndent < expectedIndent
-                                && currentIndent < lineLength
-                                && baseString[currentIndent + begin] == '#'
-                                ;
-                            break;
-                    }
-    
-                    var isWhiteSpace = line.ToSubString(currentIndent).IsWhiteSpace;
-    
-                    if (isComment)
-                    {
-                        visitor.Comment(currentIndent, line.ToSubString(currentIndent + 1));
-                    }
-                    else if (isWhiteSpace && currentIndent < expectedIndent)
-                    {
-                        switch (state)
-                        {
-                            case ParseState.ExpectingValue:
-                                visitor.Value_Line(SubString.Empty);
-                                break;
-                            case ParseState.ExpectingTag:
-                            default:
-                                visitor.Empty(line);
-                                break;
-                        }
-                    }
-                    else if (isWhiteSpace)
-                    {
-                        switch (state)
-                        {
-                            case ParseState.ExpectingValue:
-                                visitor.Value_Line(line.ToSubString(expectedIndent));
-                                break;
-                            case ParseState.ExpectingTag:
-                            default:
-                                visitor.Empty(line);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        if (currentIndent < expectedIndent)
-                        {
-                            switch (state)
-                            {
-                                case ParseState.ExpectingTag:
-                                    for (var iter = currentIndent; iter < expectedIndent; ++iter)
-                                    {
-                                        visitor.Object_End(context.Peek());
-                                        context.Pop();
-                                    }
-                                    break;
-                                case ParseState.ExpectingValue:
-                                default:
-                                    visitor.Value_End(context.Peek());
-                                    // Popping the value name
-                                    context.Pop();
-                                    for (var iter = currentIndent + 1; iter < expectedIndent; ++iter)
-                                    {
-                                        visitor.Object_End(context.Peek());
-                                        context.Pop();
-                                    }
-                                    break;
-                            }
-    
-                            expectedIndent = currentIndent;
-                            state = ParseState.ExpectingTag;
-                        }
-    
-                        switch (state)
-                        {
-                            case ParseState.ExpectingTag:
-                                if (currentIndent > expectedIndent)
-                                {
-                                    visitor.Error(lineNo, line, ParseError.IndentIncreasedMoreThanExpected);
-                                    if (++errorCount > 0)
-                                    {
-                                        return;
-                                    }
-                                }
-                                else if (currentIndent < lineLength)
-                                {
-                                    var first = baseString[currentIndent + begin];
-                                    switch (first)
-                                    {
-                                        case '@':
-                                            state = ParseState.ExpectingTag;
-                                            ++expectedIndent;
-                                            context.Push(line.ToSubString(currentIndent + 1));
-                                            visitor.Object_Begin(context.Peek());
-                                            break;
-                                        case '=':
-                                            state = ParseState.ExpectingValue;
-                                            ++expectedIndent;
-                                            context.Push(line.ToSubString(currentIndent + 1));
-                                            visitor.Value_Begin(context.Peek());
-                                            break;
-                                        default:
-                                            visitor.Error(lineNo, line, ParseError.TagIsNotCorrectlyFormatted);
-                                            if (++errorCount > 0)
-                                            {
-                                                return;
-                                            }
-                                            break;
-                                    }
-                                }
-                                else
-                                {
-                                    visitor.Error(lineNo, line, ParseError.ProgrammingError);
-                                    if (++errorCount > 0)
-                                    {
-                                        return;
-                                    }
-                                }
-                                break;
-                            case ParseState.ExpectingValue:
-                                visitor.Value_Line(line.ToSubString(expectedIndent));
-                                break;
-                        }
-                    }
-                }
-    
-                switch (state)
-                {
-                    case ParseState.ExpectingTag:
-                        for (var iter = 0; iter < expectedIndent; ++iter)
-                        {
-                            visitor.Object_End(context.Peek());
-                            context.Pop();
-                        }
-                        break;
-                    case ParseState.ExpectingValue:
-                    default:
-                        visitor.Value_End(context.Peek());
-                        // Popping the value name
-                        context.Pop();
-                        for (var iter = 0 + 1; iter < expectedIndent; ++iter)
-                        {
-                            visitor.Object_End(context.Peek());
-                            context.Pop();
-                        }
-                        break;
-                }
-    
-            }
-    
-        }
-    
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    
-    
-    
-    using System;
-    
-    namespace Source.HRON
-    {
-        using System.Collections.Generic;
-        using System.Dynamic;
-        using System.Linq;
-        using System.Text;
-    
-        using Source.Common;
-        using Source.Extensions;
-    
-        static partial class HronExtensions
-        {
-            public static IHRONEntity FirstOrEmpty (this IEnumerable<IHRONEntity> entities)
-            {
-                if (entities == null)
-                {
-                    return HRONValue.Empty;
-                }
-    
-                return entities.FirstOrDefault() ?? HRONValue.Empty;
-            }
-        }
-    
-        partial class HRONDynamicParseError
-        {
-            public readonly int LineNo;
-            public readonly string Line;
-            public readonly HRONSerializer.ParseError ParseError;
-    
-            public HRONDynamicParseError(int lineNo, string line, HRONSerializer.ParseError parseError)
-            {
-                LineNo = lineNo;
-                Line = line;
-                ParseError = parseError;
-            }
-        }
-    
-        partial interface IHRONEntity
-        {
-            HRONSerializer.DynamicType GetDynamicType();
-    
-            IEnumerable<string>      GetMemberNames();
-            IEnumerable<IHRONEntity> GetMember(string name);
-            string GetValue();
-    
-            void Apply(SubString name, IHRONVisitor visitor);
-            void ToString(StringBuilder sb);
-        }
-    
-        sealed partial class HRONDynamicMembers : DynamicObject
-        {
-            readonly IHRONEntity[] m_entities;
-    
-            public HRONDynamicMembers(IEnumerable<IHRONEntity> entities)
-            {
-                m_entities = (entities ?? Array<IHRONEntity>.Empty).ToArray ();
-            }
-    
-            public override string ToString()
-            {
-                var sb = new StringBuilder();
-    
-                var first = true;
-    
-                foreach (var entity in m_entities)
-                {
-                    if (first)
-                    {
-                        first = false;
-                    }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-    
-                    entity.ToString(sb);
-                }
-    
-                return sb.ToString();
-            }
-    
-            public int GetCount ()
-            {
-                return m_entities.Length;
-            }
-    
-            public bool Exists ()
-            {
-                return m_entities.Length > 0;
-            }
-    
-            public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
-            {
-                if (indexes.Length == 1 && indexes[0] is int)
-                {
-                    var index = (int)indexes[0];
-                    if (index < 0)
-                    {
-                        result = HRONValue.Empty;
-                        return true;
-                    }
-    
-                    if (index >= m_entities.Length)
-                    {
-                        result = HRONValue.Empty;
-                        return true;
-                    }
-    
-                    result = m_entities[index];
-                    return true;
-                }
-    
-                return base.TryGetIndex(binder, indexes, out result);
-            }
-    
-            public override bool TryGetMember(GetMemberBinder binder, out object result)
-            {
-                var entity = m_entities.FirstOrEmpty();
-    
-                var dynamicObject = entity as DynamicObject;
-                if (dynamicObject != null)
-                {
-                    return dynamicObject.TryGetMember(binder, out result);
-                }
-    
-                return base.TryGetMember(binder, out result);
-            }
-    
-            public override bool TryConvert(ConvertBinder binder, out object result)
-            {
-                var returnType = binder.ReturnType;
-                if (returnType == typeof(string))
-                {
-                    result = m_entities.FirstOrEmpty().GetValue ();
-                    return true;
-                }
-                else if (returnType == typeof(string[]))
-                {
-                    result = m_entities.Select(e => e.GetValue()).ToArray();
-                    return true;
-                }
-                else if (returnType ==typeof(object[]))
-                {
-                    result = m_entities;
-                    return true;
-                }
-                else if (returnType.CanParse())
-                {
-                    result = m_entities.FirstOrEmpty().GetValue().Parse(Config.DefaultCulture, returnType, returnType.GetDefaultValue());
-                    return true;                
-                }
-                else if (returnType.IsArray)
-                {
-                    var elementType = returnType.GetElementType();
-                    if (elementType.CanParse())
-                    {
-                        var values = m_entities.Select(entity => entity.GetValue().Parse(Config.DefaultCulture, elementType, elementType.GetDefaultValue())).ToArray();
-                        var array = Array.CreateInstance(elementType, values.Length);
-                        values.CopyTo(array, 0);
-                        result = array;
-                        return true;
-                    }
-                }
-                return base.TryConvert(binder, out result);
-            }
-        }
-    
-        abstract partial class BaseHRONEntity : DynamicObject, IHRONEntity
-        {
-            public abstract HRONSerializer.DynamicType GetDynamicType();
-            public abstract IEnumerable<string> GetMemberNames();
-            public abstract IEnumerable<IHRONEntity> GetMember(string name);
-            public abstract string GetValue();
-    
-            public abstract void Apply(SubString name, IHRONVisitor visitor);
-            public abstract void ToString(StringBuilder sb);
-    
-            public override string ToString()
-            {
-                var sb = new StringBuilder(128);
-                ToString(sb);
-                return sb.ToString();
-            }
-    
-            public override bool TryGetMember(GetMemberBinder binder, out object result)
-            {
-                result = new HRONDynamicMembers(GetMember(binder.Name));
-                return true;
-            }
-    
-            public override bool TryConvert(ConvertBinder binder, out object result)
-            {
-                var returnType = binder.ReturnType;
-                if (returnType == typeof(string))
-                {
-                    result = GetValue();
-                    return true;
-                }
-                else if (returnType.CanParse())
-                {
-                    result = GetValue().Parse(Config.DefaultCulture, returnType, returnType.GetDefaultValue ());
-                    return true;
-                }
-                return base.TryConvert(binder, out result);
-            }
-    
-        }
-    
-        sealed partial class HRONObject : BaseHRONEntity
-        {
-            public partial struct Member
-            {
-                readonly string m_name;
-                readonly IHRONEntity m_value;
-    
-                public Member(string name, IHRONEntity value)
-                    : this()
-                {
-                    m_name = name;
-                    m_value = value;
-                }
-    
-                public string Name
-                {
-                    get { return m_name ?? ""; }
-                }
-    
-                public IHRONEntity Value
-                {
-                    get { return m_value ?? HRONValue.Empty; }
-                }
-    
-                public override string ToString()
-                {
-                    return Name + " : " + Value;
-                }
-            }
-    
-            ILookup<string, IHRONEntity> m_lookup;
-            readonly Member[] m_members;
-    
-            public HRONObject(Member[] members)
-            {
-                m_members = members ?? Array<Member>.Empty;
-            }
-    
-            ILookup<string, IHRONEntity> GetLookup()
-            {
-                if (m_lookup == null)
-                {
-                    m_lookup = m_members.ToLookup(p => p.Name, p => p.Value);
-                }
-    
-                return m_lookup;
-            }
-    
-            public override HRONSerializer.DynamicType GetDynamicType()
-            {
-                return HRONSerializer.DynamicType.Object;
-            }
-    
-            public override IEnumerable<string> GetMemberNames()
-            {
-                for (int index = 0; index < m_members.Length; index++)
-                {
-                    var pair = m_members[index];
-                    yield return pair.Name;
-                }
-            }
-    
-            public override IEnumerable<IHRONEntity> GetMember(string name)
-            {
-                return GetLookup()[name ?? ""]; 
-            }
-    
-            public override string GetValue()
-            {
-                return "";
-            }
-    
-            public void Visit (IHRONVisitor visitor)
-            {
-                if (visitor == null)
-                {
-                    return;
-                }
-    
-                for (var index = 0; index < m_members.Length; index++)
-                {
-                    var pair = m_members[index];
-                    var innerName = pair.Name.ToSubString();
-                    pair.Value.Apply(innerName, visitor);
-                }
-            }
-    
-            public override void Apply(SubString name, IHRONVisitor visitor)
-            {
-                if (visitor == null)
-                {
-                    return;
-                }
-    
-                visitor.Object_Begin(name);
-                for (var index = 0; index < m_members.Length; index++)
-                {
-                    var pair = m_members[index];
-                    var innerName = pair.Name.ToSubString();
-                    pair.Value.Apply(innerName, visitor);
-                }
-                visitor.Object_End(name);
-            }
-    
-            public override void ToString(StringBuilder sb)
-            {
-                sb.Append("{Object");
-                for (var index = 0; index < m_members.Length; index++)
-                {
-                    var pair = m_members[index];
-                    sb.Append(", '");
-                    sb.Append(pair.Name);
-                    sb.Append("' : ");
-                    pair.Value.ToString(sb);
-                }
-                sb.Append('}');
-            }
-        }
-    
-        sealed partial class HRONValue : BaseHRONEntity
-        {
-            readonly string m_value;
-            public static readonly IHRONEntity Empty = new HRONValue("");
-    
-            public HRONValue(string value)
-            {
-                m_value = value ?? "";
-            }
-    
-            public override HRONSerializer.DynamicType GetDynamicType()
-            {
-                return HRONSerializer.DynamicType.Value;
-            }
-    
-            public override IEnumerable<string> GetMemberNames()
-            {
-                return Array<string>.Empty;
-            }
-    
-            public override IEnumerable<IHRONEntity> GetMember(string name)
-            {
-                return Array<IHRONEntity>.Empty;
-            }
-    
-            public override string GetValue()
-            {
-                return m_value;
-            }
-    
-            public override void Apply(SubString name, IHRONVisitor visitor)
-            {
-                if (visitor == null)
-                {
-                    return;
-                }
-    
-                visitor.Value_Begin(name);
-                foreach (var line in m_value.ReadLines())
-                {
-                    visitor.Value_Line(line);
-                }
-                visitor.Value_End(name);
-            }
-    
-            public override void ToString(StringBuilder sb)
-            {
-                sb.Append('"');
-    
-                var first = true;
-    
-                foreach (var line in m_value.ReadLines())
-                {
-                    if (first)
-                    {
-                        first = false;
-                    }
-                    else
-                    {
-                        sb.Append(", ");
-                    }
-                    sb.AppendSubString(line);                
-                }
-                sb.Append('"');
-            }
-        }
-    
-        sealed partial class HRONDynamicBuilderVisitor : IHRONVisitor
-        {
-            public struct Item
-            {
-                public readonly SubString Name;
-                public readonly List<HRONObject.Member> Pairs;
-    
-                public Item(SubString name)
-                    : this()
-                {
-                    Name = name;
-                    Pairs = new List<HRONObject.Member>();
-                }
-            }
-    
-            readonly Stack<Item> m_stack = new Stack<Item>();
-            readonly StringBuilder m_value = new StringBuilder(128);
-            bool m_firstLine = true;
-    
-            public readonly List<HRONDynamicParseError> Errors = new List<HRONDynamicParseError>();
-            public readonly int MaxErrors;
-    
-            public HRONDynamicBuilderVisitor(int maxErrors)
-            {
-                MaxErrors = maxErrors;
-                m_stack.Push(new Item("Root".ToSubString()));
-            }
-    
-            public Item Top
-            {
-                get { return m_stack.Peek(); }
-            }
-    
-            public void Empty(SubString line)
-            {
-            }
-    
-            public void Comment(int indent, SubString comment)
-            {
-            }
-    
-            public void Value_Begin(SubString name)
-            {
-                m_value.Clear();
-                m_firstLine = true;
-            }
-    
-            public void Value_Line(SubString value)
-            {
-                if (m_firstLine)
-                {
-                    m_firstLine = false;
-                }
-                else
-                {
-                    m_value.AppendLine();
-                }
-                m_value.Append(value);
-            }
-    
-            public void Value_End(SubString name)
-            {
-                AddEntity(name.Value, new HRONValue(m_value.ToString()));
-            }
-    
-            public void Object_Begin(SubString name)
-            {
-                m_stack.Push(new Item(name));
-            }
-    
-            public void Object_End(SubString name)
-            {
-                var pop = m_stack.Pop();
-                AddEntity(pop.Name.Value, new HRONObject(pop.Pairs.ToArray()));
-            }
-    
-            void AddEntity(string name, IHRONEntity entity)
-            {
-                Top.Pairs.Add(new HRONObject.Member(name, entity));
-            }
-    
-            public void Error(int lineNo, SubString line, HRONSerializer.ParseError parseError)
-            {
-                Errors.Add(new HRONDynamicParseError(lineNo, line.Value, parseError));
-            }
-        }
-    
-    
-        static partial class HRONSerializer
-        {
-            public enum DynamicType
-            {
-                Value,
-                Object,
-            }
-    
-            public static void VisitDynamic (
-                HRONObject hronObject,
-                IHRONVisitor visitor
-                )
-            {
-                if (hronObject == null)
-                {
-                    return;
-                }
-    
-                hronObject.Visit(visitor);
-            }
-    
-            public static string DynamicAsString (
-                HRONObject hronObject
-                )
-            {
-                if (hronObject == null)
-                {
-                    return "";
-                }
-    
-                var v = new HRONWriterVisitor();
-                VisitDynamic(hronObject, v);
-                return v.Value;
-            }
-    
-            public static bool TryParseDynamic(
-                int maxErrorCount,
-                IEnumerable<SubString> lines,
-                out dynamic dyn,
-                out HRONDynamicParseError[] errors
-                )
-            {
-                HRONObject hronObject;
-    
-                if (!TryParseDynamic(maxErrorCount, lines, out hronObject, out errors))
-                {
-                    dyn = null;
-                    return false;
-                }
-    
-                dyn = hronObject;
-                return true;
-            }
-    
-            public static bool TryParseDynamic(
-                int maxErrorCount,
-                IEnumerable<SubString> lines,
-                out HRONObject hronObject,
-                out HRONDynamicParseError[] errors
-                )
-            {
-                hronObject = null;
-                errors = Array<HRONDynamicParseError>.Empty;
-    
-                var visitor = new HRONDynamicBuilderVisitor(maxErrorCount);
-    
-                Parse(maxErrorCount, lines, visitor);
-    
-                if (visitor.Errors.Count > 0)
-                {
-                    errors = visitor.Errors.ToArray();
-                    return false;
-                }
-    
-                hronObject = new HRONObject(visitor.Top.Pairs.ToArray());
-    
-                return true;
-            }
-    
-        }
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    namespace Source.Common
-    {
-        static class Array<T>
-        {
-            public static readonly T[] Empty = new T[0];
-        }
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    
-    namespace Source.Common
-    {
-        using System.Globalization;
-    
-        sealed partial class InitConfig
-        {
-            public CultureInfo DefaultCulture = CultureInfo.InvariantCulture;
-        }
-    
-        static partial class Config
-        {
-            static partial void Partial_Constructed(ref InitConfig initConfig);
-    
-            public readonly static CultureInfo DefaultCulture;
-    
-            static Config ()
-            {
-                var initConfig = new InitConfig();
-    
-                Partial_Constructed (ref initConfig);
-    
-                initConfig = initConfig ?? new InitConfig();
-    
-                DefaultCulture = initConfig.DefaultCulture;
-            }
-        }
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
-{
-    // ----------------------------------------------------------------------------------------------
-    // Copyright (c) Mårten Rånge.
-    // ----------------------------------------------------------------------------------------------
-    // This source code is subject to terms and conditions of the Microsoft Public License. A 
-    // copy of the license can be found in the License.html file at the root of this distribution. 
-    // If you cannot locate the  Microsoft Public License, please send an email to 
-    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
-    //  by the terms of the Microsoft Public License.
-    // ----------------------------------------------------------------------------------------------
-    // You must not remove this notice, or any other, from this software.
-    // ----------------------------------------------------------------------------------------------
-    
-    
-    
-    namespace Source.Common
-    {
-        using System;
-        using System.Globalization;
-    
-        static partial class Log
-        {
-            static partial void Partial_LogMessage (Level level, string message);
-            static partial void Partial_ExceptionOnLog (Level level, string format, object[] args, Exception exc);
-    
-            public static void LogMessage (Level level, string format, params object[] args)
-            {
-                try
-                {
-                    Partial_LogMessage (level, GetMessage (format, args));
-                }
-                catch (Exception exc)
-                {
-                    Partial_ExceptionOnLog (level, format, args, exc);
-                }
-                
-            }
-    
-            static string GetMessage (string format, object[] args)
-            {
-                format = format ?? "";
-                try
-                {
-                    return (args == null || args.Length == 0)
-                               ? format
-                               : string.Format (Config.DefaultCulture, format, args)
-                        ;
-                }
-                catch (FormatException)
-                {
-    
-                    return format;
-                }
-            }
-        }
-    }
-}
-
-// ############################################################################
-namespace M3.HRON
+namespace M3.HRON.Generator
 {
     // ----------------------------------------------------------------------------------------------
     // Copyright (c) Mårten Rånge.
@@ -1744,7 +411,35 @@ namespace M3.HRON
 }
 
 // ############################################################################
-namespace M3.HRON
+
+// ############################################################################
+namespace M3.HRON.Generator
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    namespace Source.Common
+    {
+        static class Array<T>
+        {
+            public static readonly T[] Empty = new T[0];
+        }
+    }
+}
+
+// ############################################################################
+
+// ############################################################################
+namespace M3.HRON.Generator
 {
     
     
@@ -1911,7 +606,7 @@ namespace M3.HRON
                 return s_parsers.ContainsKey (type);
             }
     
-            public static object GetDefaultValue (this Type type)
+            public static object GetParsedDefaultValue (this Type type)
             {
                 type = type ?? typeof (object);
     
@@ -2381,7 +1076,9 @@ namespace M3.HRON
 }
 
 // ############################################################################
-namespace M3.HRON
+
+// ############################################################################
+namespace M3.HRON.Generator
 {
     // ----------------------------------------------------------------------------------------------
     // Copyright (c) Mårten Rånge.
@@ -2395,124 +1092,314 @@ namespace M3.HRON
     // You must not remove this notice, or any other, from this software.
     // ----------------------------------------------------------------------------------------------
     
-    // ############################################################################
-    // #                                                                          #
-    // #        ---==>  T H I S  F I L E  I S   G E N E R A T E D  <==---         #
-    // #                                                                          #
-    // # This means that any edits to the .cs file will be lost when its          #
-    // # regenerated. Changes should instead be applied to the corresponding      #
-    // # template file (.tt)                                                      #
-    // ############################################################################
     
     
-    
-    
-    
-    namespace Source.Common
+    namespace Source.Extensions
     {
         using System;
+        using System.Collections.Concurrent;
+        using System.Reflection;
     
-        partial class Log
+        using Source.Reflection;
+    
+        static partial class EnumParseExtensions
         {
-            public enum Level
+            enum Dummy {}
+    
+            sealed partial class EnumParser
             {
-                Success = 1000,
-                HighLight = 2000,
-                Info = 3000,
-                Warning = 10000,
-                Error = 20000,
-                Exception = 21000,
+                public Func<string, object> ParseEnum   ;
+                public Func<object>         DefaultEnum ;
             }
     
-            public static void Success (string format, params object[] args)
+            static readonly MethodInfo s_parseEnum = StaticReflection.GetMethodInfo (() => ParseEnum<Dummy>(default (string)));
+            static readonly MethodInfo s_genericParseEnum = s_parseEnum.GetGenericMethodDefinition ();
+    
+            static readonly MethodInfo s_defaultEnum = StaticReflection.GetMethodInfo (() => DefaultEnum<Dummy>());
+            static readonly MethodInfo s_genericDefaultEnum = s_defaultEnum.GetGenericMethodDefinition ();
+    
+            static readonly MethodInfo s_parseNullableEnum = StaticReflection.GetMethodInfo(() => ParseNullableEnum<Dummy>(default(string)));
+            static readonly MethodInfo s_genericParseNullableEnum = s_parseNullableEnum.GetGenericMethodDefinition();
+    
+            static readonly MethodInfo s_defaultNullableEnum = StaticReflection.GetMethodInfo(() => DefaultNullableEnum<Dummy>());
+            static readonly MethodInfo s_genericDefaultNullableEnum = s_defaultNullableEnum.GetGenericMethodDefinition();
+    
+            static readonly ConcurrentDictionary<Type, EnumParser> s_enumParsers = new ConcurrentDictionary<Type, EnumParser>();
+            static readonly Func<Type, EnumParser> s_createParser = type => CreateParser (type);
+    
+            static EnumParser CreateParser(Type type)
             {
-                LogMessage (Level.Success, format, args);
-            }
-            public static void HighLight (string format, params object[] args)
-            {
-                LogMessage (Level.HighLight, format, args);
-            }
-            public static void Info (string format, params object[] args)
-            {
-                LogMessage (Level.Info, format, args);
-            }
-            public static void Warning (string format, params object[] args)
-            {
-                LogMessage (Level.Warning, format, args);
-            }
-            public static void Error (string format, params object[] args)
-            {
-                LogMessage (Level.Error, format, args);
-            }
-            public static void Exception (string format, params object[] args)
-            {
-                LogMessage (Level.Exception, format, args);
-            }
-            static ConsoleColor GetLevelColor (Level level)
-            {
-                switch (level)
+                if (type.IsEnum)
                 {
-                    case Level.Success:
-                        return ConsoleColor.Green;
-                    case Level.HighLight:
-                        return ConsoleColor.White;
-                    case Level.Info:
-                        return ConsoleColor.Gray;
-                    case Level.Warning:
-                        return ConsoleColor.Yellow;
-                    case Level.Error:
-                        return ConsoleColor.Red;
-                    case Level.Exception:
-                        return ConsoleColor.Red;
-                    default:
-                        return ConsoleColor.Magenta;
+                    return new EnumParser
+                               {
+                                   ParseEnum = (Func<string, object>)Delegate.CreateDelegate(
+                                                        typeof(Func<string, object>),
+                                                        s_genericParseEnum.MakeGenericMethod(type)
+                                                        ),
+                                   DefaultEnum = (Func<object>)Delegate.CreateDelegate(
+                                                       typeof(Func<object>),
+                                                       s_genericDefaultEnum.MakeGenericMethod(type)
+                                                       ),
+                               };
+    
+                }
+                else if (
+                        type.IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+                    && type.GetGenericArguments()[0].IsEnum
+                    )
+                {
+                    var enumType = type.GetGenericArguments()[0];
+                    return new EnumParser
+                               {
+                                   ParseEnum = (Func<string, object>)Delegate.CreateDelegate(
+                                                        typeof(Func<string, object>),
+                                                        s_genericParseNullableEnum.MakeGenericMethod(enumType)
+                                                        ),
+                                   DefaultEnum = (Func<object>)Delegate.CreateDelegate(
+                                                       typeof(Func<object>),
+                                                       s_genericDefaultNullableEnum.MakeGenericMethod(enumType)
+                                                       ),
+                               };
+    
+                }
+                else
+                {
+                    return null;
                 }
             }
     
-            static string GetLevelMessage (Level level)
+            static object ParseEnum<TEnum>(string value)
+                where TEnum : struct
             {
-                switch (level)
+                TEnum result;
+                return Enum.TryParse (value, true, out result)
+                    ? (object)result
+                    : null
+                    ;
+            }
+    
+            static object DefaultEnum<TEnum>()
+                where TEnum : struct
+            {
+                return default (TEnum);
+            }
+    
+            static object ParseNullableEnum<TEnum>(string value)
+                where TEnum : struct
+            {
+                TEnum result;
+                return Enum.TryParse(value, true, out result)
+                    ? (object)(TEnum?)result
+                    : null
+                    ;
+            }
+    
+            static object DefaultNullableEnum<TEnum>()
+                where TEnum : struct
+            {
+                return default(TEnum?);
+            }
+    
+            public static bool TryParseEnumValue(this string s, Type type, out object value)
+            {
+                value = null;
+                if (string.IsNullOrEmpty (s))
                 {
-                    case Level.Success:
-                        return "SUCCESS  ";
-                    case Level.HighLight:
-                        return "HIGHLIGHT";
-                    case Level.Info:
-                        return "INFO     ";
-                    case Level.Warning:
-                        return "WARNING  ";
-                    case Level.Error:
-                        return "ERROR    ";
-                    case Level.Exception:
-                        return "EXCEPTION";
-                    default:
-                        return "UNKNOWN  ";
+                    return false;
                 }
+    
+                var enumParser = TryGetParser (type);
+                if (enumParser == null)
+                {
+                    return false;
+    
+                }
+                
+    
+                value = enumParser.ParseEnum (s);
+    
+                return value != null;
+            }
+    
+            public static bool CanParseEnumValue (this Type type)
+            {
+                var enumParser = TryGetParser (type);
+    
+                return enumParser != null;
+            }
+    
+            static EnumParser TryGetParser (Type type)
+            {
+                if (type == null)
+                {
+                    return null;
+                }
+    
+                var enumParser = s_enumParsers.GetOrAdd (type, s_createParser);
+    
+                return enumParser;
+            }
+    
+            public static object ParseEnumValue (this string s, Type type)
+            {
+                object value;
+                return s.TryParseEnumValue (type, out value)
+                    ? value
+                    : null
+                    ;
+            }
+    
+            public static object GetDefaultEnumValue (this Type type)
+            {
+                var enumParser = TryGetParser (type);
+                return enumParser != null ? enumParser.DefaultEnum () : null;
+            }
+    
+            public static TEnum ParseEnumValue<TEnum>(this string s, TEnum defaultValue) 
+                where TEnum : struct
+            {
+                TEnum value;
+                return Enum.TryParse (s, true, out value)
+                    ? value
+                    : defaultValue
+                    ;
+            }
+    
+            public static TEnum? ParseEnumValue<TEnum>(this string s)
+                where TEnum : struct
+            {
+                TEnum value;
+                return Enum.TryParse(s, true, out value)
+                    ? (TEnum?)value
+                    : null
+                    ;
             }
     
         }
     }
-    
 }
+
 // ############################################################################
 
 // ############################################################################
-namespace M3.HRON.Include
+namespace M3.HRON.Generator
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    
+    namespace Source.Common
+    {
+        using System.Globalization;
+    
+        sealed partial class InitConfig
+        {
+            public CultureInfo DefaultCulture = CultureInfo.InvariantCulture;
+        }
+    
+        static partial class Config
+        {
+            static partial void Partial_Constructed(ref InitConfig initConfig);
+    
+            public readonly static CultureInfo DefaultCulture;
+    
+            static Config ()
+            {
+                var initConfig = new InitConfig();
+    
+                Partial_Constructed (ref initConfig);
+    
+                initConfig = initConfig ?? new InitConfig();
+    
+                DefaultCulture = initConfig.DefaultCulture;
+            }
+        }
+    }
+}
+
+// ############################################################################
+
+// ############################################################################
+namespace M3.HRON.Generator
+{
+    // ----------------------------------------------------------------------------------------------
+    // Copyright (c) Mårten Rånge.
+    // ----------------------------------------------------------------------------------------------
+    // This source code is subject to terms and conditions of the Microsoft Public License. A 
+    // copy of the license can be found in the License.html file at the root of this distribution. 
+    // If you cannot locate the  Microsoft Public License, please send an email to 
+    // dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+    //  by the terms of the Microsoft Public License.
+    // ----------------------------------------------------------------------------------------------
+    // You must not remove this notice, or any other, from this software.
+    // ----------------------------------------------------------------------------------------------
+    
+    namespace Source.Reflection
+    {
+        using System;
+        using System.Linq.Expressions;
+        using System.Reflection;
+    
+        static partial class StaticReflection
+        {
+            public static MethodInfo GetMethodInfo (Expression<Action> expr)
+            {
+                return ((MethodCallExpression)expr.Body).Method;
+            }
+    
+            public static MemberInfo GetMemberInfo<TReturn> (Expression<Func<TReturn>> expr)
+            {
+                return ((MemberExpression)expr.Body).Member;
+            }
+    
+            public static ConstructorInfo GetConstructorInfo<TReturn> (Expression<Func<TReturn>> expr)
+            {
+                return ((NewExpression)expr.Body).Constructor;
+            }
+        }
+    
+        static partial class StaticReflection<T>
+        {
+            public static MethodInfo GetMethodInfo (Expression<Action<T>> expr)
+            {
+                return ((MethodCallExpression)expr.Body).Method;
+            }
+    
+            public static MemberInfo GetMemberInfo<TReturn>(Expression<Func<T, TReturn>> expr)
+            {
+                return ((MemberExpression)expr.Body).Member;
+            }
+        }
+    }
+}
+
+// ############################################################################
+
+// ############################################################################
+namespace M3.HRON.Generator.Include
 {
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-11-21T08:49:50";
+        public const string IncludeDate     = @"2012-12-26T22:04:56";
 
-        public const string Include_0       = @"mrange/T4Include/master/Extensions/BasicExtensions.cs";
-        public const string Include_1       = @"mrange/T4Include/master/Hron/HRONSerializer.cs";
-        public const string Include_2       = @"mrange/T4Include/master/Hron/HRONDynamicObjectSerializer.cs";
-        public const string Include_3       = @"https://raw.github.com/mrange/T4Include/master/Common/Array.cs";
+        public const string Include_0       = @"mrange/T4Include/master/Common/SubString.cs";
+        public const string Include_1       = @"mrange/T4Include/master/Common/Array.cs";
+        public const string Include_2       = @"mrange/T4Include/master/Extensions/ParseExtensions.cs";
+        public const string Include_3       = @"mrange/T4Include/master/Extensions/EnumParseExtensions.cs";
         public const string Include_4       = @"https://raw.github.com/mrange/T4Include/master/Common/Config.cs";
-        public const string Include_5       = @"https://raw.github.com/mrange/T4Include/master/Common/Log.cs";
-        public const string Include_6       = @"https://raw.github.com/mrange/T4Include/master/Common/SubString.cs";
-        public const string Include_7       = @"https://raw.github.com/mrange/T4Include/master/Extensions/ParseExtensions.cs";
-        public const string Include_8       = @"https://raw.github.com/mrange/T4Include/master/Common/Generated_Log.cs";
+        public const string Include_5       = @"https://raw.github.com/mrange/T4Include/master/Reflection/StaticReflection.cs";
     }
 }
 // ############################################################################

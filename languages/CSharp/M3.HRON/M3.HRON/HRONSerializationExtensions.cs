@@ -10,17 +10,47 @@
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
 
+
+
 namespace M3.HRON
 {
     using System.Collections.Generic;
+    using System.Linq;
     using System.IO;
+
+    using M3.HRON.Generator.Source.Common;
 
     public static partial class HRONSerializationExtensions
     {
+        internal static IHRONEntity FirstOrEmpty(this IEnumerable<IHRONEntity> entities)
+        {
+            if (entities == null)
+            {
+                return HRONValue.Empty;
+            }
+
+            return entities.FirstOrDefault() ?? HRONValue.Empty;
+        }
+
+        internal static IEnumerable<string> ReadLines(this TextReader tr)
+        {
+            if (tr == null)
+            {
+                yield break;
+            }
+
+            string line;
+            while ((line = tr.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
         public static dynamic ParseAsHRON(this string input, object defaultValue = null)
         {
-            object dynamicValue;
-            return HRONSerialization.TryParseAsDynamic(input, out dynamicValue) 
+            HRONObject dynamicValue;
+            HRONDynamicParseError[] errors;
+            return HRONSerialization.TryParseAsDynamic(input.ReadLines(), out dynamicValue, out errors) 
                        ? dynamicValue 
                        : defaultValue
                 ;
@@ -28,8 +58,9 @@ namespace M3.HRON
 
         public static dynamic ParseAsHRON(this IEnumerable<string> input, object defaultValue = null)
         {
-            object dynamicValue;
-            return HRONSerialization.TryParseAsDynamic(input, out dynamicValue)
+            HRONObject dynamicValue;
+            HRONDynamicParseError[] errors;
+            return HRONSerialization.TryParseAsDynamic(input, out dynamicValue, out errors)
                        ? dynamicValue
                        : defaultValue
                 ;
@@ -37,8 +68,9 @@ namespace M3.HRON
 
         public static dynamic ParseAsHRON(this TextReader textReader, object defaultValue = null)
         {
-            object dynamicValue;
-            return HRONSerialization.TryParseAsDynamic(textReader, out dynamicValue)
+            HRONObject dynamicValue;
+            HRONDynamicParseError[] errors;
+            return HRONSerialization.TryParseAsDynamic(textReader.ReadLines(), out dynamicValue, out errors)
                        ? dynamicValue
                        : defaultValue
                 ;
@@ -48,6 +80,5 @@ namespace M3.HRON
         {
             return HRONSerialization.SerializeKeyValuePairs(keyValuePairs);
         }
-
     }
 }

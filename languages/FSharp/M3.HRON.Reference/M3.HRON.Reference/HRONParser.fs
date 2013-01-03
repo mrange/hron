@@ -65,7 +65,7 @@ module HRONParser =
                             >>? ContentLine
 
     let p_value_line    = p_choose [
-                            p_nonempty_line ; 
+                            p_nonempty_line ;
                             p_comment_line  ; 
                             p_empty_line    ;
                             ]

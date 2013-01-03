@@ -73,12 +73,14 @@ module Parser =
             else  Failure ("EOS", ps)
         )
 
-    let p_satisy_many test = (fun ps -> 
-        let e = seq {for x in ps.pos..ps.input.Length -> x} 
-                |> Seq.tryFind (fun x -> (test x ps.input.[x]) = false)
-        match e with
-            |   Some x' -> Success (ps.input.Substring(ps.pos, x' - ps.pos), move_to ps x')
-            |   _       -> Success (ps.input.Substring(ps.pos), move_to ps ps.input.Length)
+    let p_satisy_many test = (fun ps ->         
+        let mutable p = ps.pos
+        let e = ps.input.Length
+
+        while (p < e) && (test (p - ps.pos) ps.input.[p]) do
+            p <- p + 1
+
+        Success (ps.input.Substring(ps.pos, p - ps.pos), move_to ps p)
         )
 
     let p_map (p : Parser<'a>) m = (fun ps ->
@@ -196,14 +198,15 @@ module Parser =
 
     let p_indention = 
         (fun ps ->
-            let pos' = seq {for x in ps.pos..(min ps.input.Length (ps.pos + ps.indent)) -> x}  
-                    |> Seq.tryFind (fun x -> ps.input.[x] <> '\t')
-            let pos = match pos' with
-                |   Some i' -> i'
-                |   _       -> ps.input.Length
-            if pos = ps.indent + ps.pos
-            then Success ((), move_to ps pos)
-            else Failure("Expected indent", ps)
+            let s = ps.pos 
+            let e = min ps.input.Length (ps.pos + ps.indent)
+            let mutable r = true
+            for x in s..(e - 1) do
+                r <- (ps.input.[x] = '\t') && r 
+            
+            if r 
+            then    Success ((), move_to ps (ps.pos + ps.indent))
+            else    Failure("Expected indent", ps)    
         )     
 
 
