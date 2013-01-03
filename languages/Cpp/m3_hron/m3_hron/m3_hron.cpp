@@ -150,7 +150,13 @@ namespace
     {
         visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
 
-        vs.output << "Comment:0," << std::string (s + b, s + e) << std::endl;
+        vs.output 
+            << "Comment:" 
+            << b - 1
+            << ","
+            << std::string (s + b, s + e) 
+            << std::endl
+            ;
     }
 
     void object__begin (void * payload, hron_string_type s, int b, int e)
@@ -178,7 +184,7 @@ namespace
     {
         visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
 
-        vs.output << "Value_Line:" << std::string (s + b, s + e) << std::endl;
+        vs.output << "ContentLine:" << std::string (s + b, s + e) << std::endl;
     }
 
 
