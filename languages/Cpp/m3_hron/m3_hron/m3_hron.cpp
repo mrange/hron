@@ -207,24 +207,12 @@ namespace
             ;
     }
 
-}
-// -----------------------------------------------------------------------------
-int main()
-{
-    try
+    void correctness_test (
+            std::wstring const & reference_datum_path
+        ,   std::wstring const & action_logs_path
+        )
     {
-        auto reference_datum_path = get__reference_datum_path ();
-        auto action_logs_path = reference_datum_path + L"test-results\\C\\";
-
-        if (!directory_exists (reference_datum_path))
-        {
-            wprintf(L"Exiting due to missing reference datum directory (%s)\r\n", reference_datum_path.c_str ());
-        }
-
-        if (!directory_exists (action_logs_path))
-        {
-            wprintf(L"Exiting due to missing action log directory (%s)\r\n", action_logs_path.c_str ());
-        }
+        wprintf(L"1. Testing correctness\r\n");
 
         auto reference_datum = get__reference_datum (reference_datum_path);
 
@@ -281,7 +269,94 @@ int main()
             }
         }
 
+    }
 
+    void performance_test (
+            std::wstring const & reference_datum_path
+        ,   std::wstring const & action_logs_path
+        )
+    {
+        wprintf(L"2. Testing performance\r\n");
+
+        auto large_path = reference_datum_path + L"large.hron";
+
+        wprintf(L"Looking for %s\r\n", large_path.c_str());
+
+        std::ifstream hron (large_path);
+        std::vector<std::string> lines;
+        std::string line;
+
+
+        if (!hron)
+        {
+            wprintf(L"Failed to open stream\r\n");
+            return;
+        }
+
+        if (!test_bom (hron))
+        {
+            wprintf(L"Failed to open stream, need to be UTF-8\r\n");
+            return;
+        }
+
+        while (std::getline (hron, line))
+        {
+            lines.push_back (line);
+        }
+
+        auto then = GetTickCount() + 0x0ui64;
+        int count = 100u;
+
+        hron__visitor dv = {};
+
+        for (auto iter = 0; iter < count; ++iter)
+        {
+            auto parser_state = hron__initialize(&dv);
+            if (parser_state)
+            {
+                auto close_parser = on_exit ([=](){hron__finalize (parser_state);});
+
+                for (auto line : lines)
+                {
+                    hron__accept_line (parser_state, line.c_str (), 0, line.size ());
+                }
+            }
+        }
+
+        auto now = GetTickCount() + 0x100000000ui64;
+        auto diff = static_cast<__int32> ((now - then) & 0xFFFFFFFF);
+
+        wprintf(
+                L"%d lines reading %d milliseconds\r\n"
+            ,   count * lines.size()
+            ,   diff
+            );
+
+    }
+}
+
+// -----------------------------------------------------------------------------
+int main()
+{
+    try
+    {
+        auto reference_datum_path = get__reference_datum_path ();
+        auto action_logs_path = reference_datum_path + L"test-results\\C\\";
+
+        wprintf(L"m3_hron - running test cases\r\n");
+
+        if (!directory_exists (reference_datum_path))
+        {
+            wprintf(L"Exiting due to missing reference datum directory (%s)\r\n", reference_datum_path.c_str ());
+        }
+
+        if (!directory_exists (action_logs_path))
+        {
+            wprintf(L"Exiting due to missing action log directory (%s)\r\n", action_logs_path.c_str ());
+        }
+
+        correctness_test (reference_datum_path, action_logs_path);
+        performance_test (reference_datum_path, action_logs_path);
 
         return 0;
     }

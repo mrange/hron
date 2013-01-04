@@ -18,6 +18,8 @@
 #include <stdlib.h>
 // -----------------------------------------------------------------------------
 #define HRON_UNUSED(p) p
+#define HRON_PRELUDE __declspec(noalias) __declspec (safebuffers)  
+#define HRON_EXT_PRELUDE HRON_PRELUDE  
 // -----------------------------------------------------------------------------
 struct tag__secret__parser_state
 {
@@ -49,11 +51,11 @@ typedef struct tag__secret__parser_state secret__parser_state;
 // -----------------------------------------------------------------------------
 #include "../../../../tools/M3.HRON.Generator/M3.HRON.Generator/Generated_CParser.c"
 // -----------------------------------------------------------------------------
-static void empty_void_method (void* pl)
+HRON_PRELUDE static void empty_void_method (void* pl)
 {
     HRON_UNUSED(pl);
 }
-static void empty_string_method (void* pl, hron_string_type s, int begin, int end)
+HRON_PRELUDE static void empty_string_method (void* pl, hron_string_type s, int begin, int end)
 {
     HRON_UNUSED(pl);
     HRON_UNUSED(s);
@@ -61,7 +63,7 @@ static void empty_string_method (void* pl, hron_string_type s, int begin, int en
     HRON_UNUSED(end);
 }
 
-static void empty_error_method (void* pl, int line_no, hron_string_type line, int begin, int end, hron_string_type message)
+HRON_PRELUDE static void empty_error_method (void* pl, int line_no, hron_string_type line, int begin, int end, hron_string_type message)
 {
     HRON_UNUSED(pl);
     HRON_UNUSED(line_no);
@@ -71,7 +73,7 @@ static void empty_error_method (void* pl, int line_no, hron_string_type line, in
     HRON_UNUSED(message);
 }
 // -----------------------------------------------------------------------------
-void pop_context(secret__scanner_state * ss)
+HRON_PRELUDE void pop_context(secret__scanner_state * ss)
 {
     if (ss->parser_state.is_building_value && ss->parser_state.indention < ss->parser_state.expected_indent)
     {
@@ -88,7 +90,7 @@ void pop_context(secret__scanner_state * ss)
 
 }
 
-static void scanner_begin_line (secret__scanner_state * ss)
+HRON_PRELUDE static void scanner_begin_line (secret__scanner_state * ss)
 {
     switch (ss->state)
     {
@@ -106,12 +108,12 @@ static void scanner_begin_line (secret__scanner_state * ss)
     ++ss->parser_state.line_no;
 }
 
-static void scanner_end_line (secret__scanner_state * ss)
+HRON_PRELUDE static void scanner_end_line (secret__scanner_state * ss)
 {
     HRON_UNUSED(ss);
 }
 
-static void scanner_statechoice (
+HRON_PRELUDE static void scanner_statechoice (
         secret__scanner_state *     ss
     ,   scanner_state_choice        choice
     )
@@ -140,13 +142,14 @@ static void scanner_statechoice (
 
 hron_string_type empty = "";
 
-static void scanner_statetransition (
+HRON_PRELUDE static void scanner_statetransition (
         secret__scanner_state *     ss
     ,   scanner_state               from
     ,   scanner_state               to
     ,   scanner_state_transition    sst
     )
 {
+    HRON_UNUSED(from);
     assert(ss);
     switch (sst)
     {

@@ -74,23 +74,23 @@ struct tag__secret__scanner_state
 
 typedef struct  tag__secret__scanner_state      secret__scanner_state   ;
 
-static void scanner_begin_line (secret__scanner_state * ss);
+HRON_EXT_PRELUDE static void scanner_begin_line (secret__scanner_state * ss);
 
-static void scanner_end_line (secret__scanner_state * ss);
+HRON_EXT_PRELUDE static void scanner_end_line (secret__scanner_state * ss);
 
-static void scanner_statechoice (
+HRON_EXT_PRELUDE static void scanner_statechoice (
         secret__scanner_state *     ss
     ,   scanner_state_choice        choice
     );
 
-static void scanner_statetransition (
+HRON_EXT_PRELUDE static void scanner_statetransition (
         secret__scanner_state *     ss
     ,   scanner_state               from
     ,   scanner_state               to
     ,   scanner_state_transition    sst
     );
 
-static void scanner_init (
+HRON_PRELUDE static void scanner_init (
         secret__scanner_state * ss
     ,   scanner_state           initial_state
     ,   secret__parser_state *  ps
@@ -105,7 +105,7 @@ static void scanner_init (
     ss->parser_state    = *ps           ;
 }
 
-scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs, int begin, int end)
+HRON_PRELUDE scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs, int begin, int end)
 {
     int iter;
 
