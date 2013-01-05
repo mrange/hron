@@ -13,17 +13,17 @@
 // -----------------------------------------------------------------------------
 #include "stdafx.h"
 // -----------------------------------------------------------------------------
+#pragma warning(disable:4100)
+#pragma warning(disable:4512)
+// -----------------------------------------------------------------------------
 #include <Windows.h>
 // -----------------------------------------------------------------------------
+#include <cassert>
 #include <string>
 #include <vector>
 // -----------------------------------------------------------------------------
-extern "C"
-{
-    #include "hron_parser.h"
-}
+#include "hron_parser.hpp"
 // -----------------------------------------------------------------------------
-#pragma warning(disable:4512)
 namespace
 {
 
@@ -207,12 +207,79 @@ namespace
             ;
     }
 
+    struct console__visitor : hron::i__visitor
+    {
+        virtual void    document__begin (){wprintf(L"document__begin\r\n");}
+        virtual void    document__end   (){wprintf(L"document__end\r\n");}
+
+        virtual void    preprocessor    (hron_string_type b, hron_string_type e){wprintf(L"preprocessor\r\n");}
+        virtual void    comment         (hron_string_type b, hron_string_type e){wprintf(L"comment\r\n");}
+        virtual void    empty           (hron_string_type b, hron_string_type e){wprintf(L"empty\r\n");}
+
+        virtual void    object__begin   (hron_string_type b, hron_string_type e){wprintf(L"object__begin\r\n");}
+        virtual void    object__end     (){wprintf(L"object__end\r\n");}
+
+        virtual void    value__begin    (hron_string_type b, hron_string_type e){wprintf(L"value__begin\r\n");}
+        virtual void    value__line     (hron_string_type b, hron_string_type e){wprintf(L"value__line\r\n");}
+        virtual void    value__end      (){wprintf(L"value__end\r\n");}
+
+        virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg){wprintf(L"error\r\n");}
+    };
+    
+    void unit_test (
+            std::wstring const & reference_datum_path
+        ,   std::wstring const & action_logs_path
+        )
+    {
+        wprintf(L"1. Testing units\r\n");
+
+        auto large_path = reference_datum_path + L"helloworld.hron";
+
+        wprintf(L"Looking for %s\r\n", large_path.c_str());
+
+        std::ifstream hron (large_path);
+        std::vector<std::string> lines;
+        std::string line;
+
+
+        if (!hron)
+        {
+            wprintf(L"Failed to open stream\r\n");
+            return;
+        }
+
+        if (!test_bom (hron))
+        {
+            wprintf(L"Failed to open stream, need to be UTF-8\r\n");
+            return;
+        }
+
+        while (std::getline (hron, line))
+        {
+            lines.push_back (line);
+        }
+
+        console__visitor cv;
+
+        {
+            hron::parser p (&cv);
+            for (auto line : lines)
+            {
+                p.accept_line (line);
+            }
+        }
+
+        {
+            hron::parser p (&cv);
+        }
+    }
+
     void correctness_test (
             std::wstring const & reference_datum_path
         ,   std::wstring const & action_logs_path
         )
     {
-        wprintf(L"1. Testing correctness\r\n");
+        wprintf(L"2. Testing correctness\r\n");
 
         auto reference_datum = get__reference_datum (reference_datum_path);
 
@@ -264,7 +331,7 @@ namespace
 
                 while (std::getline(hron, line))
                 {
-                    hron__accept_line (parser_state, line.c_str (), 0, line.size ());
+                    hron__accept_line (parser_state, line.c_str (), 0, static_cast<int> (line.size ()));
                 }
             }
         }
@@ -276,7 +343,7 @@ namespace
         ,   std::wstring const & action_logs_path
         )
     {
-        wprintf(L"2. Testing performance\r\n");
+        wprintf(L"3. Testing performance\r\n");
 
         auto large_path = reference_datum_path + L"large.hron";
 
@@ -318,7 +385,7 @@ namespace
 
                 for (auto line : lines)
                 {
-                    hron__accept_line (parser_state, line.c_str (), 0, line.size ());
+                    hron__accept_line (parser_state, line.c_str (), 0, static_cast<int> (line.size ()));
                 }
             }
         }
@@ -355,8 +422,9 @@ int main()
             wprintf(L"Exiting due to missing action log directory (%s)\r\n", action_logs_path.c_str ());
         }
 
-        correctness_test (reference_datum_path, action_logs_path);
-        performance_test (reference_datum_path, action_logs_path);
+        unit_test           (reference_datum_path, action_logs_path);
+        correctness_test    (reference_datum_path, action_logs_path);
+        performance_test    (reference_datum_path, action_logs_path);
 
         return 0;
     }
