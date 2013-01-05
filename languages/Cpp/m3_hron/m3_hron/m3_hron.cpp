@@ -209,18 +209,26 @@ namespace
 
     struct console__visitor : hron::i__visitor
     {
+        static std::wstring get         (hron_string_type b, hron_string_type e)
+        {
+            assert(b);
+            assert(e);
+            assert(b <= e);
+            return std::wstring (b,e);
+        }
+
         virtual void    document__begin (){wprintf(L"document__begin\r\n");}
         virtual void    document__end   (){wprintf(L"document__end\r\n");}
 
-        virtual void    preprocessor    (hron_string_type b, hron_string_type e){wprintf(L"preprocessor\r\n");}
-        virtual void    comment         (hron_string_type b, hron_string_type e){wprintf(L"comment\r\n");}
-        virtual void    empty           (hron_string_type b, hron_string_type e){wprintf(L"empty\r\n");}
+        virtual void    preprocessor    (hron_string_type b, hron_string_type e){wprintf(L"preprocessor:%s\r\n", get(b,e).c_str ());}
+        virtual void    comment         (hron_string_type b, hron_string_type e){wprintf(L"comment:%s\r\n", get(b,e).c_str ());}
+        virtual void    empty           (hron_string_type b, hron_string_type e){wprintf(L"empty:%s\r\n", get(b,e).c_str ());}
 
-        virtual void    object__begin   (hron_string_type b, hron_string_type e){wprintf(L"object__begin\r\n");}
+        virtual void    object__begin   (hron_string_type b, hron_string_type e){wprintf(L"object__begin:%s\r\n", get(b,e).c_str ());}
         virtual void    object__end     (){wprintf(L"object__end\r\n");}
 
-        virtual void    value__begin    (hron_string_type b, hron_string_type e){wprintf(L"value__begin\r\n");}
-        virtual void    value__line     (hron_string_type b, hron_string_type e){wprintf(L"value__line\r\n");}
+        virtual void    value__begin    (hron_string_type b, hron_string_type e){wprintf(L"value__begin:%s\r\n", get(b,e).c_str ());}
+        virtual void    value__line     (hron_string_type b, hron_string_type e){wprintf(L"value__line:%s\r\n", get(b,e).c_str ());}
         virtual void    value__end      (){wprintf(L"value__end\r\n");}
 
         virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg){wprintf(L"error\r\n");}

@@ -14,6 +14,8 @@
 #pragma once
 // -----------------------------------------------------------------------------
 #include <cassert>
+#include <map>
+#include <stack>
 #include <string>
 // -----------------------------------------------------------------------------
 extern "C"
@@ -165,6 +167,116 @@ namespace hron
         }
 
 
+    };
+
+    struct hron_value
+    {
+        typedef std::basic_string<hron_char_type>       string_type ;
+        typedef std::multimap<string_type, hron_value>  values_type ;
+        string_type                                     value       ;
+        values_type                                     children    ;
+
+        hron_value  () throw ()
+        {
+        }
+
+        hron_value  (hron_value && hv) throw ()
+            :   value   (std::move (hv.value))
+            ,   children(std::move (hv.children))
+        {
+        }
+
+        hron_value&  operator= (hron_value && hv) throw ()
+        {
+            value       = std::move (hv.value);
+            children    = std::move (hv.children);
+
+            return *this;
+        }
+
+    };
+
+    struct hron_value__visitor : i__visitor
+    {
+        std::size_t             error_count ;
+        hron_value              root        ;
+        
+        bool                    value_first ;
+        hron_value::string_type value_name  ;
+        hron_value::string_type value       ;
+
+        std::stack<hron_value*> context ;
+
+        hron_value__visitor () throw ()
+            :   error_count (0)
+            ,   value_first (true)
+
+        {
+        }
+
+        virtual void    document__begin () 
+        {
+            context.push (std::addressof (root));
+        }
+        virtual void    document__end   () {}
+
+        virtual void    preprocessor    (hron_string_type b, hron_string_type e) {}
+        virtual void    comment         (hron_string_type b, hron_string_type e) {}
+        virtual void    empty           (hron_string_type b, hron_string_type e) {}
+
+        virtual void    object__begin   (hron_string_type b, hron_string_type e) 
+        {
+            auto obj = context.top ();
+            auto iterator = obj->children.insert (hron_value::values_type::value_type (
+                    hron_value::string_type (b, e)
+                ,   hron_value ())
+                );
+            context.push (std::addressof (iterator->second));
+
+        }
+        virtual void    object__end     () 
+        {
+            context.pop ();
+        }
+
+        virtual void    value__begin    (hron_string_type b, hron_string_type e) 
+        {
+            hron_value::string_type name (b, e);
+            name.swap (value_name);
+            value.clear ();
+            value_first = true;
+        }
+
+        virtual void    value__line     (hron_string_type b, hron_string_type e) 
+        {
+            if (value_first)
+            {
+                value_first = false;
+            }
+            else
+            {
+                value.push_back (L'\r');
+                value.push_back (L'\n');
+            }
+
+            value.append (b,e);
+        }
+
+        virtual void    value__end      () 
+        {
+            auto obj = context.top ();
+            hron_value hv;
+            hv.value.swap (value);
+            obj->children.insert (hron_value::values_type::value_type (
+                    std::move (value_name)
+                ,   std::move (hv))
+                );
+        }
+
+        virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg) 
+        { 
+            ++error_count; 
+        }
     };
 }
 // -----------------------------------------------------------------------------
