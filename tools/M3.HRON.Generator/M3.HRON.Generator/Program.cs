@@ -23,14 +23,14 @@ namespace M3.HRON.Generator
     {
         static void Main(string[] args)
         {
-            FunctionalityTest();
+//            FunctionalityTest();
             PerformanceTest();
         }
 
         static void FunctionalityTest()
         {
             var hrons = Directory
-                .GetFiles(@"..\..\..\..\..\..\reference-data", "*.hron")
+                .GetFiles(@"..\..\..\..\..\reference-data", "*.hron")
                 .Select(Path.GetFullPath)
                 .ToArray()
                 ;
@@ -80,7 +80,7 @@ namespace M3.HRON.Generator
 
         static void PerformanceTest()
         {
-            var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\large.hron");
+            var fullPath = Path.GetFullPath(@"..\..\..\..\..\reference-data\large.hron");
             //var fullPath = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\helloworld.hron");
             var lines = ReadLines(fullPath);
 
