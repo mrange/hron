@@ -166,5 +166,21 @@ function Test-Random
     write-host $x
 }
 
+function Test-Simple
+{
+    $text = Get-Content ..\..\reference-data\simple.hron
+    $x = ConvertFrom-HRON $text
+    write-host $x
+}
+
+function Test-Large
+{
+    $text = Get-Content ..\..\reference-data\large.hron
+    $x = ConvertFrom-HRON $text
+    write-host $x
+}
+
 #Test-HelloWorld
-Test-Random
+#Test-Random
+#Test-Simple
+Test-Large
