@@ -27,7 +27,19 @@ function Parse-String([ref]$lines, $indent)
     while($lines.Value.Count -gt 0)
     {
         $line = $lines.Value[0]
-        if ($line -match "^\s*$")
+        $pattern = "^(?<indent>^\t{$indent})(?<value>.*)"
+        if ($line -match $pattern)
+        {
+            Write-Debug "ContentLine:$($matches.value)"
+            Eat-Line $lines
+            $sb.AppendLine($matches.value) | Out-Null
+        }
+        elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
+        {
+            Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
+            Eat-Line $lines
+        }
+        elseif ($line -match "^\s*$")
         {
             Write-Debug "EmptyLine:$line"
             Eat-Line $lines
@@ -35,29 +47,7 @@ function Parse-String([ref]$lines, $indent)
         }        
         else
         {
-            $pattern = "^(?<indent>^\t{$indent})(?<value>.*)"
-            if ($line -match $pattern)
-            {
-                if (($matches.indent.Length -eq $indent) -or [string]::IsNullOrEmpty($matches.value.Trim()))
-                {
-                    Write-Debug "ContentLine:$($matches.value)"
-                    Eat-Line $lines
-                    $sb.AppendLine($matches.value) | Out-Null
-                }
-                else
-                {
-                    break;
-                }
-            }
-            elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
-            {
-                Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
-                Eat-Line $lines
-            }
-            else
-            {
-                break;
-            }
+            break;            
         }
     }
     return $sb.ToString()
