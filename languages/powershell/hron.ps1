@@ -1,6 +1,4 @@
-﻿$script:linecount = 1
-
-$logfile = ".\log.txt"
+﻿$logfile = ".\log.txt"
 
 Remove-Item $logfile
 
@@ -13,149 +11,182 @@ function Write-Debug
 #        $global:__DebugInfo.Messages.Add($Message) > $null
 #   }
 }
-function Eat-Line([ref]$lines)
-{ 
-    $script:linecount++;
-    $line = $lines.Value[0]
-#    Write-Verbose "$($script:linecount)>>> $line"
-    $lines.Value = $lines.Value[1..($lines.Value.Length)] 
-}
 
-function Parse-String([ref]$lines, $indent)
-{
-    $sb = New-Object System.Text.StringBuilder
-    while($lines.Value.Count -gt 0)
-    {
-        $line = $lines.Value[0]
-        $pattern = "^(?<indent>^\t{$indent})(?<value>.*)"
-        if ($line -match $pattern)
-        {
-            Write-Debug "ContentLine:$($matches.value)"
-            Eat-Line $lines
-            $sb.AppendLine($matches.value) | Out-Null
-        }
-        elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
-        {
-            Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
-            Eat-Line $lines
-        }
-        elseif ($line -match "^\s*$")
-        {
-            Write-Debug "EmptyLine:$line"
-            Eat-Line $lines
-            $sb.AppendLine() | Out-Null
-        }        
-        else
-        {
-            break;            
-        }
-    }
-    return $sb.ToString()
-}
 
-function AddOrExtend-Member($object, $member, $value)
+function ConvertFrom-HRON
 {
-    if ($object | Get-Member $member)
-    {
-        if ($object -is [array])
+    begin
+    {        
+        function AddOrExtend-Member($object, $member, $value)
         {
-            $object.$member += $value
-        }
-        else
-        {
-            $object.$member = $object.$member, $value
-        }
-    }
-    else
-    {
-        $object | Add-Member NoteProperty $member $value
-    }
-}
-
-function Parse-Members([ref]$lines, $object, $indent)
-{
-    $margin = New-Object string($indent)
-    while($lines.Value.Count -gt 0)
-    {
-        $line = $lines.Value[0]
-        if ($line -match "^\s*$")
-        {
-            Eat-Line $lines
-            Write-Debug "Empty:$line"
-        }      
-        elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
-        {
-            Eat-Line $lines
-            Write-Debug "Comment:$($matches.indent.Length),$($matches.comment)"
-        }
-        elseif ($line -match "^(?<indent>^\t*)(?<controlchar>@|=)(?<membername>.*)")
-        {                       
-            if ($indent -eq $matches.indent.Length)
+            if ($object | Get-Member $member)
             {
-                $memberName = $matches.membername
-                Eat-Line $lines
-                $value = $null
-                switch($matches.controlchar)
-                {
-                    "@" 
-                    {
-                        Write-Debug "Object_Begin:$memberName"
-                        $value = New-Object PSObject
-                        Parse-Members $lines $value ($indent+1)
-                        Write-Debug "Object_End:$memberName"
-                    }
-                    "="
-                    {
-                        Write-Debug "Value_Begin:$memberName"
-                        $value = Parse-String $lines ($indent+1)
-                        Write-Debug "Value_End:$memberName"
-                    }
-                }
-
-                AddOrExtend-Member $object $memberName $value
+                if ($object -is [array]) { $object.$member += $value } else { $object.$member = $object.$member, $value }
             }
             else
             {
-                break;
+                $object | Add-Member NoteProperty $member $value
             }
         }
-        else
-        {
-            throw "Parse error on line $($script:linecount); expecting empty line, comment or member declaration"
-        }
-    }
-}
 
-function Parse-Header([ref]$lines)
-{
-    while($lines.Value.Count -gt 0)
+        $object = New-Object psobject
+        $objectStack = New-Object System.Collections.ArrayList
+        $memberStack = New-Object System.Collections.ArrayList
+        $indent = 0
+        $modeHeader = 0; $modeObject = 1; $modeValue = 2;
+        $mode =  $modeHeader
+        $lineCount = 0
+        $loop = $false
+        $sb = $null
+        $memberName = $null
+    }
+
+    process
     {
-        $line = $lines.Value[0]
-        if ($line -match "^\s*!(?<directive>.*)")
+        $line = $_
+        $lineCount++
+        do
         {
-            Eat-Line $lines
-            Write-Debug "PreProcessor:$($matches.directive)"            
-        }
-        else
-        {
-            break;
-        }
-    }
-}
+            $loop = $false
+            switch($mode)
+            {
+                ############################### header mode #########################################
+                $modeHeader 
+                {
+                    if ($line -match "^\s*!(?<directive>.*)")
+                    {                        
+                        Write-Debug "PreProcessor:$($matches.directive)"            
+                    }
+                    else
+                    {
+                        $mode = $modeObject;
+                        $loop = $true;
+                    }
+                }
 
-function ConvertFrom-HRON($lines)
-{
-    $result = New-Object psobject
-    $linesRef = [ref]$lines
-    Parse-Header $linesRef
-    Parse-Members $linesRef $result 0
-    return $result
+                ############################### object mode #########################################
+                $modeObject
+                {
+                    if ($line -match "^\s*$")
+                    {
+                        Write-Debug "Empty:$line"
+                    }      
+                    elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
+                    {
+                        Write-Debug "Comment:$($matches.indent.Length),$($matches.comment)"
+                    }
+                    elseif ($line -match "^(?<indent>^\t*)(?<controlchar>@|=)(?<membername>.*)")
+                    {                       
+                        if ($indent -eq $matches.indent.Length)
+                        {
+                            $memberStack.Add($memberName) | Out-Null
+                            $memberName = $matches.membername
+                            $value = $null
+                            switch($matches.controlchar)
+                            {
+                                "@" 
+                                {
+                                    Write-Debug "Object_Begin:$memberName"
+                                    $objectStack.Add($object) | Out-Null
+                                    $object = New-Object PSObject
+                                    $indent++
+                                    $mode = $modeObject                                    
+                                }
+                                "="
+                                {
+                                    Write-Debug "Value_Begin:$memberName"
+                                    $indent++
+                                    $mode = $modeValue
+                                    $sb = New-Object System.Text.StringBuilder
+                                    #$value = Parse-String $lines ($indent+1)
+                                    #Write-Debug "Value_End:$memberName"
+                                }
+                            }
+                        }
+                        else
+                        {                           
+                            Write-Debug "Object_End:$memberName"
+                            $parent = $objectStack[$objectStack.Count-1]
+                            $objectStack.RemoveAt($objectStack.Count-1) | Out-Null
+                            AddOrExtend-Member $parent $memberName $object
+                            $memberName = $memberStack[$memberStack.Count-1]
+                            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
+                            $object = $parent
+                            $indent--
+                            $mode = $modeObject
+                            $loop = $true
+                        }
+                    }
+                    else
+                    {
+                        throw "Parse error on line $linecount; expecting empty line, comment or member declaration"
+                    }
+                }
+
+                ############################### value mode #########################################
+                $modeValue
+                {
+                    if ($line -match "^(?<indent>^\t{$indent})(?<value>.*)")
+                    {
+                        Write-Debug "ContentLine:$($matches.value)"
+                        $sb.AppendLine($matches.value) | Out-Null
+                    }
+                    elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
+                    {
+                        Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
+                    }
+                    elseif ($line -match "^\s*$")
+                    {
+                        Write-Debug "EmptyLine:$line"
+                        $sb.AppendLine() | Out-Null
+                    }        
+                    else
+                    {                        
+                        Write-Debug "Value_End:$memberName"
+                        AddOrExtend-Member $object $memberName $sb.ToString()
+                        $memberName = $memberStack[$memberStack.Count-1]
+                        $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
+                        $sb = $null
+                        $indent--
+                        $mode = $modeObject
+                        $loop = $true
+                    }
+                }
+            }
+        } while($loop);
+    }
+
+    end
+    {
+        # unwind value
+        if ($sb)
+        {
+            Write-Debug "Value_End:$memberName"
+            AddOrExtend-Member $object $memberName $sb.ToString()
+            $memberName = $memberStack[$memberStack.Count-1]
+            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
+        }
+
+        # unwind object stack
+        while($objectStack.Count -gt 0)
+        {
+            Write-Debug "Object_End:$memberName"
+            $parent = $objectStack[$objectStack.Count-1]
+            $objectStack.RemoveAt($objectStack.Count-1) | Out-Null
+            AddOrExtend-Member $parent $memberName $object
+            $memberName = $memberStack[$memberStack.Count-1]
+            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
+            $object = $parent
+        }
+
+        # return
+        $object
+    }
 }
 
 function Test-HelloWorld
 {
-    $text = Get-Content ..\..\reference-data\helloworld.hron
-    $x = ConvertFrom-HRON $text
+    $x = Get-Content ..\..\reference-data\helloworld.hron | ConvertFrom-HRON $text
     Write-Host "Common.LogPath: " $x.Common.LogPath 
     Write-Host "Common.Welcomemessage: " $x.Common.WelcomeMessage
     foreach($conn in $x.DataBaseConnection)
@@ -169,26 +200,23 @@ function Test-HelloWorld
 
 function Test-Random
 {
-    $text = Get-Content ..\..\reference-data\random.hron
-    $x = ConvertFrom-HRON $text
+    $x = Get-Content ..\..\reference-data\random.hron | ConvertFrom-HRON $text
     write-host $x
 }
 
 function Test-Simple
 {
-    $text = Get-Content ..\..\reference-data\simple.hron
-    $x = ConvertFrom-HRON $text
+    $x = Get-Content ..\..\reference-data\simple.hron | ConvertFrom-HRON $text
     write-host $x
 }
 
 function Test-Large
 {
-    $text = Get-Content ..\..\reference-data\large.hron
-    $x = ConvertFrom-HRON $text
+    $x = Get-Content ..\..\reference-data\large.hron | ConvertFrom-HRON $text
     write-host $x
 }
 
 #Test-HelloWorld
-Test-Random
+#Test-Random
 #Test-Simple
-#Test-Large
+Test-Large
