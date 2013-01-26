@@ -1,10 +1,23 @@
 ﻿$script:linecount = 1
 
+$logfile = ".\log.txt"
+
+Remove-Item $logfile
+
+function Write-Debug 
+{ 
+    param([Parameter(Mandatory=$true)][string]$Message)
+    $Message | Out-File $logfile -Append 
+#    $d = Get-Command Write-Debug -CommandType cmdlet; & $d $Message; 
+#    if ($global:__DebugInfo.Enabled) {
+#        $global:__DebugInfo.Messages.Add($Message) > $null
+#   }
+}
 function Eat-Line([ref]$lines)
 { 
     $script:linecount++;
     $line = $lines.Value[0]
-    Write-Debug "$($script:linecount)>>> $line"
+#    Write-Verbose "$($script:linecount)>>> $line"
     $lines.Value = $lines.Value[1..($lines.Value.Length)] 
 }
 
@@ -16,6 +29,7 @@ function Parse-String([ref]$lines, $indent)
         $line = $lines.Value[0]
         if ($line -match "^\s*$")
         {
+            Write-Debug "EmptyLine:$line"
             Eat-Line $lines
             $sb.AppendLine() | Out-Null
         }        
@@ -26,6 +40,7 @@ function Parse-String([ref]$lines, $indent)
             {
                 if (($matches.indent.Length -eq $indent) -or [string]::IsNullOrEmpty($matches.value.Trim()))
                 {
+                    Write-Debug "ContentLine:$($matches.value)"
                     Eat-Line $lines
                     $sb.AppendLine($matches.value) | Out-Null
                 }
@@ -34,8 +49,9 @@ function Parse-String([ref]$lines, $indent)
                     break;
                 }
             }
-            elseif ($line -match "^\s*#")
+            elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
             {
+                Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
                 Eat-Line $lines
             }
             else
@@ -69,45 +85,47 @@ function AddOrExtend-Member($object, $member, $value)
 function Parse-Members([ref]$lines, $object, $indent)
 {
     $margin = New-Object string($indent)
-    Write-Debug "$margin Beginning of object"
     while($lines.Value.Count -gt 0)
     {
         $line = $lines.Value[0]
         if ($line -match "^\s*$")
         {
             Eat-Line $lines
-            Write-Debug "$margin Empty line"
+            Write-Debug "Empty:$line"
         }      
-        elseif ($line -match "^\s*#")
+        elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
         {
             Eat-Line $lines
-            Write-Debug "$margin Comment"
+            Write-Debug "Comment:$($matches.indent.Length),$($matches.comment)"
         }
         elseif ($line -match "^(?<indent>^\t*)(?<controlchar>@|=)(?<membername>.*)")
         {                       
             if ($indent -eq $matches.indent.Length)
             {
+                $memberName = $matches.membername
                 Eat-Line $lines
-                Write-Debug "$margin Member $($matches.membername)"
                 $value = $null
                 switch($matches.controlchar)
                 {
                     "@" 
                     {
+                        Write-Debug "Object_Begin:$memberName"
                         $value = New-Object PSObject
                         Parse-Members $lines $value ($indent+1)
+                        Write-Debug "Object_End:$memberName"
                     }
                     "="
                     {
+                        Write-Debug "Value_Begin:$memberName"
                         $value = Parse-String $lines ($indent+1)
+                        Write-Debug "Value_End:$memberName"
                     }
                 }
 
-                AddOrExtend-Member $object $matches.membername $value
+                AddOrExtend-Member $object $memberName $value
             }
             else
             {
-                Write-Debug "$margin End of object reached"
                 break;
             }
         }
@@ -123,10 +141,10 @@ function Parse-Header([ref]$lines)
     while($lines.Value.Count -gt 0)
     {
         $line = $lines.Value[0]
-        if ($line -match "^\s*!")
+        if ($line -match "^\s*!(?<directive>.*)")
         {
             Eat-Line $lines
-            Write-Debug "Directive"            
+            Write-Debug "PreProcessor:$($matches.directive)"            
         }
         else
         {
@@ -181,6 +199,6 @@ function Test-Large
 }
 
 #Test-HelloWorld
-#Test-Random
+Test-Random
 #Test-Simple
-Test-Large
+#Test-Large
