@@ -1,19 +1,4 @@
-﻿$logfile = ".\log.txt"
-
-Remove-Item $logfile
-
-function Write-Debug 
-{ 
-    param([Parameter(Mandatory=$true)][string]$Message)
-    $Message | Out-File $logfile -Append 
-#    $d = Get-Command Write-Debug -CommandType cmdlet; & $d $Message; 
-#    if ($global:__DebugInfo.Enabled) {
-#        $global:__DebugInfo.Messages.Add($Message) > $null
-#   }
-}
-
-
-function ConvertFrom-HRON
+﻿function ConvertFrom-HRON
 {
     begin
     {        
@@ -39,12 +24,21 @@ function ConvertFrom-HRON
         $loop = $false
         $sb = $null
         $memberName = $null
+        $regexDirective = [regex]"^\s*!(?<directive>.*)"
+        $regexEmptyLine = [regex]"^\s*$"
+        $regexComment = [regex]"^(?<indent>\t*)#(?<comment>.*)"
+        $regexMember = [regex]"^(?<indent>^\t*)(?<controlchar>@|=)(?<membername>.*)"
     }
 
     process
     {
         $line = $_
         $lineCount++
+        if ($lineCount % 100 -eq 0)
+        {
+            Write-Progress -Activity "Parsing HRON" -Status "$lineCount lines processed"
+        }
+
         do
         {
             $loop = $false
@@ -53,7 +47,7 @@ function ConvertFrom-HRON
                 ############################### header mode #########################################
                 $modeHeader 
                 {
-                    if ($line -match "^\s*!(?<directive>.*)")
+                    if ($line -match $regexDirective)
                     {                        
                         Write-Debug "PreProcessor:$($matches.directive)"            
                     }
@@ -67,15 +61,15 @@ function ConvertFrom-HRON
                 ############################### object mode #########################################
                 $modeObject
                 {
-                    if ($line -match "^\s*$")
+                    if ($line -match $regexEmptyLine)
                     {
                         Write-Debug "Empty:$line"
-                    }      
-                    elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
+                    }                    
+                    elseif ($line -match $regexComment)
                     {
                         Write-Debug "Comment:$($matches.indent.Length),$($matches.comment)"
                     }
-                    elseif ($line -match "^(?<indent>^\t*)(?<controlchar>@|=)(?<membername>.*)")
+                    elseif ($line -match $regexMember)
                     {                       
                         if ($indent -eq $matches.indent.Length)
                         {
@@ -131,11 +125,11 @@ function ConvertFrom-HRON
                         Write-Debug "ContentLine:$($matches.value)"
                         $sb.AppendLine($matches.value) | Out-Null
                     }
-                    elseif ($line -match "^(?<indent>\t*)#(?<comment>.*)")
+                    elseif ($line -match $regexComment)
                     {
                         Write-Debug "CommentLine:$($matches.indent.Length),$($matches.comment)"
                     }
-                    elseif ($line -match "^\s*$")
+                    elseif ($line -match $regexEmptyLine)
                     {
                         Write-Debug "EmptyLine:$line"
                         $sb.AppendLine() | Out-Null
@@ -179,44 +173,11 @@ function ConvertFrom-HRON
             $object = $parent
         }
 
+        # report progress
+        Write-Progress -Activity "Parsing HRON" -Completed
+
         # return
         $object
     }
 }
 
-function Test-HelloWorld
-{
-    $x = Get-Content ..\..\reference-data\helloworld.hron | ConvertFrom-HRON $text
-    Write-Host "Common.LogPath: " $x.Common.LogPath 
-    Write-Host "Common.Welcomemessage: " $x.Common.WelcomeMessage
-    foreach($conn in $x.DataBaseConnection)
-    {
-        Write-Host "Databaseconnection.Name: " $conn.Name
-        Write-Host "Databaseconnection.Timeout: " $conn.Timeout
-        Write-Host "Databaseconnection.User.UserName: " $conn.User.UserName
-        Write-Host "Databaseconnection.User.Password: " $conn.User.Password
-    }
-}
-
-function Test-Random
-{
-    $x = Get-Content ..\..\reference-data\random.hron | ConvertFrom-HRON $text
-    write-host $x
-}
-
-function Test-Simple
-{
-    $x = Get-Content ..\..\reference-data\simple.hron | ConvertFrom-HRON $text
-    write-host $x
-}
-
-function Test-Large
-{
-    $x = Get-Content ..\..\reference-data\large.hron | ConvertFrom-HRON $text
-    write-host $x
-}
-
-#Test-HelloWorld
-#Test-Random
-#Test-Simple
-Test-Large
