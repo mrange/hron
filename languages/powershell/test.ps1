@@ -56,10 +56,12 @@ function Run-Test($hronFile, $hronRefLog)
     if (Test-Path $script:logfile) { Remove-Item -Force $script:logfile }
 }
 
+# setup
+$base = Join-Path $root ..\..\reference-data | Resolve-Path 
+
 # test correctness
 if ($correctness)
 {
-    $base = Join-Path $root ..\..\reference-data | Resolve-Path 
     Run-Test $base\simple.hron $base\simple.hron.actionlog
     Run-Test $base\helloworld.hron $base\helloworld.hron.actionlog
     Run-Test $base\random.hron $base\random.hron.actionlog
