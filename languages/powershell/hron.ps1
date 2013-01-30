@@ -15,15 +15,10 @@
         }
 
         $object = New-Object psobject
-        $objectStack = New-Object System.Collections.ArrayList
-        $memberStack = New-Object System.Collections.ArrayList
-        $indent = 0
-        $modeHeader = 0; $modeObject = 1; $modeValue = 2;
-        $mode =  $modeHeader
+        $stack = New-Object System.Collections.Stack
+        $mode = 0
         $lineCount = 0
         $loop = $false
-        $sb = $null
-        $memberName = $null
         $regexDirective = [regex]"^\s*!(?<directive>.*)"
         $regexEmptyLine = [regex]"^\s*$"
         $regexComment = [regex]"^(?<indent>\t*)#(?<comment>.*)"
@@ -45,7 +40,7 @@
             switch($mode)
             {
                 ############################### header mode #########################################
-                $modeHeader 
+                0 
                 {
                     if ($line -match $regexDirective)
                     {                        
@@ -53,13 +48,13 @@
                     }
                     else
                     {
-                        $mode = $modeObject;
+                        $mode = 1;
                         $loop = $true;
                     }
                 }
 
                 ############################### object mode #########################################
-                $modeObject
+                1
                 {
                     if ($line -match $regexEmptyLine)
                     {
@@ -70,44 +65,33 @@
                         Write-Debug "Comment:$($matches.indent.Length),$($matches.comment)"
                     }
                     elseif ($line -match $regexMember)
-                    {                       
-                        if ($indent -eq $matches.indent.Length)
+                    {             
+                        if ($stack.Count -eq $matches.indent.Length)
                         {
-                            $memberStack.Add($memberName) | Out-Null
                             $memberName = $matches.membername
-                            $value = $null
+                            $stack.Push(@($object, $memberName))
                             switch($matches.controlchar)
                             {
                                 "@" 
                                 {
                                     Write-Debug "Object_Begin:$memberName"
-                                    $objectStack.Add($object) | Out-Null
                                     $object = New-Object PSObject
-                                    $indent++
-                                    $mode = $modeObject                                    
                                 }
                                 "="
                                 {
                                     Write-Debug "Value_Begin:$memberName"
-                                    $indent++
-                                    $mode = $modeValue
-                                    $sb = New-Object System.Text.StringBuilder
-                                    #$value = Parse-String $lines ($indent+1)
-                                    #Write-Debug "Value_End:$memberName"
+                                    $mode = 2
+                                    $object = New-Object System.Text.StringBuilder
                                 }
                             }
                         }
                         else
                         {                           
+                            $value = $object
+                            $object, $memberName = $stack.Pop()
                             Write-Debug "Object_End:$memberName"
-                            $parent = $objectStack[$objectStack.Count-1]
-                            $objectStack.RemoveAt($objectStack.Count-1) | Out-Null
-                            AddOrExtend-Member $parent $memberName $object
-                            $memberName = $memberStack[$memberStack.Count-1]
-                            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
-                            $object = $parent
-                            $indent--
-                            $mode = $modeObject
+                            AddOrExtend-Member $object $memberName $value                            
+                            $mode = 1
                             $loop = $true
                         }
                     }
@@ -118,12 +102,12 @@
                 }
 
                 ############################### value mode #########################################
-                $modeValue
+                2
                 {
-                    if ($line -match "^(?<indent>^\t{$indent})(?<value>.*)")
+                    if ($line -match "^(?<indent>^\t{$($stack.Count)})(?<value>.*)")
                     {
                         Write-Debug "ContentLine:$($matches.value)"
-                        $sb.AppendLine($matches.value) | Out-Null
+                        $object.AppendLine($matches.value) | Out-Null
                     }
                     elseif ($line -match $regexComment)
                     {
@@ -132,17 +116,15 @@
                     elseif ($line -match $regexEmptyLine)
                     {
                         Write-Debug "EmptyLine:$line"
-                        $sb.AppendLine() | Out-Null
+                        $object.AppendLine() | Out-Null
                     }        
                     else
                     {                        
+                        $value = $object.ToString()
+                        $object, $memberName = $stack.Pop()
                         Write-Debug "Value_End:$memberName"
-                        AddOrExtend-Member $object $memberName $sb.ToString()
-                        $memberName = $memberStack[$memberStack.Count-1]
-                        $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
-                        $sb = $null
-                        $indent--
-                        $mode = $modeObject
+                        AddOrExtend-Member $object $memberName $value                            
+                        $mode = 1
                         $loop = $true
                     }
                 }
@@ -152,25 +134,21 @@
 
     end
     {
-        # unwind value
-        if ($sb)
+        # unwind stack
+        if ($mode -eq 2)
         {
+            $value = $object.ToString()
+            $object, $memberName = $stack.Pop()
             Write-Debug "Value_End:$memberName"
-            AddOrExtend-Member $object $memberName $sb.ToString()
-            $memberName = $memberStack[$memberStack.Count-1]
-            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
+            AddOrExtend-Member $object $memberName $value                            
         }
 
-        # unwind object stack
-        while($objectStack.Count -gt 0)
+        while($stack.Count -gt 0)
         {
+            $value = $object
+            $object, $memberName = $stack.Pop()
             Write-Debug "Object_End:$memberName"
-            $parent = $objectStack[$objectStack.Count-1]
-            $objectStack.RemoveAt($objectStack.Count-1) | Out-Null
-            AddOrExtend-Member $parent $memberName $object
-            $memberName = $memberStack[$memberStack.Count-1]
-            $memberStack.RemoveAt($memberStack.Count-1) | Out-Null
-            $object = $parent
+            AddOrExtend-Member $object $memberName $value                            
         }
 
         # report progress
