@@ -48,8 +48,8 @@
                     }
                     else
                     {
-                        $mode = 1;
-                        $loop = $true;
+                        $mode = 1
+                        $loop = $true
                     }
                 }
 

@@ -1,4 +1,8 @@
-﻿# load hron 
+﻿# settings
+$correctness = $true
+$performance = $false
+
+# load hron 
 $root = Split-Path $MyInvocation.MyCommand.Definition 
 . $root\hron.ps1
 
@@ -7,7 +11,9 @@ $script:logfile = $null
 function Write-Debug 
 { 
     param([Parameter(Mandatory=$true)][string]$Message)
-    $message | Out-File $script:logfile -Append 
+    if ($script:logfile) {
+        $message | Out-File $script:logfile -Append 
+    }
 }
 
 function Test-HelloWorld
@@ -50,10 +56,22 @@ function Run-Test($hronFile, $hronRefLog)
     if (Test-Path $script:logfile) { Remove-Item -Force $script:logfile }
 }
 
-$base = Join-Path $root ..\..\reference-data | Resolve-Path 
-Run-Test $base\simple.hron $base\simple.hron.actionlog
-Run-Test $base\helloworld.hron $base\helloworld.hron.actionlog
-Run-Test $base\random.hron $base\random.hron.actionlog
-# only run this if you have plenty of time...
-#Run-Test $base\large.hron $base\reference-data\large.hron.actionlog
+# test correctness
+if ($correctness)
+{
+    $base = Join-Path $root ..\..\reference-data | Resolve-Path 
+    Run-Test $base\simple.hron $base\simple.hron.actionlog
+    Run-Test $base\helloworld.hron $base\helloworld.hron.actionlog
+    Run-Test $base\random.hron $base\random.hron.actionlog
+    # only run this if you have plenty of time...
+    #Run-Test $base\large.hron $base\reference-data\large.hron.actionlog
+}
 
+if ($performance)
+{
+    # test performance
+    $script:logfile = $null
+    Measure-Command {
+        Get-Content $base\random.hron |  ConvertFrom-HRON
+    }
+}
