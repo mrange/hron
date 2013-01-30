@@ -1,5 +1,16 @@
 ﻿function ConvertFrom-HRON
 {
+<#
+.Synopsis
+	Converts HRON (line based) data from input pipe to a powershell object
+.Example
+	Get-Content .\myfile.hron | ConvertFrom-HRON
+    
+    This example will load the data from myfile.hron, send it down
+    the pipe and parse it using this command. The parsed result
+    will be a powershell custom object.
+#>
+
     begin
     {        
         function AddOrExtend-Member($object, $member, $value)
