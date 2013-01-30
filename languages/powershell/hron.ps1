@@ -17,7 +17,7 @@
         {
             if ($object | Get-Member $member)
             {
-                if ($object -is [array]) { $object.$member += $value } else { $object.$member = $object.$member, $value }
+                if ($object.$member -is [array]) { $object.$member += $value } else { $object.$member = $object.$member, $value }
             }
             else
             {
