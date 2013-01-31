@@ -195,7 +195,7 @@ function ConvertTo-HRON
 #>
     [CmdLetBinding()]
     param(
-        [Parameter(Mandatory=$true, Position=0)]
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
         $Object,
         [Parameter(Position=1)]
         [ValidatePattern({^\t*$})]
@@ -223,22 +223,3 @@ function ConvertTo-HRON
         }
     }     
 }
-
-$y = New-Object PSObject -Property @{ Q=1; W=2 }
-$z = New-Object PSObject -Property @{ Q=3; W=4 }
-
-$x = New-Object PSObject -Property @{
-    A=10
-    B=20.3
-    C="Daniel"
-    D=New-Object PSObject -Property @{
-        AA=100
-        BB=300.343
-        CC="jdslkjlsk"
-    }    
-    E=1,2,3,"dds"
-    F=$y,$z
-}
-
-cls
-ConvertTo-HRON $x
