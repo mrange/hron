@@ -170,3 +170,75 @@
     }
 }
 
+function ConvertTo-HRON
+{
+<#
+    .SYNOPSIS
+    Convert a powershell obect to HRON
+
+    .DESCRIPTION
+    Convert a powershell obect to HRON.
+
+    .EXAMPLE
+    $x = New-Object PsObject -Property @{A=1; B="Hello"}
+    ConvertTo-HRON $x
+
+    This example creates an object that are serialized to HRON using this command
+
+    .PARAMETER Object
+    The object to convert
+
+    .PARAMETER Indent
+    A string that will be prepended to all output lines. The string should
+    consist of zero or more tab characters
+
+#>
+    [CmdLetBinding()]
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        $Object,
+        [Parameter(Position=1)]
+        [ValidatePattern({^\t*$})]
+        $Indent=""
+        )
+
+    if (!$Object) { return }
+
+    Get-Member -InputObject $object -MemberType Properties | ForEach-Object {
+        $memberName = $_.Name
+        $object.$memberName | ForEach-Object {
+            $memberTypeName = $_.GetType().Name        
+            if ($memberTypeName -eq "PSCustomObject")
+            {
+                "$indent@$memberName"
+                ConvertTo-HRON $_ ($indent+"`t")
+            }
+            else
+            {
+                "$indent=$memberName"
+                $_.ToString().Split("`r`n") | ForEach-Object {
+                    "$indent`t$_"
+                }
+            }
+        }
+    }     
+}
+
+$y = New-Object PSObject -Property @{ Q=1; W=2 }
+$z = New-Object PSObject -Property @{ Q=3; W=4 }
+
+$x = New-Object PSObject -Property @{
+    A=10
+    B=20.3
+    C="Daniel"
+    D=New-Object PSObject -Property @{
+        AA=100
+        BB=300.343
+        CC="jdslkjlsk"
+    }    
+    E=1,2,3,"dds"
+    F=$y,$z
+}
+
+cls
+ConvertTo-HRON $x
