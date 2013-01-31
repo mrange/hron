@@ -216,7 +216,9 @@ function ConvertTo-HRON
             else
             {
                 "$indent=$memberName"
-                $_.ToString().Split("`r`n") | ForEach-Object {
+                $trimmedStringVal = $_.ToString() -replace "`r`n$", "" 
+                $values = $trimmedStringVal -split "\r\n" 
+                $values | ForEach-Object {
                     "$indent`t$_"
                 }
             }
