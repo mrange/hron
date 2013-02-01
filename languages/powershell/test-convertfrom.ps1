@@ -1,10 +1,13 @@
 ﻿# settings
-$correctness = $true
-$performance = $false
+$correctness = $false
+$performance = $true
 
 # load hron 
 $root = Split-Path $MyInvocation.MyCommand.Definition 
 . $root\hron.ps1
+
+# setup
+$base = Join-Path $root ..\..\reference-data | Resolve-Path 
 
 $script:logfile = $null
 
@@ -18,7 +21,7 @@ function Write-Debug
 
 function Test-HelloWorld
 {    
-    $x = Get-Content ..\..\reference-data\helloworld.hron | ConvertFrom-HRON $text
+    $x = Get-Content $base\helloworld.hron | ConvertFrom-HRON $text
     Write-Host "Common.LogPath: " $x.Common.LogPath 
     Write-Host "Common.Welcomemessage: " $x.Common.WelcomeMessage
     foreach($conn in $x.DataBaseConnection)
@@ -29,6 +32,8 @@ function Test-HelloWorld
         Write-Host "Databaseconnection.User.Password: " $conn.User.Password
     }
 }
+
+#Test-HelloWorld
 
 function Run-Test($hronFile, $hronRefLog)
 {
@@ -55,9 +60,6 @@ function Run-Test($hronFile, $hronRefLog)
     # clean up
     if (Test-Path $script:logfile) { Remove-Item -Force $script:logfile }
 }
-
-# setup
-$base = Join-Path $root ..\..\reference-data | Resolve-Path 
 
 # test correctness
 if ($correctness)

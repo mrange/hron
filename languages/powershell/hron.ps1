@@ -13,19 +13,19 @@
 
     begin
     {        
+        $createMap = if ($host.Version.Major -lt 3) { { @{} } } else { { [ordered]@{} } }        
+        $convertToObject = if ($host.Version.Major -lt 3) { { New-Object PsObject -Property $args[0] } } else { { [pscustomobject]$args[0] } }     
         function AddOrExtend-Member($object, $member, $value)
         {
-            if ($object | Get-Member $member)
-            {
+            if ($object.Contains($member)) {
                 if ($object.$member -is [array]) { $object.$member += $value } else { $object.$member = $object.$member, $value }
-            }
-            else
-            {
-                $object | Add-Member NoteProperty $member $value
+            } 
+            else {
+                $object[$member] = $value
             }
         }
-
-        $object = New-Object psobject
+        
+        $object = & $createMap
         $stack = New-Object System.Collections.Stack
         $mode = 0
         $lineCount = 0
@@ -86,7 +86,7 @@
                                 "@" 
                                 {
                                     Write-Debug "Object_Begin:$memberName"
-                                    $object = New-Object PSObject
+                                    $object = & $createMap
                                 }
                                 "="
                                 {
@@ -98,10 +98,10 @@
                         }
                         else
                         {                           
-                            $value = $object
+                            $value = & $convertToObject $object
                             $object, $memberName = $stack.Pop()
                             Write-Debug "Object_End:$memberName"
-                            AddOrExtend-Member $object $memberName $value                            
+                            AddOrExtend-Member $object $memberName $value                                                        
                             $mode = 1
                             $loop = $true
                         }
@@ -156,7 +156,7 @@
 
         while($stack.Count -gt 0)
         {
-            $value = $object
+            $value = & $convertToObject $object
             $object, $memberName = $stack.Pop()
             Write-Debug "Object_End:$memberName"
             AddOrExtend-Member $object $memberName $value                            
@@ -166,7 +166,7 @@
         Write-Progress -Activity "Parsing HRON" -Completed
 
         # return
-        $object
+        & $convertToObject $object
     }
 }
 
