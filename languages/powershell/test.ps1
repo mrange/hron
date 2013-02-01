@@ -1,59 +1,92 @@
-﻿# load hron 
+﻿param([switch]$LongRunning)
+
+# load hron 
 $root = Split-Path $MyInvocation.MyCommand.Definition 
 . $root\hron.ps1
 
-$script:logfile = $null
+# initialize
+$base = Join-Path $root ..\..\reference-data | Resolve-Path 
+$script:log = $null
 
 function Write-Debug 
 { 
     param([Parameter(Mandatory=$true)][string]$Message)
-    $message | Out-File $script:logfile -Append 
-}
-
-function Test-HelloWorld
-{    
-    $x = Get-Content ..\..\reference-data\helloworld.hron | ConvertFrom-HRON $text
-    Write-Host "Common.LogPath: " $x.Common.LogPath 
-    Write-Host "Common.Welcomemessage: " $x.Common.WelcomeMessage
-    foreach($conn in $x.DataBaseConnection)
-    {
-        Write-Host "Databaseconnection.Name: " $conn.Name
-        Write-Host "Databaseconnection.Timeout: " $conn.Timeout
-        Write-Host "Databaseconnection.User.UserName: " $conn.User.UserName
-        Write-Host "Databaseconnection.User.Password: " $conn.User.Password
+    if ($script:log.Add) {
+        $script:log.Add($message) | Out-Null
     }
 }
 
-function Run-Test($hronFile, $hronRefLog)
+function Test-ConvertFrom($hronFile, $hronRefLog)
 {
-    # prepare logging
-    $script:logfile = "$root\log.txt"
-    if (Test-Path $script:logfile) { Remove-Item -Force $script:logfile }
+    # create a new log
+    $script:log = New-Object System.Collections.ArrayList
 
     # run
-    $x = Get-Content $hronFile | ConvertFrom-HRON
-    if (!$x) 
-    { 
-        throw "parse failed" 
+    Write-Host "---------------------------------------------------------------------------------------------"
+    Write-Host "Parsing $hronFile."
+    $time = Measure-Command {
+        Get-Content $hronFile | ConvertFrom-HRON
     }
 
     # analyze logs
-    $log = Get-Content $script:logfile
     $reflog = Get-Content $hronRefLog
-    $result = Compare-Object $log $reflog 
+    $result = Compare-Object $script:log $reflog 
     if ($result)
     {
-        throw "logs are not equal"
+        Write-Host -ForegroundColor Red "Test failed. Action log produced when parsning $hronFile did not match reference $hronRefLog."
+        $fileName = Join-Path $root ((Split-Path -Leaf $hronFile) + ".errorlog")
+        $script:log | Out-File -Encoding utf8 $fileName
+        Write-Host "Temporary action log was saved in $fileName"
+    }
+    else
+    {
+        Write-Host -ForegroundColor Green "Ok. (Took $($time.TotalSeconds))"
     }
 
     # clean up
-    if (Test-Path $script:logfile) { Remove-Item -Force $script:logfile }
+    $script:log = $null
 }
 
-$base = Join-Path $root ..\..\reference-data | Resolve-Path 
-Run-Test $base\simple.hron $base\simple.hron.actionlog
-Run-Test $base\helloworld.hron $base\helloworld.hron.actionlog
-Run-Test $base\random.hron $base\random.hron.actionlog
-# only run this if you have plenty of time...
-#Run-Test $base\large.hron $base\reference-data\large.hron.actionlog
+# this test will not work in ps 2 since the hron serializer does not guarantee property order
+# this test does not work if the reference file contains comments
+function Test-ConvertTo($refHronFile)
+{
+    if ($host.Version.Major -lt 3) {
+        Write-Host -ForegroundColor Red "This test might not succeed in powershell 2 or lower since property order is not guaranteed by the hron serializer."
+    }
+    
+    $script:log = $null
+    $refSerialized = Get-Content $base\simple.hron 
+    $hronObject = $refSerialized | ConvertFrom-HRON
 
+    Write-Host "---------------------------------------------------------------------------------------------"
+    Write-Host "Serializing hron object (reference file: $refHronFile)"
+
+    $serialized = [ref]$null
+    $time = Measure-Command {
+        $serialized.Value = $hronObject | ConvertTo-HRON
+    }
+
+    $result = Compare-Object $serialized.Value $refSerialized 
+    if ($result)
+    {
+        Write-Host -ForegroundColor Red "Test failed. Action log produced when parsning $hronFile did not match reference $hronRefLog."
+        $fileName = Join-Path $root ((Split-Path -Leaf $hronFile) + ".errorlog")
+        $script:log | Out-File -Encoding utf8 $fileName
+        Write-Host "Temporary action log was saved in $fileName"
+    }
+    else
+    {
+        Write-Host -ForegroundColor Green "Ok. (Took $($time.TotalSeconds))"
+    }
+}
+
+
+Clear-Host
+Test-ConvertFrom $base\simple.hron $base\simple.hron.actionlog
+Test-ConvertFrom $base\helloworld.hron $base\helloworld.hron.actionlog
+Test-ConvertFrom $base\random.hron $base\random.hron.actionlog
+if ($longRunning) {
+    Test-ConvertFrom $base\large.hron $base\large.hron.actionlog
+}
+Test-ConvertTo $base\simple.hron 
