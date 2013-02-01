@@ -202,10 +202,20 @@ function ConvertTo-HRON
         $Indent=""
         )
 
-    if (!$Object) { return }
+    if (!$object) { return }
 
-    Get-Member -InputObject $object -MemberType Properties | ForEach-Object {
-        $memberName = $_.Name
+    $memberNames =
+        if ($object -is [pscustomobject]) {
+            # trick for enumerating properties in order, 
+            # http://stackoverflow.com/questions/5831623/powershell-import-csv-get-member-sort-column-names-property-names-based-on
+            $object.psobject.properties | Select -ExpandProperty Name 
+        }
+        else {
+            Get-Member -InputObject $object -MemberType Properties | Select -ExpandProperty Name 
+        }
+
+    $memberNames | ForEach-Object {
+        $memberName = $_
         $object.$memberName | ForEach-Object {
             $memberTypeName = $_.GetType().Name        
             if ($memberTypeName -eq "PSCustomObject")

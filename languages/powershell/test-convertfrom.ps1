@@ -33,7 +33,7 @@ function Test-HelloWorld
     }
 }
 
-#Test-HelloWorld
+Test-HelloWorld
 
 function Run-Test($hronFile, $hronRefLog)
 {
