@@ -226,7 +226,7 @@ function ConvertTo-HRON
         $memberName = $_
         $object.$memberName | ForEach-Object {
             $memberTypeName = $_.GetType().Name        
-            if ($memberTypeName -eq "PSCustomObject")
+            if ($memberTypeName -match "^(?:psobject|pscustomobject)$")
             {
                 "$indent@$memberName"
                 ConvertTo-HRON $_ ($indent+"`t")
