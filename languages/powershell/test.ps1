@@ -7,6 +7,8 @@ $root = Split-Path $MyInvocation.MyCommand.Definition
 # initialize
 $base = Join-Path $root ..\..\reference-data | Resolve-Path 
 $script:log = $null
+$delimiterSize = if ($Host.UI.RawUI.BufferSize.Width) { $Host.UI.RawUI.BufferSize.Width-2 } else { 78 }
+$delimiter = '-' * $delimiterSize
 
 function Write-Debug 
 { 
@@ -22,7 +24,7 @@ function Test-ConvertFrom($hronFile, $hronRefLog)
     $script:log = New-Object System.Collections.ArrayList
 
     # run
-    Write-Host "---------------------------------------------------------------------------------------------"
+    Write-Host "$delimiter"
     Write-Host "Parsing $hronFile."
     $time = Measure-Command {
         Get-Content $hronFile | ConvertFrom-HRON
@@ -51,16 +53,17 @@ function Test-ConvertFrom($hronFile, $hronRefLog)
 # this test does not work if the reference file contains comments
 function Test-ConvertTo($refHronFile)
 {
-    if ($host.Version.Major -lt 3) {
-        Write-Host -ForegroundColor Red "This test might not succeed in powershell 2 or lower since property order is not guaranteed by the hron serializer."
-    }
+    Write-Host "$delimiter"
     
     $script:log = $null
     $refSerialized = Get-Content $base\simple.hron 
     $hronObject = $refSerialized | ConvertFrom-HRON
 
-    Write-Host "---------------------------------------------------------------------------------------------"
     Write-Host "Serializing hron object (reference file: $refHronFile)"
+
+    if ($host.Version.Major -lt 3) {
+        Write-Host -ForegroundColor Red "This test might not succeed in powershell 2 or lower since property order is not guaranteed by the hron serializer."
+    }
 
     $serialized = [ref]$null
     $time = Measure-Command {
