@@ -54,16 +54,16 @@ function Test-ConvertFrom($hronFile, $hronRefLog)
 function Test-ConvertTo($refHronFile)
 {
     Write-Host "$delimiter"
-
-    if ($host.Version.Major -lt 3) {
-        Write-Host -ForegroundColor Red "This test might not succeed in powershell 2 or lower since property order is not guaranteed by the hron serializer."
-    }
     
     $script:log = $null
     $refSerialized = Get-Content $base\simple.hron 
     $hronObject = $refSerialized | ConvertFrom-HRON
 
     Write-Host "Serializing hron object (reference file: $refHronFile)"
+
+    if ($host.Version.Major -lt 3) {
+        Write-Host -ForegroundColor Red "This test might not succeed in powershell 2 or lower since property order is not guaranteed by the hron serializer."
+    }
 
     $serialized = [ref]$null
     $time = Measure-Command {
