@@ -17,7 +17,12 @@
     begin
     {        
         $createMap = if ($host.Version.Major -lt 3) { { @{} } } else { { [ordered]@{} } }        
-        $convertToObject = if ($host.Version.Major -lt 3) { { New-Object PsObject -Property $args[0] } } else { { [pscustomobject]$args[0] } }     
+        $convertToObject = 
+            if ($host.Version.Major -lt 3) { 
+                { if ($args[0].Count) { New-Object PsObject -Property $args[0] } } 
+            } else { 
+                { [pscustomobject]$args[0] } 
+            }     
         function AddOrExtend-Member($object, $member, $value)
         {
             if ($object.Contains($member)) {
@@ -165,7 +170,7 @@
         }
 
         # report progress
-        Write-Progress -Activity "Parsing HRON" -Completed
+        Write-Progress -Activity "Parsing HRON" -Completed -Status "Completed. $lineCount lines processed"
 
         # return
         & $convertToObject $object
@@ -208,7 +213,7 @@ function ConvertTo-HRON
     if (!$object) { return }
 
     $memberNames =
-        if ($object -is [pscustomobject]) {
+        if ($object.psobject.properties) {
             # trick for enumerating properties in order, 
             # http://stackoverflow.com/questions/5831623/powershell-import-csv-get-member-sort-column-names-property-names-based-on
             $object.psobject.properties | Select -ExpandProperty Name 
