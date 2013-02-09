@@ -12,7 +12,7 @@
 #>
 
     [CmdLetBinding()]
-    param([Parameter(Mandatory=$true, ValueFromPipeLine=$true)]$line)
+    param([Parameter(ValueFromPipeLine=$true)][string]$Line)
 
     begin
     {        
@@ -201,6 +201,7 @@ function ConvertTo-HRON
         $Object,
         [Parameter(Position=1)]
         [ValidatePattern({^\t*$})]
+        [string]
         $Indent=""
         )
 
