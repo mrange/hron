@@ -11,6 +11,9 @@
     will be a powershell custom object.
 #>
 
+    [CmdLetBinding()]
+    param([Parameter(Mandatory=$true, ValueFromPipeLine=$true)]$line)
+
     begin
     {        
         $createMap = if ($host.Version.Major -lt 3) { { @{} } } else { { [ordered]@{} } }        
@@ -38,7 +41,6 @@
 
     process
     {
-        $line = $_
         $lineCount++
         if ($lineCount % 100 -eq 0)
         {
