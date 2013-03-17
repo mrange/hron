@@ -13,6 +13,13 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialTypeWithSinglePart
 
+namespace M3.HRON.Generator.Parser
+{
+    public partial interface IScannerVisitor
+    {
+        
+    }
+}
 namespace M3.HRON
 {
     using System;
@@ -24,94 +31,6 @@ namespace M3.HRON
     using M3.HRON.Generator.Parser;
     using M3.HRON.Generator.Source.Common;
     using M3.HRON.Generator.Source.Extensions;
-
-    public partial interface IHRONVisitor
-    {
-        void Document_Begin();
-        void Document_End();
-
-        void PreProcessor(string line);
-
-        void Empty(string line);
-
-        void Comment(int indent, string comment);
-
-        void Value_Begin(string name);
-        void Value_Line(string value);
-        void Value_End();
-
-        void Object_Begin(string name);
-        void Object_End();
-
-        void Error(int lineNo, string line, string parseError);
-    }
-
-    sealed partial class TranslatingVisitor : IScannerVisitor
-    {
-        public readonly IHRONVisitor Visitor;
-        public int ErrorCount;
-
-        public TranslatingVisitor(IHRONVisitor visitor)
-        {
-            Visitor = visitor;
-        }
-
-        public void Document_Begin()
-        {
-            Visitor.Document_Begin();
-        }
-
-        public void Document_End()
-        {
-            Visitor.Document_End();
-        }
-
-        public void PreProcessor(SubString line)
-        {
-            Visitor.PreProcessor(line.Value);
-        }
-
-        public void Empty(SubString line)
-        {
-            Visitor.Empty(line.Value);
-        }
-
-        public void Comment(int indent, SubString comment)
-        {
-            Visitor.Comment(indent, comment.Value);
-        }
-
-        public void Value_Begin(SubString name)
-        {
-            Visitor.Value_Begin(name.Value);
-        }
-
-        public void Value_Line(SubString value)
-        {
-            Visitor.Value_Line(value.Value);
-        }
-
-        public void Value_End()
-        {
-            Visitor.Value_End();
-        }
-
-        public void Object_Begin(SubString name)
-        {
-            Visitor.Object_Begin(name.Value);
-        }
-
-        public void Object_End()
-        {
-            Visitor.Object_End();
-        }
-
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
-        {
-            Visitor.Error(lineNo, line.Value, parseError.ToString());
-            ++ErrorCount;
-        }
-    }
 
     sealed partial class WritingVisitor : IScannerVisitor
     {
@@ -127,40 +46,40 @@ namespace M3.HRON
         {
         }
 
-        public void PreProcessor(SubString line)
+        public void PreProcessor(string baseString, int begin, int end)
         {
             StringBuilder.Append('!');
-            StringBuilder.AppendSubString(line);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
         }
 
-        public void Empty(SubString line)
+        public void Empty(string baseString, int begin, int end)
         {
-            StringBuilder.AppendSubString(line);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
         }
 
-        public void Comment(int indent, SubString comment)
+        public void Comment(int indent, string baseString, int begin, int end)
         {
             StringBuilder.Append('\t', indent);
             StringBuilder.Append('"');
-            StringBuilder.AppendSubString(comment);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
         }
 
-        public void Value_Begin(SubString name)
+        public void Value_Begin(string baseString, int begin, int end)
         {
             StringBuilder.Append('\t', m_indent);
             StringBuilder.Append('=');
-            StringBuilder.AppendSubString(name);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
             ++m_indent;
         }
 
-        public void Value_Line(SubString value)
+        public void Value_Line(string baseString, int begin, int end)
         {
             StringBuilder.Append('\t', m_indent);
-            StringBuilder.AppendSubString(value);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
         }
 
@@ -169,11 +88,11 @@ namespace M3.HRON
             --m_indent;
         }
 
-        public void Object_Begin(SubString name)
+        public void Object_Begin(string baseString, int begin, int end)
         {
             StringBuilder.Append('\t', m_indent);
             StringBuilder.Append('@');
-            StringBuilder.AppendSubString(name);
+            StringBuilder.AppendSlice(baseString, begin, end);
             StringBuilder.AppendLine();
             ++m_indent;
         }
@@ -183,84 +102,11 @@ namespace M3.HRON
             --m_indent;
         }
 
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError)
         {
-            StringBuilder.AppendFormat("# ERROR - {0}({1}) : {2}", parseError, lineNo, line);
+            StringBuilder.AppendFormat("# ERROR - {0}({1}) : {2}", parseError, lineNo, baseString.Slice(begin, end));
             StringBuilder.AppendLine();
             ++ErrorCount;
-        }
-    }
-
-    public sealed class HRONWritingVisitor : IHRONVisitor
-    {
-        readonly WritingVisitor m_visitor = new WritingVisitor();
-
-        public int ErrorCount
-        {
-            get { return m_visitor.ErrorCount; }
-        }
-        public StringBuilder StringBuilder
-        {
-            get { return m_visitor.StringBuilder; }
-        }
-
-        public void Document_Begin()
-        {
-            m_visitor.Document_Begin();
-        }
-
-        public void Document_End()
-        {
-            m_visitor.Document_End();
-        }
-
-        public void PreProcessor(string line)
-        {
-            m_visitor.PreProcessor(line.ToSubString());
-        }
-
-        public void Empty(string line)
-        {
-            m_visitor.Empty(line.ToSubString());
-        }
-
-        public void Comment(int indent, string comment)
-        {
-            m_visitor.Comment(Math.Max(indent, 0), comment.ToSubString());
-        }
-
-        public void Value_Begin(string name)
-        {
-            m_visitor.Value_Begin(name.ToSubString());
-        }
-
-        public void Value_Line(string value)
-        {
-            m_visitor.Value_Line(value.ToSubString());
-        }
-
-        public void Value_End()
-        {
-            m_visitor.Value_End();
-        }
-
-        public void Object_Begin(string name)
-        {
-            m_visitor.Object_Begin(name.ToSubString());
-        }
-
-        public void Object_End()
-        {
-            m_visitor.Object_End();
-        }
-
-        public void Error(int lineNo, string line, string parseError)
-        {
-            m_visitor.Error(
-                Math.Max(lineNo, 0), 
-                line.ToSubString(),
-                parseError.ParseEnumValue(Scanner.Error.General)
-                );
         }
     }
 
@@ -270,11 +116,11 @@ namespace M3.HRON
         {
             foreach (var kv in dictionary)
             {
-                var key = kv.Key.ToSubString();
+                var key = kv.Key;
                 var innerDictionary = kv.Value as IEnumerable<KeyValuePair<string, object>>;
                 if (innerDictionary != null)
                 {
-                    visitor.Object_Begin(key);
+                    visitor.Object_Begin(key, 0, key.Length);
                     SerializeRecursiveDictionaryImpl(
                         innerDictionary,
                         visitor
@@ -283,7 +129,7 @@ namespace M3.HRON
                 }
                 else
                 {
-                    visitor.Value_Begin(key);
+                    visitor.Value_Begin(key, 0, key.Length);
                     var value = kv.Value;
                     if (value != null)
                     {
@@ -316,20 +162,16 @@ namespace M3.HRON
             return visitor.StringBuilder.ToString();
         }
 
-        static bool TryParse<T>(T input, IHRONVisitor visitor, Action<T, Scanner> action)
+        static bool TryParse<T>(T input, IScannerVisitor visitor, Action<T, Scanner> action)
         {
             if (visitor == null)
             {
                 return false;
             }
 
-            var translatingVisitor = new TranslatingVisitor(visitor);
+            Parse(input, visitor, action);
 
-            translatingVisitor.Document_Begin();
-
-            Parse(input, translatingVisitor, action);
-
-            return translatingVisitor.ErrorCount == 0;
+            return visitor.ErrorCount == 0;
         }
 
         static void Parse<T>(T input, IScannerVisitor visitor, Action<T, Scanner> action)
@@ -350,7 +192,7 @@ namespace M3.HRON
             }
         }
 
-        public static bool TryParse(string input, IHRONVisitor visitor)
+        public static bool TryParse(string input, IScannerVisitor visitor)
         {
             return TryParse(
                 input,
@@ -364,7 +206,7 @@ namespace M3.HRON
                     });
         }
 
-        public static bool TryParse(IEnumerable<string> input, IHRONVisitor visitor)
+        public static bool TryParse(IEnumerable<string> input, IScannerVisitor visitor)
         {
             return TryParse(
                 input,
@@ -379,7 +221,7 @@ namespace M3.HRON
                     });
         }
 
-        public static bool TryParse(TextReader textReader, IHRONVisitor visitor)
+        public static bool TryParse(TextReader textReader, IScannerVisitor visitor)
         {
             return TryParse(
                 textReader.ReadLines(), 

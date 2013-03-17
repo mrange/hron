@@ -19,11 +19,11 @@ using M3.HRON.Generator.Source.Common;
 
 namespace M3.HRON.Generator
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
-//            FunctionalityTest();
+            FunctionalityTest();
             PerformanceTest();
         }
 
@@ -104,25 +104,24 @@ namespace M3.HRON.Generator
             Log.Success("{0:#,0} lines in {1:#,0} ms", Count*lines.Length, sw.ElapsedMilliseconds);
         }
 
-        static SubString[] ReadLines(string fullPath)
+        static string[] ReadLines(string fullPath)
         {
             var lines = File
                 .ReadAllLines(fullPath)
                 .Take(int.MaxValue)
-                .Select(s => s.ToSubString())
                 .ToArray()
                 ;
             return lines;
         }
 
-        static void ReadDocument(IScannerVisitor v, SubString[] lines)
+        static void ReadDocument(IScannerVisitor v, string[] lines)
         {
             var scanner = new Scanner(v);
             v.Document_Begin();
             for (int index = 0; index < lines.Length; index++)
             {
                 var line = lines[index];
-                scanner.AcceptLine(line);
+                scanner.AcceptLine(line, 0, line.Length);
             }
             scanner.AcceptEndOfStream();
             v.Document_End();
@@ -141,24 +140,24 @@ namespace M3.HRON.Generator
             Log.Info("Document_End");
         }
 
-        public void Empty(SubString line)
+        public void Empty(string baseString, int begin, int end)
         {
-            Log.Info("Empty:{0}", line);
+            Log.Info("Empty:{0}", baseString.Slice(begin, end));
         }
 
-        public void Comment(int indent, SubString comment)
+        public void Comment(int indent, string baseString, int begin, int end)
         {
-            Log.Info("Comment:{0},{1}", indent, comment);
+            Log.Info("Comment:{0},{1}", indent, baseString.Slice(begin, end));
         }
 
-        public void PreProcessor(SubString preProcessor)
+        public void PreProcessor(string baseString, int begin, int end)
         {
-            Log.Info("PreProcessor:{0}", preProcessor);
+            Log.Info("PreProcessor:{0}", baseString.Slice(begin, end));
         }
 
-        public void Object_Begin(SubString name)
+        public void Object_Begin(string baseString, int begin, int end)
         {
-            Log.Info("Object_Begin:{0}", name);
+            Log.Info("Object_Begin:{0}", baseString.Slice(begin, end));
         }
 
         public void Object_End()
@@ -166,14 +165,14 @@ namespace M3.HRON.Generator
             Log.Info("Object_End");
         }
 
-        public void Value_Begin(SubString name)
+        public void Value_Begin(string baseString, int begin, int end)
         {
-            Log.Info("Value_Begin:{0}", name);
+            Log.Info("Value_Begin:{0}", baseString.Slice(begin, end));
         }
 
-        public void Value_Line(SubString content)
+        public void Value_Line(string baseString, int begin, int end)
         {
-            Log.Info("Value_Line:{0}", content);
+            Log.Info("Value_Line:{0}", baseString.Slice(begin, end));
         }
 
         public void Value_End()
@@ -181,9 +180,9 @@ namespace M3.HRON.Generator
             Log.Info("Value_End");
         }
 
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError)
         {
-            Log.Info("Error:{0},{1},{2}", parseError, lineNo, line);
+            Log.Info("Error:{0},{1},{2}", parseError, lineNo, baseString.Slice(begin, end));
         }
     }
 
@@ -197,19 +196,19 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void PreProcessor(SubString preProcessor)
+        public void PreProcessor(string baseString, int begin, int end)
         {
         }
 
-        public void Empty(SubString line)
+        public void Empty(string baseString, int begin, int end)
         {
         }
 
-        public void Comment(int indent, SubString comment)
+        public void Comment(int indent, string baseString, int begin, int end)
         {
         }
 
-        public void Object_Begin(SubString name)
+        public void Object_Begin(string baseString, int begin, int end)
         {
         }
 
@@ -217,11 +216,11 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Value_Begin(SubString name)
+        public void Value_Begin(string baseString, int begin, int end)
         {
         }
 
-        public void Value_Line(SubString content)
+        public void Value_Line(string baseString, int begin, int end)
         {
         }
 
@@ -229,7 +228,7 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError)
         {
         }
     }
@@ -251,24 +250,24 @@ namespace M3.HRON.Generator
         {
         }
 
-        public void Empty(SubString line)
+        public void Empty(string baseString, int begin, int end)
         {
-            m_writer.WriteLine("Empty:{0}", line);
+            m_writer.WriteLine("Empty:{0}", baseString.Slice(begin, end));
         }
 
-        public void Comment(int indent, SubString comment)
+        public void Comment(int indent, string baseString, int begin, int end)
         {
-            m_writer.WriteLine("Comment:{0},{1}", indent, comment);
+            m_writer.WriteLine("Comment:{0},{1}", indent, baseString.Slice(begin, end));
         }
 
-        public void PreProcessor(SubString preProcessor)
+        public void PreProcessor(string baseString, int begin, int end)
         {
-            m_writer.WriteLine("PreProcessor:{0}", preProcessor);
+            m_writer.WriteLine("PreProcessor:{0}", baseString.Slice(begin, end));
         }
 
-        public void Object_Begin(SubString name)
+        public void Object_Begin(string baseString, int begin, int end)
         {
-            m_writer.WriteLine("Object_Begin:{0}", name);
+            m_writer.WriteLine("Object_Begin:{0}", baseString.Slice(begin, end));
         }
 
         public void Object_End()
@@ -276,14 +275,14 @@ namespace M3.HRON.Generator
             m_writer.WriteLine("Object_End:");
         }
 
-        public void Value_Begin(SubString name)
+        public void Value_Begin(string baseString, int begin, int end)
         {
-            m_writer.WriteLine("Value_Begin:{0}", name);
+            m_writer.WriteLine("Value_Begin:{0}", baseString.Slice(begin, end));
         }
 
-        public void Value_Line(SubString content)
+        public void Value_Line(string baseString, int begin, int end)
         {
-            m_writer.WriteLine("ContentLine:{0}", content);
+            m_writer.WriteLine("ContentLine:{0}", baseString.Slice(begin, end));
         }
 
         public void Value_End()
@@ -291,9 +290,9 @@ namespace M3.HRON.Generator
             m_writer.WriteLine("Value_End:");
         }
 
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError)
         {
-            m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, line);
+            m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, baseString.Slice(begin, end));
         }
     }
 }

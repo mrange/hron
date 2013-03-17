@@ -2,17 +2,15 @@
     // Whenever this file is saved the files in the Includes section is downloaded
     // from GitHub (you can download from other websources by changing rootpath)
     RootPath    = @"https://raw.github.com/";
-    Namespace   = "M3.HRON.Generator"       ;   // The downloaded content is wrapped in this namespace
+    Namespace   = "$rootnamespace$"         ;   // The downloaded content is wrapped in this namespace
     Includes    = new []
         {
             // Include the basic extension from T4Include
-            Include (@"mrange/T4Include/master/Common/Array.cs"),
-            Include (@"mrange/T4Include/master/Extensions/ParseExtensions.cs"),
-            Include (@"mrange/T4Include/master/Extensions/EnumParseExtensions.cs"),
+            Include (@"mrange/T4Include/master/Extensions/BasicExtensions.cs"),
 
             // Uncomment below to include dapper
             // Include (@"SamSaffron/dapper-dot-net/master/Dapper/SqlMapper.cs"),
         };
 #>
 
-<#@ include file="$(SolutionDir)\packages\T4Include.1.1.0\T4\IncludeWebFile.ttinclude" #>
+<#@ include file="$(SolutionDir)\packages\T4Include.1.1.2\T4\IncludeWebFile.ttinclude" #>

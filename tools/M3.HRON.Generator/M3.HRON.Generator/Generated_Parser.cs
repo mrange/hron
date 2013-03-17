@@ -23,8 +23,6 @@
 
 namespace M3.HRON.Generator.Parser
 {
-    using M3.HRON.Generator.Source.Common;
-
     enum ParserState
     {
         Error,
@@ -54,7 +52,6 @@ namespace M3.HRON.Generator.Parser
         Continue,
         Done    ,
     }
-
 
     sealed partial class Scanner
     {
@@ -185,25 +182,26 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_AcceptEndOfStream ();
                 
-        ParserResult Result;
-        SubString    CurrentLine;
-        char         CurrentCharacter;
+        ParserResult Result             ;
+        string       BaseString         ;
+        int          Begin              ;
+        int          End                ;
+        char         CurrentCharacter   ;
 
         public void AcceptEndOfStream ()
         {
             Partial_AcceptEndOfStream ();
         }
 
-        public bool AcceptLine (SubString ss)
+        public bool AcceptLine (string bs, int begin, int end)
         {
             Result = ParserResult.Continue;
-            CurrentLine = ss;
+
+            BaseString  = bs        ;
+            Begin       = begin     ;
+            End         = end       ;
 
             Partial_BeginLine ();
-
-            var bs = ss.BaseString;
-            var begin = ss.Begin;
-            var end = ss.End;
 
             for (var iter = begin; iter < end; ++iter)
             {

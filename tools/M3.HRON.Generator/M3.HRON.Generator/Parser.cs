@@ -14,32 +14,25 @@
 // ReSharper disable InconsistentNaming
 
 
+using System.Text;
+
 namespace M3.HRON.Generator.Parser
 {
-    using M3.HRON.Generator.Source.Common;
-
-    interface IScannerVisitor
+    static partial class ScannerExtensions
     {
-        void Document_Begin();
-        void Document_End();
+        public static string Slice (this string baseString, int begin, int end)
+        {
+            return baseString.Substring(begin, end - begin);
+        }
 
-        void PreProcessor(SubString preProcessor);
-
-        void Empty(SubString line);
-
-        void Comment(int indent, SubString comment);
-
-        void Object_Begin(SubString name);
-        void Object_End();
-
-        void Value_Begin(SubString name);
-        void Value_Line(SubString content);
-        void Value_End();
-
-        void Error(int lineNo, SubString line, Scanner.Error parseError);
+        public static StringBuilder AppendSlice (this StringBuilder sb, string baseString, int begin, int end)
+        {
+            sb.Append(baseString, begin, end - begin);
+            return sb;
+        }
     }
 
-    partial class Scanner
+    partial interface IScannerVisitor
     {
         public enum Error
         {
@@ -48,12 +41,34 @@ namespace M3.HRON.Generator.Parser
             NonEmptyTag ,
         }
 
+        void Document_Begin();
+        void Document_End();
+
+        void PreProcessor(string baseString, int begin, int end);
+
+        void Empty(string baseString, int begin, int end);
+
+        void Comment(int indent, string baseString, int begin, int end);
+
+        void Object_Begin(string baseString, int begin, int end);
+        void Object_End();
+
+        void Value_Begin(string baseString, int begin, int end);
+        void Value_Line(string baseString, int begin, int end);
+        void Value_End();
+
+        void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError);
+
+        int ErrorCount { get; }
+    }
+
+    partial class Scanner
+    {
         bool m_isBuildingValue;
         int m_indention;
         int m_expectedIndention;
         int m_lineNo;
         readonly IScannerVisitor m_visitor;
-        static readonly SubString s_empty = new SubString();
 
         public Scanner(IScannerVisitor visitor)
         {
@@ -158,30 +173,30 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_EndOfPreProcessorTag()
         {
-            m_visitor.PreProcessor(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.PreProcessor(BaseString, m_indention + 1, End);
         }
 
         partial void Partial_StateTransition__To_EndOfCommentTag()
         {
-            m_visitor.Comment(m_indention, CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Comment(m_indention, BaseString, m_indention + 1, End);
         }
 
         partial void Partial_StateTransition__To_EndOfEmptyTag()
         {
             if (m_isBuildingValue)
             {
-                m_visitor.Value_Line(s_empty);
+                m_visitor.Value_Line(BaseString, Begin, Begin);
             }
             else
             {
-                m_visitor.Empty(CurrentLine);
+                m_visitor.Empty(BaseString, Begin, End);
             }
         }
 
         partial void Partial_StateTransition__To_EndOfObjectTag()
         {
             PopContext();
-            m_visitor.Object_Begin(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Object_Begin(BaseString, m_indention + 1, End);
             m_expectedIndention = m_indention + 1;
         }
 
@@ -189,31 +204,31 @@ namespace M3.HRON.Generator.Parser
         {
             PopContext();
             m_isBuildingValue = true;
-            m_visitor.Value_Begin(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Value_Begin(BaseString, m_indention + 1, End);
             m_expectedIndention = m_indention + 1;
         }
 
         partial void Partial_StateTransition__To_EndOfValueLine()
         {
-            m_visitor.Value_Line(CurrentLine.ToSubString(m_expectedIndention));
+            m_visitor.Value_Line(BaseString, m_expectedIndention, End);
         }
 
         partial void Partial_StateTransition__To_Error()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.General);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.General);
         }
 
         partial void Partial_StateTransition__To_WrongTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.WrongTag);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.WrongTag);
         }
 
         partial void Partial_StateTransition__To_NonEmptyTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.NonEmptyTag);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.NonEmptyTag);
         }
 
     }

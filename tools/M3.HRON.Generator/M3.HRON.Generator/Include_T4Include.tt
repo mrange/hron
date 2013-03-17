@@ -7,7 +7,6 @@
         {
             // Include the basic extension from T4Include
             Include (@"mrange/T4Include/master/Extensions/BasicExtensions.cs"),
-            Include (@"mrange/T4Include/master/Common/SubString.cs"),
             Include (@"mrange/T4Include/master/Common/ConsoleLog.cs"),
 
             // Uncomment below to include dapper
@@ -15,4 +14,4 @@
         };
 #>
 
-<#@ include file="$(SolutionDir)\packages\T4Include.1.0.7\T4\IncludeWebFile.ttinclude" #>
+<#@ include file="$(SolutionDir)\packages\T4Include.1.1.2\T4\IncludeWebFile.ttinclude" #>
