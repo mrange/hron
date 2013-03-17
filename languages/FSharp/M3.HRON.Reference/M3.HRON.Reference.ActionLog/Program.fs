@@ -47,7 +47,7 @@ let build_action_log (hron : string) (action_log : string)=
     let result = Parser.parse HRONParser.p_hron input
     match result with
         |   Success (doc, ps)   -> write_hron output doc
-        |   Failure (msg, _)    -> failwithf "Parse failure: %s" msg
+        |   Failure (msg, _, _) -> failwithf "Parse failure: %s" msg
 [<EntryPoint>]
 let main argv = 
     let hrons = Directory.GetFiles (@"..\..\..\..\..\..\reference-data", "*.hron")

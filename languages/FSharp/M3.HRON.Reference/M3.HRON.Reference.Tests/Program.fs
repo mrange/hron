@@ -102,6 +102,6 @@ let main argv =
             elif first = -1
             then printf "Length mismatch %d, %d\r\n" l1 l2
             else printf "First mismatch@ %d\r\n" first 
-        |   Failure (_,_)       ->  printf "Failed to parse\r\n"
+        |   Failure (_,_,_)     ->  printf "Failed to parse\r\n"
     
     0 
