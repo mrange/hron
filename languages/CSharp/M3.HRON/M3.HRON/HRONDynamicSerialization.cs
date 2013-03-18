@@ -67,7 +67,7 @@ namespace M3.HRON
 
     partial interface IHRONEntity2 : IHRONEntity
     {
-        void Apply(SubString name, IScannerVisitor visitor);
+        void Apply(SubString name, IHRONVisitor visitor);
     }
 
     sealed partial class HRONDynamicMembers : DynamicObject
@@ -350,7 +350,7 @@ namespace M3.HRON
             return "";
         }
 
-        internal void Visit(IScannerVisitor visitor)
+        internal void Visit(IHRONVisitor visitor)
         {
             if (visitor == null)
             {
@@ -365,7 +365,7 @@ namespace M3.HRON
             }
         }
 
-        void IHRONEntity2.Apply(SubString name, IScannerVisitor visitor)
+        void IHRONEntity2.Apply(SubString name, IHRONVisitor visitor)
         {
             if (visitor == null)
             {
@@ -427,7 +427,7 @@ namespace M3.HRON
             return m_value;
         }
 
-        void IHRONEntity2.Apply(SubString name, IScannerVisitor visitor)
+        void IHRONEntity2.Apply(SubString name, IHRONVisitor visitor)
         {
             if (visitor == null)
             {
@@ -464,7 +464,7 @@ namespace M3.HRON
         }
     }
 
-    sealed partial class HRONDynamicBuilderVisitor : IScannerVisitor
+    sealed partial class HRONDynamicBuilderVisitor : IHRONVisitor
     {
         public struct Item
         {
@@ -581,19 +581,6 @@ namespace M3.HRON
     {
         static void VisitDynamic(
             HRONObject hronObject,
-            IScannerVisitor visitor
-            )
-        {
-            if (hronObject == null)
-            {
-                return;
-            }
-
-            hronObject.Visit(visitor);
-        }
-
-        public static void VisitDynamic(
-            HRONObject hronObject,
             IHRONVisitor visitor
             )
         {
@@ -602,7 +589,7 @@ namespace M3.HRON
                 return;
             }
 
-            hronObject.Visit(new TranslatingVisitor(visitor));
+            hronObject.Visit(visitor);
         }
 
         public static string DynamicAsString(

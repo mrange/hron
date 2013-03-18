@@ -30,9 +30,105 @@ namespace M3.HRON.Generator.Parser
             sb.Append(baseString, begin, end - begin);
             return sb;
         }
+
+        enum ParseLineState
+        {
+            NewLine     ,
+            Inline      ,
+            ConsumedCR  ,
+        }
+
+        public delegate bool ReadLineDelegate (string baseString, int begin, int end);
+
+        public static void ReadLines (this string baseString, int begin, int end, ReadLineDelegate readLineDelegate)
+        {
+            var beginLine   = begin ;
+            var count       = 0     ;
+
+            var state       = ParseLineState.NewLine;
+
+            for (var iter = begin; iter < end; ++iter)
+            {
+                var ch = baseString[iter];
+
+                switch (state)
+                {
+                    case ParseLineState.ConsumedCR:
+                        if (!readLineDelegate (baseString, beginLine, count)) return;
+                        switch (ch)
+                        {
+                            case '\r':
+                                beginLine = iter;
+                                count = 0;
+                                state = ParseLineState.ConsumedCR;
+                                break;
+                            case '\n':
+                                state = ParseLineState.NewLine;
+                                break;
+                            default:
+                                beginLine = iter;
+                                count = 1;
+                                state = ParseLineState.Inline;
+                                break;
+                        }
+
+                        break;
+                    case ParseLineState.NewLine:
+                        beginLine   = iter;
+                        count       = 0;
+                        switch (ch)
+                        {
+                            case '\r':
+                                state = ParseLineState.ConsumedCR;
+                                break;
+                            case '\n':
+                                if (!readLineDelegate (baseString, beginLine, count)) return;
+                                state = ParseLineState.NewLine;
+                                break;
+                            default:
+                                state = ParseLineState.Inline;
+                                ++count;
+                                break;
+                        }
+                        break;
+                    case ParseLineState.Inline:
+                    default:
+                        switch (ch)
+                        {
+                            case '\r':
+                                state = ParseLineState.ConsumedCR;
+                                break;
+                            case '\n':
+                                if (!readLineDelegate (baseString, beginLine, count)) return;
+                                state = ParseLineState.NewLine;
+                                break;
+                            default:
+                                ++count;
+                                break;
+                        }
+                        break;
+                }
+            }
+
+            switch (state)
+            {
+                case ParseLineState.NewLine:
+                    if (!readLineDelegate (baseString, 0, 0)) return;
+                    break;
+                case ParseLineState.ConsumedCR:
+                    if (!readLineDelegate (baseString, beginLine, count)) return;
+                    if (!readLineDelegate (baseString, 0, 0)) return;
+                    break;
+                case ParseLineState.Inline:
+                default:
+                    if (!readLineDelegate (baseString, beginLine, count)) return;
+                    break;
+            }
+        }
+
     }
 
-    partial interface IScannerVisitor
+    static partial class ScannerInterface
     {
         public enum Error
         {
@@ -41,25 +137,28 @@ namespace M3.HRON.Generator.Parser
             NonEmptyTag ,
         }
 
-        void Document_Begin();
-        void Document_End();
+        public partial interface IScannerVisitor
+        {
+            void Document_Begin();
+            void Document_End();
 
-        void PreProcessor(string baseString, int begin, int end);
+            void PreProcessor(string baseString, int begin, int end);
 
-        void Empty(string baseString, int begin, int end);
+            void Empty(string baseString, int begin, int end);
 
-        void Comment(int indent, string baseString, int begin, int end);
+            void Comment(int indent, string baseString, int begin, int end);
 
-        void Object_Begin(string baseString, int begin, int end);
-        void Object_End();
+            void Object_Begin(string baseString, int begin, int end);
+            void Object_End();
 
-        void Value_Begin(string baseString, int begin, int end);
-        void Value_Line(string baseString, int begin, int end);
-        void Value_End();
+            void Value_Begin(string baseString, int begin, int end);
+            void Value_Line(string baseString, int begin, int end);
+            void Value_End();
 
-        void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError);
+            void Error(int lineNo, string baseString, int begin, int end, Error parseError);
 
-        int ErrorCount { get; }
+            int ErrorCount { get; }
+        }
     }
 
     partial class Scanner
@@ -68,9 +167,9 @@ namespace M3.HRON.Generator.Parser
         int m_indention;
         int m_expectedIndention;
         int m_lineNo;
-        readonly IScannerVisitor m_visitor;
+        readonly ScannerInterface.IScannerVisitor m_visitor;
 
-        public Scanner(IScannerVisitor visitor)
+        public Scanner(ScannerInterface.IScannerVisitor visitor)
         {
             m_visitor = visitor;
             State = ParserState.PreProcessing;
@@ -216,19 +315,19 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__To_Error()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.General);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, ScannerInterface.Error.General);
         }
 
         partial void Partial_StateTransition__To_WrongTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.WrongTag);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, ScannerInterface.Error.WrongTag);
         }
 
         partial void Partial_StateTransition__To_NonEmptyTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, BaseString, Begin, End, Error.NonEmptyTag);
+            m_visitor.Error(m_lineNo, BaseString, Begin, End, ScannerInterface.Error.NonEmptyTag);
         }
 
     }

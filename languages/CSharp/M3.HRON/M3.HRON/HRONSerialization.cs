@@ -13,13 +13,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialTypeWithSinglePart
 
-namespace M3.HRON.Generator.Parser
-{
-    public partial interface IScannerVisitor
-    {
-        
-    }
-}
 namespace M3.HRON
 {
     using System;
@@ -32,10 +25,14 @@ namespace M3.HRON
     using M3.HRON.Generator.Source.Common;
     using M3.HRON.Generator.Source.Extensions;
 
-    sealed partial class WritingVisitor : IScannerVisitor
+    public partial interface IHRONVisitor : ScannerInterface.IScannerVisitor
+    {
+        
+    }
+
+    sealed partial class WritingVisitor : IHRONVisitor
     {
         int m_indent;
-        public int ErrorCount;
         public readonly StringBuilder StringBuilder = new StringBuilder();
 
         public void Document_Begin()
@@ -102,12 +99,14 @@ namespace M3.HRON
             --m_indent;
         }
 
-        public void Error(int lineNo, string baseString, int begin, int end, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, ScannerInterface.Error parseError)
         {
             StringBuilder.AppendFormat("# ERROR - {0}({1}) : {2}", parseError, lineNo, baseString.Slice(begin, end));
             StringBuilder.AppendLine();
             ++ErrorCount;
         }
+
+        public int ErrorCount { get; private set; }
     }
 
     public static partial class HRONSerialization
@@ -138,11 +137,14 @@ namespace M3.HRON
                             ? formattable.ToString("", CultureInfo.InvariantCulture) 
                             : value.ToString()
                             ;
-                        var lines = valueAsString.ReadLines();
-                        foreach (var line in lines)
-                        {
-                            visitor.Value_Line(line);
-                        }
+                        valueAsString.ReadLines(
+                            0,
+                            valueAsString.Length,
+                            (bs,b,e) => 
+                                {
+                                    visitor.Value_Line(bs, b, e);
+                                    return true;
+                                });
                     }
                     visitor.Value_End();
                 }
@@ -162,7 +164,7 @@ namespace M3.HRON
             return visitor.StringBuilder.ToString();
         }
 
-        static bool TryParse<T>(T input, IScannerVisitor visitor, Action<T, Scanner> action)
+        static bool TryParse<T>(T input, IHRONVisitor visitor, Action<T, Scanner> action)
         {
             if (visitor == null)
             {
@@ -174,7 +176,7 @@ namespace M3.HRON
             return visitor.ErrorCount == 0;
         }
 
-        static void Parse<T>(T input, IScannerVisitor visitor, Action<T, Scanner> action)
+        static void Parse<T>(T input, IHRONVisitor visitor, Action<T, Scanner> action)
         {
             visitor.Document_Begin();
 
@@ -192,21 +194,23 @@ namespace M3.HRON
             }
         }
 
-        public static bool TryParse(string input, IScannerVisitor visitor)
+        public static bool TryParse(string input, IHRONVisitor visitor)
         {
             return TryParse(
                 input,
                 visitor,
-                (i,s) =>
-                    {
-                        foreach (var line in i.ReadLines())
-                        {
-                            s.AcceptLine(line);
-                        }
-                    });
+                (i,s) => 
+                    i.ReadLines(
+                        0,
+                        i.Length,
+                        (bs,b,e) => 
+                            {
+                                s.AcceptLine(bs, b, e);
+                                return true;
+                            }));
         }
 
-        public static bool TryParse(IEnumerable<string> input, IScannerVisitor visitor)
+        public static bool TryParse(IEnumerable<string> input, IHRONVisitor visitor)
         {
             return TryParse(
                 input,
@@ -216,12 +220,12 @@ namespace M3.HRON
                         i = i ?? Array<string>.Empty;
                         foreach (var line in i)
                         {
-                            s.AcceptLine(line.ToSubString());
+                            s.AcceptLine(line, 0, line.Length);
                         }
                     });
         }
 
-        public static bool TryParse(TextReader textReader, IScannerVisitor visitor)
+        public static bool TryParse(TextReader textReader, IHRONVisitor visitor)
         {
             return TryParse(
                 textReader.ReadLines(), 
