@@ -43,7 +43,7 @@ namespace M3.HRON.Generator.Parser
         public static void ReadLines (this string baseString, int begin, int end, ReadLineDelegate readLineDelegate)
         {
             var beginLine   = begin ;
-            var count       = 0     ;
+            var endLine     = begin ;
 
             var state       = ParseLineState.NewLine;
 
@@ -54,20 +54,20 @@ namespace M3.HRON.Generator.Parser
                 switch (state)
                 {
                     case ParseLineState.ConsumedCR:
-                        if (!readLineDelegate (baseString, beginLine, count)) return;
+                        if (!readLineDelegate (baseString, beginLine, endLine)) return;
                         switch (ch)
                         {
                             case '\r':
-                                beginLine = iter;
-                                count = 0;
+                                beginLine   = iter;
+                                endLine     = iter;
                                 state = ParseLineState.ConsumedCR;
                                 break;
                             case '\n':
                                 state = ParseLineState.NewLine;
                                 break;
                             default:
-                                beginLine = iter;
-                                count = 1;
+                                beginLine   = iter;
+                                endLine     = iter + 1;
                                 state = ParseLineState.Inline;
                                 break;
                         }
@@ -75,19 +75,19 @@ namespace M3.HRON.Generator.Parser
                         break;
                     case ParseLineState.NewLine:
                         beginLine   = iter;
-                        count       = 0;
+                        endLine     = iter;
                         switch (ch)
                         {
                             case '\r':
                                 state = ParseLineState.ConsumedCR;
                                 break;
                             case '\n':
-                                if (!readLineDelegate (baseString, beginLine, count)) return;
+                                if (!readLineDelegate (baseString, beginLine, endLine)) return;
                                 state = ParseLineState.NewLine;
                                 break;
                             default:
                                 state = ParseLineState.Inline;
-                                ++count;
+                                ++endLine;
                                 break;
                         }
                         break;
@@ -99,11 +99,11 @@ namespace M3.HRON.Generator.Parser
                                 state = ParseLineState.ConsumedCR;
                                 break;
                             case '\n':
-                                if (!readLineDelegate (baseString, beginLine, count)) return;
+                                if (!readLineDelegate (baseString, beginLine, endLine)) return;
                                 state = ParseLineState.NewLine;
                                 break;
                             default:
-                                ++count;
+                                ++endLine;
                                 break;
                         }
                         break;
@@ -116,12 +116,12 @@ namespace M3.HRON.Generator.Parser
                     if (!readLineDelegate (baseString, 0, 0)) return;
                     break;
                 case ParseLineState.ConsumedCR:
-                    if (!readLineDelegate (baseString, beginLine, count)) return;
+                    if (!readLineDelegate (baseString, beginLine, endLine)) return;
                     if (!readLineDelegate (baseString, 0, 0)) return;
                     break;
                 case ParseLineState.Inline:
                 default:
-                    if (!readLineDelegate (baseString, beginLine, count)) return;
+                    if (!readLineDelegate (baseString, beginLine, endLine)) return;
                     break;
             }
         }
@@ -272,12 +272,12 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_EndOfPreProcessorTag()
         {
-            m_visitor.PreProcessor(BaseString, m_indention + 1, End);
+            m_visitor.PreProcessor(BaseString, Begin + m_indention + 1, End);
         }
 
         partial void Partial_StateTransition__To_EndOfCommentTag()
         {
-            m_visitor.Comment(m_indention, BaseString, m_indention + 1, End);
+            m_visitor.Comment(m_indention, BaseString, Begin + m_indention + 1, End);
         }
 
         partial void Partial_StateTransition__To_EndOfEmptyTag()
@@ -295,7 +295,7 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_StateTransition__To_EndOfObjectTag()
         {
             PopContext();
-            m_visitor.Object_Begin(BaseString, m_indention + 1, End);
+            m_visitor.Object_Begin(BaseString, Begin + m_indention + 1, End);
             m_expectedIndention = m_indention + 1;
         }
 
@@ -303,13 +303,13 @@ namespace M3.HRON.Generator.Parser
         {
             PopContext();
             m_isBuildingValue = true;
-            m_visitor.Value_Begin(BaseString, m_indention + 1, End);
+            m_visitor.Value_Begin(BaseString, Begin + m_indention + 1, End);
             m_expectedIndention = m_indention + 1;
         }
 
         partial void Partial_StateTransition__To_EndOfValueLine()
         {
-            m_visitor.Value_Line(BaseString, m_expectedIndention, End);
+            m_visitor.Value_Line(BaseString, Begin + m_expectedIndention, End);
         }
 
         partial void Partial_StateTransition__To_Error()
