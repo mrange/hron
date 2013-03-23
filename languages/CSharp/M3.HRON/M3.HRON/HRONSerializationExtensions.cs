@@ -18,8 +18,6 @@ namespace M3.HRON
     using System.Linq;
     using System.IO;
 
-    using M3.HRON.Generator.Source.Common;
-
     public static partial class HRONSerializationExtensions
     {
         internal static IHRONEntity FirstOrEmpty(this IEnumerable<IHRONEntity> entities)
@@ -50,7 +48,7 @@ namespace M3.HRON
         {
             HRONObject dynamicValue;
             HRONDynamicParseError[] errors;
-            return HRONSerialization.TryParseAsDynamic(input.ReadLines(), out dynamicValue, out errors) 
+            return HRONSerialization.TryParseAsDynamic(input, out dynamicValue, out errors) 
                        ? dynamicValue 
                        : defaultValue
                 ;

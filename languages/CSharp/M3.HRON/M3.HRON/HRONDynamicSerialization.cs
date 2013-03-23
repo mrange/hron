@@ -67,7 +67,7 @@ namespace M3.HRON
 
     partial interface IHRONEntity2 : IHRONEntity
     {
-        void Apply(SubString name, IHRONVisitor visitor);
+        void Apply(string name, IHRONVisitor visitor);
     }
 
     sealed partial class HRONDynamicMembers : DynamicObject
@@ -360,24 +360,23 @@ namespace M3.HRON
             for (var index = 0; index < m_members.Length; index++)
             {
                 var pair = m_members[index];
-                var innerName = pair.Name.ToSubString();
-                pair.Value.Apply(innerName, visitor);
+                pair.Value.Apply(pair.Name, visitor);
             }
         }
 
-        void IHRONEntity2.Apply(SubString name, IHRONVisitor visitor)
+        void IHRONEntity2.Apply(string name, IHRONVisitor visitor)
         {
             if (visitor == null)
             {
                 return;
             }
 
-            visitor.Object_Begin(name);
+            visitor.Object_Begin(name, 0, name.Length);
             for (var index = 0; index < m_members.Length; index++)
             {
                 var pair = m_members[index];
-                var innerName = pair.Name.ToSubString();
-                pair.Value.Apply(innerName, visitor);
+                var innerName = pair.Name;
+                pair.Value.Apply(name, visitor);
             }
             visitor.Object_End();
         }
@@ -427,18 +426,22 @@ namespace M3.HRON
             return m_value;
         }
 
-        void IHRONEntity2.Apply(SubString name, IHRONVisitor visitor)
+        void IHRONEntity2.Apply(string name, IHRONVisitor visitor)
         {
             if (visitor == null)
             {
                 return;
             }
 
-            visitor.Value_Begin(name);
-            foreach (var line in m_value.ReadLines())
-            {
-                visitor.Value_Line(line);
-            }
+            visitor.Value_Begin(name, 0, name.Length);
+            m_value.ReadLines(
+                0,
+                m_value.Length,
+                (baseString, begin, end) =>
+                    {
+                        visitor.Value_Line(baseString, begin, end); 
+                        return true;
+                    });
             visitor.Value_End();
         }
 
@@ -448,18 +451,23 @@ namespace M3.HRON
 
             var first = true;
 
-            foreach (var line in m_value.ReadLines())
-            {
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    sb.Append(", ");
-                }
-                sb.AppendSubString(line);
-            }
+            m_value.ReadLines(
+                0, 
+                m_value.Length,
+                (baseString, begin, end) =>
+                    {
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(", ");
+                        }
+                        sb.AppendSlice(baseString, begin, end);
+                        return true;
+                    });
+
             sb.Append('"');
         }
     }
@@ -468,10 +476,10 @@ namespace M3.HRON
     {
         public struct Item
         {
-            public readonly SubString Name;
+            public readonly string Name;
             public readonly List<HRONObject.Member> Pairs;
 
-            public Item(SubString name)
+            public Item(string name)
                 : this()
             {
                 Name = name;
@@ -480,15 +488,16 @@ namespace M3.HRON
         }
 
         readonly Stack<Item> m_stack = new Stack<Item>();
-        SubString m_valueName;
+        string m_valueName;
         readonly StringBuilder m_value = new StringBuilder(128);
         bool m_firstLine = true;
 
         public readonly List<HRONDynamicParseError> Errors = new List<HRONDynamicParseError>();
+        int m_errorCount;
 
         public HRONDynamicBuilderVisitor()
         {
-            m_stack.Push(new Item("Root".ToSubString()));
+            m_stack.Push(new Item("Root"));
         }
 
         public Item Top
@@ -504,26 +513,26 @@ namespace M3.HRON
         {
         }
 
-        public void PreProcessor(SubString line)
+        public void PreProcessor(string baseString, int begin, int end)
         {
         }
 
-        public void Empty(SubString line)
+        public void Empty(string baseString, int begin, int end)
         {
         }
 
-        public void Comment(int indent, SubString comment)
+        public void Comment(int indent, string baseString, int begin, int end)
         {
         }
 
-        public void Value_Begin(SubString name)
+        public void Value_Begin(string baseString, int begin, int end)
         {
-            m_valueName = name;
+            m_valueName = baseString.Slice(begin, end);
             m_value.Clear();
             m_firstLine = true;
         }
 
-        public void Value_Line(SubString value)
+        public void Value_Line(string baseString, int begin, int end)
         {
             if (m_firstLine)
             {
@@ -533,23 +542,23 @@ namespace M3.HRON
             {
                 m_value.AppendLine();
             }
-            m_value.Append(value);
+            m_value.AppendSlice(baseString, begin, end);
         }
 
         public void Value_End()
         {
-            AddEntity(m_valueName.Value, new HRONValue(m_value.ToString()));
+            AddEntity(m_valueName, new HRONValue(m_value.ToString()));
         }
 
-        public void Object_Begin(SubString name)
+        public void Object_Begin(string baseString, int begin, int end)
         {
-            m_stack.Push(new Item(name));
+            m_stack.Push(new Item(baseString.Slice(begin, end)));
         }
 
         public void Object_End()
         {
             var pop = m_stack.Pop();
-            AddEntity(pop.Name.Value, new HRONObject(pop.Pairs.ToArray()));
+            AddEntity(pop.Name, new HRONObject(pop.Pairs.ToArray()));
         }
 
         void AddEntity(string name, IHRONEntity2 entity)
@@ -557,22 +566,28 @@ namespace M3.HRON
             Top.Pairs.Add(new HRONObject.Member(name, entity));
         }
 
-        static HRONParseError GetParseError(Scanner.Error parseError)
+        static HRONParseError GetParseError(ScannerInterface.Error parseError)
         {
             switch (parseError)
             {
-                case Scanner.Error.WrongTag:
+                case ScannerInterface.Error.WrongTag:
                     return HRONParseError.WrongTag;
-                case Scanner.Error.NonEmptyTag:
+                case ScannerInterface.Error.NonEmptyTag:
                     return HRONParseError.NonEmptyTag;
-                case Scanner.Error.General:
+                case ScannerInterface.Error.General:
                 default:
                     return HRONParseError.General;;
             }
         }
-        public void Error(int lineNo, SubString line, Scanner.Error parseError)
+        public void Error(int lineNo, string baseString, int begin, int end, ScannerInterface.Error parseError)
         {
-            Errors.Add(new HRONDynamicParseError(lineNo, line.Value, GetParseError (parseError)));
+            Errors.Add(new HRONDynamicParseError(lineNo, baseString.Slice(begin, end), GetParseError (parseError)));
+            ++m_errorCount;
+        }
+
+        public int ErrorCount
+        {
+            get { return m_errorCount; }
         }
     }
 
@@ -607,7 +622,7 @@ namespace M3.HRON
         }
 
         internal static bool TryParseAsDynamic(
-            IEnumerable<SubString> lines,
+            IEnumerable<string> lines,
             out HRONObject hronObject,
             out HRONDynamicParseError[] errors
             )
@@ -618,11 +633,11 @@ namespace M3.HRON
 
             Parse(lines,
                   visitor,
-                  (l, v) =>
+                  (innerLines, v) =>
                       {
-                          foreach (var line in l)
+                          foreach (var line in innerLines)
                           {
-                              v.AcceptLine(line);
+                              v.AcceptLine(line, 0, line.Length);
                           }
                       });
 
@@ -637,19 +652,38 @@ namespace M3.HRON
             return true;
         }
 
-        public static bool TryParseAsDynamic(
-            IEnumerable<string> lines,
+        internal static bool TryParseAsDynamic(
+            string document,
             out HRONObject hronObject,
             out HRONDynamicParseError[] errors
             )
         {
-            lines = lines ?? Array<string>.Empty;
+            hronObject = null;
 
-            return TryParseAsDynamic(
-                lines.Select(l => l.ToSubString()),
-                out hronObject,
-                out errors
-                );
+            var visitor = new HRONDynamicBuilderVisitor();
+
+            Parse(
+                document,
+                visitor,
+                (doc, v) => doc.ReadLines(
+                    0, 
+                    doc.Length,
+                    (baseString, begin, end) =>
+                        {
+                            v.AcceptLine(baseString, begin, end);
+                            return true;
+                        }));
+
+            errors = visitor.Errors.ToArray();
+            if (errors.Length > 0)
+            {
+                return false;
+            }
+
+            hronObject = new HRONObject(visitor.Top.Pairs.ToArray());
+
+            return true;
         }
+
     }
 }

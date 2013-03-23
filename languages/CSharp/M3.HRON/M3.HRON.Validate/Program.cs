@@ -16,10 +16,12 @@ namespace M3.HRON.Validate
     using System.IO;
     using System.Linq;
     using M3.HRON.Validate.Source.Common;
+    using M3.HRON.Generator.Parser;
+
 
     using Source.ConsoleApp;
 
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
@@ -31,6 +33,11 @@ namespace M3.HRON.Validate
     {
         static partial class Runner
         {
+            public static string Slice (this string baseString, int begin, int end)
+            {
+                return baseString.Substring(begin, end - begin);
+            }
+
             static partial void Partial_Run(string[] args, dynamic config)
             {
                 Log.Info("Looking for reference data...");
@@ -62,7 +69,7 @@ namespace M3.HRON.Validate
                 {
                     try
                     {
-                        var dir = Path.GetDirectoryName(testCase.actionLog);
+                        var dir = Path.GetDirectoryName(testCase.actionLog) ?? ".";
                         if (!Directory.Exists(dir))
                         {
                             Directory.CreateDirectory(dir);
@@ -101,6 +108,7 @@ namespace M3.HRON.Validate
         sealed class ActionLogVisitor : IHRONVisitor
         {
             readonly StreamWriter m_writer;
+            int m_errorCount;
 
             public ActionLogVisitor(StreamWriter writer)
             {
@@ -115,24 +123,24 @@ namespace M3.HRON.Validate
             {
             }
 
-            public void Empty(string line)
+            public void Empty(string baseString, int begin, int end)
             {
-                m_writer.WriteLine("Empty:{0}", line);
+                m_writer.WriteLine("Empty:{0}", baseString.Slice(begin, end));
             }
 
-            public void Comment(int indent, string comment)
+            public void Comment(int indent, string baseString, int begin, int end)
             {
-                m_writer.WriteLine("Comment:{0},{1}", indent, comment);
+                m_writer.WriteLine("Comment:{0},{1}", indent, baseString.Slice(begin, end));
             }
 
-            public void PreProcessor(string preProcessor)
+            public void PreProcessor(string baseString, int begin, int end)
             {
-                m_writer.WriteLine("PreProcessor:{0}", preProcessor);
+                m_writer.WriteLine("PreProcessor:{0}", baseString.Slice(begin, end));
             }
 
-            public void Object_Begin(string name)
+            public void Object_Begin(string baseString, int begin, int end)
             {
-                m_writer.WriteLine("Object_Begin:{0}", name);
+                m_writer.WriteLine("Object_Begin:{0}", baseString.Slice(begin, end));
             }
 
             public void Object_End()
@@ -140,19 +148,25 @@ namespace M3.HRON.Validate
                 m_writer.WriteLine("Object_End:");
             }
 
-            public void Error(int lineNo, string line, string parseError)
+            public void Error(int lineNo, string baseString, int begin, int end, ScannerInterface.Error parseError)
             {
-                m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, line);
+                m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, baseString.Slice(begin, end));
+                ++m_errorCount;
             }
 
-            public void Value_Begin(string name)
+            public int ErrorCount
             {
-                m_writer.WriteLine("Value_Begin:{0}", name);
+                get { return m_errorCount; }
             }
 
-            public void Value_Line(string content)
+            public void Value_Begin(string baseString, int begin, int end)
             {
-                m_writer.WriteLine("ContentLine:{0}", content);
+                m_writer.WriteLine("Value_Begin:{0}", baseString.Slice(begin, end));
+            }
+
+            public void Value_Line(string baseString, int begin, int end)
+            {
+                m_writer.WriteLine("ContentLine:{0}", baseString.Slice(begin, end));
             }
 
             public void Value_End()
