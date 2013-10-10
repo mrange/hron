@@ -1,4 +1,16 @@
-﻿module HRON {
+﻿// ----------------------------------------------------------------------------------------------
+// Copyright (c) Mårten Rånge.
+// ----------------------------------------------------------------------------------------------
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License.
+// ----------------------------------------------------------------------------------------------
+// You must not remove this notice, or any other, from this software.
+// ----------------------------------------------------------------------------------------------
+
+module HRON {
 
     class Snapshot {
         position    : number
@@ -345,6 +357,20 @@
         }
     }
 
+    function transform<T0, T1>(p : Parser<T0>, transform : (T0) => T1) : Parser<T1> {
+        return function (ps : ParserState) { 
+
+            var pResult = p(ps)
+
+            if (!pResult.success) {
+                return ps.succeed<T1>(null)
+            }
+
+            return ps.succeed(transform(pResult.value))
+        }
+    }
+
+
     function choice<T>(... choices : Parser<T>[]) : Parser<T> {
         return function (ps : ParserState) { 
 
@@ -384,25 +410,127 @@
 
     // Defining HRON AST
 
+    interface HRONVisitor {
+        VisitDocument(preprocessors : string[], members : HRON[]) : void;
+        VisitValue(name : string, lines : string[]) : void;
+        VisitEmpty() : void;
+        VisitComment(lin : string) : void;
+        VisitObject(name : string, members : HRON[]) : void;
+    }
+
+    interface HRON {
+        apply(visitor : HRONVisitor) : void;
+    }
+
+    class HRONValue implements HRON {
+        name            : string
+        lines           : string[]
+
+        constructor (
+            name            : string    ,
+            lines           : string[]
+            ) {
+            this.name   = name
+            this.lines  = lines
+        }
+
+
+        apply(visitor : HRONVisitor) : void {
+            visitor.VisitValue(this.name, this.lines)
+        }
+    }
+
+    class HRONEmpty implements HRON {
+
+        apply(visitor : HRONVisitor) : void {
+            visitor.VisitEmpty()
+        }
+    }
+
+    class HRONComment implements HRON {
+        line            : string
+
+        constructor (
+            line           : string
+            ) {
+            this.line   = line
+        }
+
+
+        apply(visitor : HRONVisitor) : void {
+            visitor.VisitComment(this.line)
+        }
+    }
+
+    class HRONObject implements HRON {
+        name            : string
+        members         : HRON[]
+
+        constructor (
+            name            : string,
+            members         : HRON[]
+            ) {
+            this.name   = name
+            this.members= members
+        }
+
+        apply(visitor : HRONVisitor) : void {
+            visitor.VisitObject(this.name, this.members)
+        }
+    }
+
+    class HRONDocument implements HRON {
+        preprocessors   : string[]
+        members         : HRON[]
+
+        constructor (
+            preprocessors   : string[]  ,
+            members         : HRON[]
+            ) {
+            this.preprocessors  = preprocessors
+            this.members        = members
+        }
+
+        apply(visitor : HRONVisitor) : void {
+            visitor.VisitDocument(this.preprocessors, this.members)
+        }
+    }
+
     // Defining HRON grammar
     function whitespace() : Parser<string> {
         return satisfy(satisyWhitespace)
     }
 
     function emptyString() : Parser<string> {
-        return manyString(except(whitespace(), EOL()))
+        return manyString(
+            except(whitespace(), EOL())
+            )
     }
 
     function string_() : Parser<string> {
-        return manyString(except(anyChar(), EOL()))
+        return manyString(
+            except(anyChar(), EOL())
+            )
     }
 
     function commentString() : Parser<string> {
-        return keepRight(keepLeft(anyIndention(), skipString("#")), string_())
+        return keepRight(
+            keepLeft(
+                anyIndention(), 
+                skipString("#")
+                )
+            , string_()
+            )
     }
 
     function preprocessor() : Parser<string> {
-        return keepLeft(keepRight(skipString("!"), string_()), EOL())
+        return keepLeft(
+            keepRight(
+                skipString("!"), 
+                string_()
+                ), 
+            EOL()
+            )
     }
 
     function preprocessors() : Parser<string[]> {
@@ -418,19 +546,125 @@
     }
 
     function nonEmptyLine() : Parser<string> {
-        return keepLeft(keepRight(indention(), string_()), EOL())
+        return keepLeft(
+            keepRight(
+                indention(), 
+                string_()
+                ), 
+            EOL()
+            )
     }
 
     function valueLine() : Parser<string> {
-        return choice(nonEmptyLine(), commentLine(), emptyLine())
+        return choice(
+            nonEmptyLine(), 
+            commentLine(), 
+            emptyLine()
+            )
     }
 
     function valueLines() : Parser<string[]> {
-        return many(except(valueLine(), EOL()))
+        return many(
+            except(
+                valueLine(), 
+                EOL()
+                )
+            )
     }
 
-    function value() : Parser<string[]> {
-        return many(except(valueLine(), EOL()))
+    function value() : Parser<HRON> {
+        var p = keepRight(
+            indention(), 
+            keepRight(
+                skipString("="),
+                combine(
+                    keepLeft(
+                        string_(),
+                        EOL()
+                        ),
+                    keepRight(
+                        indent(),
+                        keepLeft(
+                            valueLines(),
+                            dedent()
+                        )
+                    )
+                )
+            )
+        )
+
+        return transform(
+            p,
+            function (c : {v0 : string; v1 : string[]}) {
+                return new HRONValue(c.v0, c.v1)
+            })
+    }
+
+    function empty() : Parser<HRON> {
+        var p = keepLeft(
+            emptyString(),
+            EOL()
+        )
+
+        return transform(
+            p,
+            function (c : string) {
+                return new HRONEmpty()
+            })
+    }
+
+    function comment() : Parser<HRON> {
+        var p = keepLeft(
+            commentString(),
+            EOL()
+        )
+
+        return transform(
+            p,
+            function (c : string) {
+                return new HRONComment(c)
+            })
+    }
+
+    function object() : Parser<HRON> {
+        var p = keepRight(
+            indention(), 
+            keepRight(
+                skipString("@"),
+                combine(
+                    keepLeft(
+                        string_(),
+                        EOL()
+                        ),
+                    keepRight(
+                        indent(),
+                        keepLeft(
+                            members(),
+                            dedent()
+                        )
+                    )
+                )
+            )
+        )
+
+        return transform(
+            p,
+            function (c : {v0 : string; v1 : HRON[]}) {
+                return new HRONObject(c.v0, c.v1)
+            })
+    }
+
+    function member() : Parser<HRON> {
+        return choice (value(), object(), comment(), empty ())
+    }
+
+    function members() : Parser<HRON[]> {
+        return many(
+            except(
+                member(),
+                EOS()
+                )
+            )
     }
 
 }

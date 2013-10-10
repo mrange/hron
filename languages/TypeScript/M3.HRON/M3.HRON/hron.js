@@ -1,3 +1,14 @@
+// ----------------------------------------------------------------------------------------------
+// Copyright (c) Mårten Rånge.
+// ----------------------------------------------------------------------------------------------
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+//  by the terms of the Microsoft Public License.
+// ----------------------------------------------------------------------------------------------
+// You must not remove this notice, or any other, from this software.
+// ----------------------------------------------------------------------------------------------
 var HRON;
 (function (HRON) {
     var Snapshot = (function () {
@@ -343,6 +354,18 @@ var HRON;
         };
     }
 
+    function transform(p, transform) {
+        return function (ps) {
+            var pResult = p(ps);
+
+            if (!pResult.success) {
+                return ps.succeed(null);
+            }
+
+            return ps.succeed(transform(pResult.value));
+        };
+    }
+
     function choice() {
         var choices = [];
         for (var _i = 0; _i < (arguments.length - 0); _i++) {
@@ -382,6 +405,59 @@ var HRON;
         };
     }
 
+    var HRONValue = (function () {
+        function HRONValue(name, lines) {
+            this.name = name;
+            this.lines = lines;
+        }
+        HRONValue.prototype.apply = function (visitor) {
+            visitor.VisitValue(this.name, this.lines);
+        };
+        return HRONValue;
+    })();
+
+    var HRONEmpty = (function () {
+        function HRONEmpty() {
+        }
+        HRONEmpty.prototype.apply = function (visitor) {
+            visitor.VisitEmpty();
+        };
+        return HRONEmpty;
+    })();
+
+    var HRONComment = (function () {
+        function HRONComment(line) {
+            this.line = line;
+        }
+        HRONComment.prototype.apply = function (visitor) {
+            visitor.VisitComment(this.line);
+        };
+        return HRONComment;
+    })();
+
+    var HRONObject = (function () {
+        function HRONObject(name, members) {
+            this.name = name;
+            this.members = members;
+        }
+        HRONObject.prototype.apply = function (visitor) {
+            visitor.VisitObject(this.name, this.members);
+        };
+        return HRONObject;
+    })();
+
+    var HRONDocument = (function () {
+        function HRONDocument(preprocessors, members) {
+            this.preprocessors = preprocessors;
+            this.members = members;
+        }
+        HRONDocument.prototype.apply = function (visitor) {
+            visitor.VisitDocument(this.preprocessors, this.members);
+        };
+        return HRONDocument;
+    })();
+
+    // Defining HRON grammar
     function whitespace() {
         return satisfy(satisyWhitespace);
     }
@@ -396,6 +472,74 @@ var HRON;
 
     function commentString() {
         return keepRight(keepLeft(anyIndention(), skipString("#")), string_());
+    }
+
+    function preprocessor() {
+        return keepLeft(keepRight(skipString("!"), string_()), EOL());
+    }
+
+    function preprocessors() {
+        return many(preprocessor());
+    }
+
+    function emptyLine() {
+        return keepLeft(emptyLine(), EOL());
+    }
+
+    function commentLine() {
+        return keepLeft(commentString(), EOL());
+    }
+
+    function nonEmptyLine() {
+        return keepLeft(keepRight(indention(), string_()), EOL());
+    }
+
+    function valueLine() {
+        return choice(nonEmptyLine(), commentLine(), emptyLine());
+    }
+
+    function valueLines() {
+        return many(except(valueLine(), EOL()));
+    }
+
+    function value() {
+        var p = keepRight(indention(), keepRight(skipString("="), combine(keepLeft(string_(), EOL()), keepRight(indent(), keepLeft(valueLines(), dedent())))));
+
+        return transform(p, function (c) {
+            return new HRONValue(c.v0, c.v1);
+        });
+    }
+
+    function empty() {
+        var p = keepLeft(emptyString(), EOL());
+
+        return transform(p, function (c) {
+            return new HRONEmpty();
+        });
+    }
+
+    function comment() {
+        var p = keepLeft(commentString(), EOL());
+
+        return transform(p, function (c) {
+            return new HRONComment(c);
+        });
+    }
+
+    function object() {
+        var p = keepRight(indention(), keepRight(skipString("@"), combine(keepLeft(string_(), EOL()), keepRight(indent(), keepLeft(members(), dedent())))));
+
+        return transform(p, function (c) {
+            return new HRONObject(c.v0, c.v1);
+        });
+    }
+
+    function member() {
+        return choice(value(), object(), comment(), empty());
+    }
+
+    function members() {
+        return many(except(member(), EOS()));
     }
 })(HRON || (HRON = {}));
 //# sourceMappingURL=hron.js.map
