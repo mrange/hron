@@ -107,7 +107,7 @@ module MonadicParser {
         }
 
         combine<TOther>(pOther : Parser<TOther>) : Parser<{v0 : T; v1 : TOther}> {
-            return parser<{v0 : T; v1 : TOther}> (function (ps : ParserState) { 
+            return parser<{v0 : T; v1 : TOther}> ((ps : ParserState) => { 
                 var snapshot = ps.snapshot()
 
                 var pResult = this.parse(ps)
@@ -130,7 +130,7 @@ module MonadicParser {
         }
 
         keepLeft<TOther>(pOther : Parser<TOther>) : Parser<T> {
-            return parser (function (ps : ParserState) { 
+            return parser ((ps : ParserState) => { 
                 var snapshot = ps.snapshot()
 
                 var pResult = this.parse(ps)
@@ -151,7 +151,7 @@ module MonadicParser {
         }
 
         keepRight<TOther>(pOther : Parser<TOther>) : Parser<TOther> {
-            return parser (function (ps : ParserState) { 
+            return parser ((ps : ParserState) => { 
                 var snapshot = ps.snapshot()
 
                 var pResult = this.parse(ps)
@@ -172,7 +172,7 @@ module MonadicParser {
         }
 
         except<TOther>(pOther : Parser<TOther>) : Parser<T> {
-            return parser (function (ps : ParserState) { 
+            return parser ((ps : ParserState) => { 
                 var snapshot = ps.snapshot()
 
                 var pResult = this.parse(ps)
@@ -193,7 +193,7 @@ module MonadicParser {
         }
 
         opt() : Parser<T> {
-            return parser (function (ps : ParserState) { 
+            return parser ((ps : ParserState) => { 
 
                 var pResult = this.parse(ps)
 
@@ -206,7 +206,7 @@ module MonadicParser {
         }
 
         transform<TTo>(transform : (T) => TTo) : Parser<TTo> {
-            return parser (function (ps : ParserState) { 
+            return parser ((ps : ParserState) => { 
 
                 var pResult = this.parse(ps)
 
@@ -229,23 +229,23 @@ module MonadicParser {
     }
 
     export function success<T>(value : T) : Parser<T> {
-        return parser (function (ps : ParserState) { return ps.succeed(value) })
+        return parser ((ps : ParserState) => { return ps.succeed(value) })
     }
 
     export function fail<T>() : Parser<T> {
-        return parser (function (ps : ParserState) { return ps.fail<T>() })
+        return parser ((ps : ParserState) => { return ps.fail<T>() })
     }
 
    
     export function indent() : Parser<void> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             ps.increaseIndent()
             return ps.succeed<void>(undefined)
         })
     }
 
     export function dedent() : Parser<void> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             if (!ps.decreaseIndent()) {
                 return ps.fail<void>()
             }
@@ -254,7 +254,7 @@ module MonadicParser {
     }
 
     export function anyChar() : Parser<string> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
@@ -268,7 +268,7 @@ module MonadicParser {
     }
 
     export function EOS() : Parser<void> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             if (!ps.isEOS()) {
                 ps.fail<void>()
             }
@@ -278,7 +278,7 @@ module MonadicParser {
     }
 
     export function EOL() : Parser<void> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
                 return ps.succeed<void>(undefined)
             }
@@ -306,7 +306,7 @@ module MonadicParser {
     }
 
     export function satisfy(satisfy : (string, number) => boolean) : Parser<string> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
@@ -324,11 +324,11 @@ module MonadicParser {
     }
 
     export function satisfyMany(satisfy : (string, number) => boolean) : Parser<string> {
-        return parser (function (ps : ParserState) { return ps.succeed(ps.advance(satisfy)) })
+        return parser ((ps : ParserState) => { return ps.succeed(ps.advance(satisfy)) })
     }
 
     export function skipSatisfyMany(satisfy : (string, number) => boolean) : Parser<number> {
-        return parser (function (ps : ParserState) { return ps.succeed(ps.skipAdvance(satisfy)) })
+        return parser ((ps : ParserState) => { return ps.succeed(ps.skipAdvance(satisfy)) })
     }
 
     export function satisyWhitespace(str : string, pos : number) {
@@ -340,12 +340,12 @@ module MonadicParser {
     }
 
     export function skipString(str : string) : Parser<void> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             var snapshot = ps.snapshot()
 
             var ss = str
 
-            var result = ps.skipAdvance(function (s, pos) {
+            var result = ps.skipAdvance((s, pos) => {
                 return pos < ss.length && ss.charCodeAt(pos) === s.charCodeAt(pos)
                 })
 
@@ -359,7 +359,7 @@ module MonadicParser {
     }
 
     export function many<T>(p : Parser<T>) : Parser<T[]> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
 
             var result : T[] = []
 
@@ -374,7 +374,7 @@ module MonadicParser {
     }
 
     export function manyString(p : Parser<string>) : Parser<string> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
 
             var result = ""
 
@@ -389,7 +389,7 @@ module MonadicParser {
     }
 
     export function choice<T>(... choices : Parser<T>[]) : Parser<T> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
 
             for (var iter = 0; iter < choices.length; ++iter) {
                 var p = choices[iter]
@@ -411,7 +411,7 @@ module MonadicParser {
     }
 
     export function indention() : Parser<number> {
-        return parser (function (ps : ParserState) { 
+        return parser ((ps : ParserState) => { 
             var snapshot = ps.snapshot()
 
             var tabs = ps.skipAdvance(satisyTab)

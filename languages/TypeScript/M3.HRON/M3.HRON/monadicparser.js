@@ -102,10 +102,11 @@ var MonadicParser;
             this.parse = p;
         }
         Parser.prototype.combine = function (pOther) {
+            var _this = this;
             return parser(function (ps) {
                 var snapshot = ps.snapshot();
 
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.fail();
@@ -125,10 +126,11 @@ var MonadicParser;
         };
 
         Parser.prototype.keepLeft = function (pOther) {
+            var _this = this;
             return parser(function (ps) {
                 var snapshot = ps.snapshot();
 
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.fail();
@@ -146,10 +148,11 @@ var MonadicParser;
         };
 
         Parser.prototype.keepRight = function (pOther) {
+            var _this = this;
             return parser(function (ps) {
                 var snapshot = ps.snapshot();
 
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.fail();
@@ -167,10 +170,11 @@ var MonadicParser;
         };
 
         Parser.prototype.except = function (pOther) {
+            var _this = this;
             return parser(function (ps) {
                 var snapshot = ps.snapshot();
 
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.fail();
@@ -188,8 +192,9 @@ var MonadicParser;
         };
 
         Parser.prototype.opt = function () {
+            var _this = this;
             return parser(function (ps) {
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.succeed(null);
@@ -200,8 +205,9 @@ var MonadicParser;
         };
 
         Parser.prototype.transform = function (transform) {
+            var _this = this;
             return parser(function (ps) {
-                var pResult = this.parse(ps);
+                var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
                     return ps.succeed(null);

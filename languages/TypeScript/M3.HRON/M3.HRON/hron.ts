@@ -166,19 +166,19 @@ module HRON {
 
         return pname
                 .combine(plines)
-                .transform(function (c : {v0 : string; v1 : string[]}) {return new HRONValue(c.v0, c.v1)})
+                .transform((c : {v0 : string; v1 : string[]}) => {return new HRONValue(c.v0, c.v1)})
     }
 
     function empty() : mp.Parser<HRON> {
         return emptyString()
                 .keepLeft(mp.EOL())
-                .transform(function (c : string) {return new HRONEmpty()})
+                .transform((c : string) => {return new HRONEmpty()})
     }
 
     function comment() : mp.Parser<HRON> {
         return commentString()
                 .keepLeft(mp.EOL())
-                .transform(function (c : string) {return new HRONComment(c)})
+                .transform((c : string) => {return new HRONComment(c)})
     }
 
     function object() : mp.Parser<HRON> {
@@ -186,7 +186,7 @@ module HRON {
         var pobjects = mp.indent().keepRight(members().keepLeft(mp.dedent()))
         return pname
                 .combine(pobjects)
-                .transform(function (c : {v0 : string; v1 : HRON[]}) {return new HRONObject(c.v0, c.v1)})
+                .transform((c : {v0 : string; v1 : HRON[]}) => {return new HRONObject(c.v0, c.v1)})
     }
 
     function member() : mp.Parser<HRON> {
@@ -199,7 +199,7 @@ module HRON {
 
     function hron() : mp.Parser<HRONDocument> {
         return preprocessors().combine(members())
-            .transform(function (c : {v0 : string[]; v1 : HRON[]}) {return new HRONDocument(c.v0, c.v1)})
+            .transform((c : {v0 : string[]; v1 : HRON[]}) => {return new HRONDocument(c.v0, c.v1)})
     }
 
     var parserForHRON = hron()
