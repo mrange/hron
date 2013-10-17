@@ -48,16 +48,17 @@ var MonadicParser;
         };
 
         ParserState.prototype.isEOS = function () {
-            return this.position < this.text.length;
+            return this.position >= this.text.length;
         };
 
         ParserState.prototype.advance = function (satisfy) {
             var begin = this.position;
             var end = this.text.length;
 
+            var i = 0;
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), i); ++pos, ++i) {
             }
 
             this.position = pos;
@@ -69,9 +70,10 @@ var MonadicParser;
             var begin = this.position;
             var end = this.text.length;
 
+            var i = 0;
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), i); ++pos, ++i) {
             }
 
             this.position = pos;
@@ -169,21 +171,21 @@ var MonadicParser;
             });
         };
 
-        Parser.prototype.except = function (pOther) {
+        Parser.prototype.except = function (pExcept) {
             var _this = this;
             return parser(function (ps) {
                 var snapshot = ps.snapshot();
 
-                var pResult = _this.parse(ps);
+                var pExceptResult = pExcept.parse(ps);
 
-                if (!pResult.success) {
+                if (pExceptResult.success) {
+                    ps.restore(snapshot);
                     return ps.fail();
                 }
 
-                var pOtherResult = pOther.parse(ps);
+                var pResult = _this.parse(ps);
 
-                if (pOtherResult.success) {
-                    ps.restore(snapshot);
+                if (!pResult.success) {
                     return ps.fail();
                 }
 
@@ -210,7 +212,7 @@ var MonadicParser;
                 var pResult = _this.parse(ps);
 
                 if (!pResult.success) {
-                    return ps.succeed(null);
+                    return ps.fail();
                 }
 
                 return ps.succeed(transform(pResult.value));
@@ -269,7 +271,7 @@ var MonadicParser;
                 ps.fail();
             }
 
-            var ch = ps.text[ps.position];
+            var ch = ps.text.charCodeAt(ps.position);
 
             ++ps.position;
 
@@ -281,7 +283,7 @@ var MonadicParser;
     function EOS() {
         return parser(function (ps) {
             if (!ps.isEOS()) {
-                ps.fail();
+                return ps.fail();
             }
 
             return ps.succeed(undefined);
@@ -324,7 +326,7 @@ var MonadicParser;
                 ps.fail();
             }
 
-            var ch = ps.text[ps.position];
+            var ch = ps.text.charCodeAt(ps.position);
 
             if (!satisfy(ch, 0)) {
                 ps.fail();
@@ -351,13 +353,21 @@ var MonadicParser;
     }
     MonadicParser.skipSatisfyMany = skipSatisfyMany;
 
-    function satisyWhitespace(str, pos) {
-        return str === " " || str === "\t" || str === "\r" || str === "\n";
+    function satisyWhitespace(ch, pos) {
+        switch (ch) {
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+            case 0x20:
+                return true;
+            default:
+                return false;
+        }
     }
     MonadicParser.satisyWhitespace = satisyWhitespace;
 
-    function satisyTab(str, pos) {
-        return str === "\t";
+    function satisyTab(ch, pos) {
+        return ch === 0x09;
     }
     MonadicParser.satisyTab = satisyTab;
 
@@ -368,10 +378,10 @@ var MonadicParser;
             var ss = str;
 
             var result = ps.skipAdvance(function (s, pos) {
-                return pos < ss.length && ss.charCodeAt(pos) === s.charCodeAt(pos);
+                return pos < ss.length && ss.charCodeAt(pos) === s;
             });
 
-            if (result = ss.length) {
+            if (result === ss.length) {
                 return ps.succeed(undefined);
             } else {
                 ps.restore(snapshot);
@@ -403,7 +413,7 @@ var MonadicParser;
             var pResult;
 
             while ((pResult = p.parse(ps)).success) {
-                result += pResult.value;
+                result += String.fromCharCode(pResult.value);
             }
 
             return ps.succeed(result);
@@ -452,5 +462,10 @@ var MonadicParser;
         });
     }
     MonadicParser.indention = indention;
+
+    function circular() {
+        return parser(null);
+    }
+    MonadicParser.circular = circular;
 })(MonadicParser || (MonadicParser = {}));
 //# sourceMappingURL=monadicparser.js.map

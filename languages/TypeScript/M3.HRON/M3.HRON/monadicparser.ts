@@ -17,6 +17,10 @@ module MonadicParser {
         indent      : number
     }
 
+    export interface Satisfy {
+        (ch : number, pos : number) : boolean
+    }
+
     export class ParserState {
         text    : string
         position: number
@@ -52,16 +56,17 @@ module MonadicParser {
         }
 
         isEOS() : boolean {
-            return this.position < this.text.length
+            return this.position >= this.text.length
         }
 
-        advance (satisfy : (string, number) => boolean) : string {
+        advance (satisfy : Satisfy) : string {
             var begin = this.position
             var end = this.text.length
 
+            var i = 0
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), i); ++pos, ++i) {
             }
 
             this.position = pos
@@ -69,13 +74,14 @@ module MonadicParser {
             return this.text.substring(begin, pos);
         }
 
-        skipAdvance (satisfy : (string, number) => boolean) : number {
+        skipAdvance (satisfy : Satisfy) : number {
             var begin = this.position
             var end = this.text.length
 
-            var pos = begin;
+            var i = 0
+            var pos = begin
 
-            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), i); ++pos, ++i) {
             }
 
             this.position = pos
@@ -171,9 +177,16 @@ module MonadicParser {
             })
         }
 
-        except<TOther>(pOther : Parser<TOther>) : Parser<T> {
+        except<TOther>(pExcept : Parser<TOther>) : Parser<T> {
             return parser ((ps : ParserState) => { 
                 var snapshot = ps.snapshot()
+
+                var pExceptResult = pExcept.parse(ps)
+
+                if (pExceptResult.success) {
+                    ps.restore(snapshot)
+                    return ps.fail<T>()
+                }
 
                 var pResult = this.parse(ps)
 
@@ -181,12 +194,6 @@ module MonadicParser {
                     return ps.fail<T>()
                 }
 
-                var pOtherResult = pOther.parse(ps)
-
-                if (pOtherResult.success) {
-                    ps.restore(snapshot)
-                    return ps.fail<T>()
-                }
 
                 return ps.succeed(pResult.value)
             })
@@ -211,7 +218,7 @@ module MonadicParser {
                 var pResult = this.parse(ps)
 
                 if (!pResult.success) {
-                    return ps.succeed<TTo>(null)
+                    return ps.fail<TTo>()
                 }
 
                 return ps.succeed(transform(pResult.value))
@@ -253,13 +260,13 @@ module MonadicParser {
         })
     }
 
-    export function anyChar() : Parser<string> {
+    export function anyChar() : Parser<number> {
         return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
 
-            var ch = ps.text[ps.position]
+            var ch = ps.text.charCodeAt(ps.position)
 
             ++ps.position
 
@@ -270,7 +277,7 @@ module MonadicParser {
     export function EOS() : Parser<void> {
         return parser ((ps : ParserState) => { 
             if (!ps.isEOS()) {
-                ps.fail<void>()
+                return ps.fail<void>()
             }
 
             return ps.succeed<void>(undefined)
@@ -305,13 +312,13 @@ module MonadicParser {
         })
     }
 
-    export function satisfy(satisfy : (string, number) => boolean) : Parser<string> {
+    export function satisfy(satisfy : Satisfy) : Parser<number> {
         return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
 
-            var ch = ps.text[ps.position]
+            var ch = ps.text.charCodeAt(ps.position)
 
             if (!satisfy(ch,0)) {
                 ps.fail<string>()
@@ -323,20 +330,29 @@ module MonadicParser {
         })
     }
 
-    export function satisfyMany(satisfy : (string, number) => boolean) : Parser<string> {
+    export function satisfyMany(satisfy : Satisfy) : Parser<string> {
         return parser ((ps : ParserState) => { return ps.succeed(ps.advance(satisfy)) })
     }
 
-    export function skipSatisfyMany(satisfy : (string, number) => boolean) : Parser<number> {
+    export function skipSatisfyMany(satisfy : Satisfy) : Parser<number> {
         return parser ((ps : ParserState) => { return ps.succeed(ps.skipAdvance(satisfy)) })
     }
 
-    export function satisyWhitespace(str : string, pos : number) {
-        return str === " " || str === "\t" || str === "\r" || str === "\n" 
+    export function satisyWhitespace(ch : number, pos : number) {
+        switch(ch)
+        {
+        case 0x09:  // Tab
+        case 0x0A:  // LF
+        case 0x0D:  // CR
+        case 0x20:  // Space
+            return true
+        default:
+            return false
+        }
     }
 
-    export function satisyTab(str : string, pos : number) {
-        return str === "\t"
+    export function satisyTab(ch : number, pos : number) {
+        return ch === 0x09 // Tab
     }
 
     export function skipString(str : string) : Parser<void> {
@@ -346,10 +362,10 @@ module MonadicParser {
             var ss = str
 
             var result = ps.skipAdvance((s, pos) => {
-                return pos < ss.length && ss.charCodeAt(pos) === s.charCodeAt(pos)
+                return pos < ss.length && ss.charCodeAt(pos) === s
                 })
 
-            if (result = ss.length) {
+            if (result === ss.length) {
                 return ps.succeed<void>(undefined)
             } else {
                 ps.restore(snapshot)
@@ -373,15 +389,15 @@ module MonadicParser {
         })
     }
 
-    export function manyString(p : Parser<string>) : Parser<string> {
+    export function manyString(p : Parser<number>) : Parser<string> {
         return parser ((ps : ParserState) => { 
 
             var result = ""
 
-            var pResult : ParseResult<string>
+            var pResult : ParseResult<number>
 
             while((pResult = p.parse(ps)).success) {
-                result += pResult.value
+                result += String.fromCharCode(pResult.value)
             }
 
             return ps.succeed(result)
@@ -423,5 +439,9 @@ module MonadicParser {
 
             return ps.succeed(tabs)
         })
+    }
+
+    export function circular<T>() : Parser<T> {
+        return parser<T> (null)
     }
 }

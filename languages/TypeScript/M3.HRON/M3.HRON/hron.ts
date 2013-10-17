@@ -106,106 +106,81 @@ module HRON {
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
 
-    function whitespace() : mp.Parser<string> {
-        return mp.satisfy(mp.satisyWhitespace)
-    }
+    var whitespace = mp.satisfy(mp.satisyWhitespace)
 
-    function emptyString() : mp.Parser<string> {
-        return mp.manyString(whitespace().except(mp.EOL()))
-    }
+    var emptyString = mp.manyString(whitespace.except(mp.EOL()))
 
-    function string_() : mp.Parser<string> {
-        return mp.manyString(mp.anyChar().except(mp.EOL()))
-    }
+    var string_ = mp.manyString(mp.anyChar().except(mp.EOL()))
 
-    function commentString() : mp.Parser<string> {
-        return mp.anyIndention()
+    var commentString = mp.anyIndention()
                 .keepLeft(mp.skipString("#"))
-                .keepRight(string_())
-    }
+                .keepRight(string_)
 
-    function preprocessor() : mp.Parser<string> {
-        return mp.skipString("!")
-                .keepRight(string_())
+    var preprocessor = mp.skipString("!")
+                .keepRight(string_)
                 .keepLeft(mp.EOL())
-    }
 
-    function preprocessors() : mp.Parser<string[]> {
-        return mp.many(preprocessor())
-    }
+    var preprocessors = mp.many(preprocessor)
 
-    function emptyLine() : mp.Parser<string> {
-        return emptyLine().keepLeft(mp.EOL())
-    }
+    var emptyLine = emptyString.keepLeft(mp.EOL())
 
-    function commentLine() : mp.Parser<string> {
-        return commentString().keepLeft(mp.EOL())
-    }
+    var commentLine = commentString.keepLeft(mp.EOL())
 
-    function nonEmptyLine() : mp.Parser<string> {
-        return mp.indention()
-                .keepRight(string_())
+    var nonEmptyLine = mp.indention()
+                .keepRight(string_)
                 .keepLeft(mp.EOL())
-    }
 
-    function valueLine() : mp.Parser<string> {
-        return mp.choice(
-            nonEmptyLine()  , 
-            commentLine()   , 
-            emptyLine()
+    var valueLine = mp.choice(
+            nonEmptyLine    , 
+            commentLine     , 
+            emptyLine
             )
-    }
 
-    function valueLines() : mp.Parser<string[]> {
-        return mp.many(valueLine().except(mp.EOL()))
-    }
+    var valueLines = mp.many(valueLine.except(mp.EOL()))
 
-    function value() : mp.Parser<HRON> {
-        var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_().keepLeft(mp.EOL())))
-        var plines = mp.indent().keepRight(valueLines().keepLeft(mp.dedent()))
+    var value : mp.Parser<HRON> = () => {
+        var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_.keepLeft(mp.EOL())))
+        var plines = mp.indent().keepRight(valueLines.keepLeft(mp.dedent()))
 
         return pname
                 .combine(plines)
                 .transform((c : {v0 : string; v1 : string[]}) => {return new HRONValue(c.v0, c.v1)})
-    }
+        }()
 
-    function empty() : mp.Parser<HRON> {
-        return emptyString()
-                .keepLeft(mp.EOL())
-                .transform((c : string) => {return new HRONEmpty()})
-    }
+    var empty : mp.Parser<HRON> = emptyString
+            .keepLeft(mp.EOL())
+            .transform((c : string) => {return new HRONEmpty()})
 
-    function comment() : mp.Parser<HRON> {
-        return commentString()
-                .keepLeft(mp.EOL())
-                .transform((c : string) => {return new HRONComment(c)})
-    }
+    var comment : mp.Parser<HRON> = commentString
+            .keepLeft(mp.EOL())
+            .transform((c : string) => {return new HRONComment(c)})
 
-    function object() : mp.Parser<HRON> {
-        var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_().keepLeft(mp.EOL())))
-        var pobjects = mp.indent().keepRight(members().keepLeft(mp.dedent()))
+    // object uses members and members uses object implicitly
+    // circular() is used to break circular references
+    var members = mp.circular<HRON[]>()
+
+    var object : mp.Parser<HRON> = () => {
+        var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_.keepLeft(mp.EOL())))
+        var pobjects = mp.indent().keepRight(members.keepLeft(mp.dedent()))
         return pname
                 .combine(pobjects)
                 .transform((c : {v0 : string; v1 : HRON[]}) => {return new HRONObject(c.v0, c.v1)})
-    }
+        }()
 
-    function member() : mp.Parser<HRON> {
-        return mp.choice (value(), object(), comment(), empty ())
-    }
+    var member = mp.choice (value, object, comment, empty)
 
-    function members() : mp.Parser<HRON[]> {
-        return mp.many(member().except(mp.EOS()))
-    }
+    var membersImpl = mp.many(member.except(mp.EOS()))
 
-    function hron() : mp.Parser<HRONDocument> {
-        return preprocessors().combine(members())
+    var hron = () => {
+        // Sets up the circular dependency
+        members.parse = membersImpl.parse
+
+        return preprocessors.combine(members)
             .transform((c : {v0 : string[]; v1 : HRON[]}) => {return new HRONDocument(c.v0, c.v1)})
-    }
-
-    var parserForHRON = hron()
+        }()
 
     export function parseHron(s : string) : {doc : HRONDocument; stop : number} {
-        var result = mp.parse(parserForHRON, s)
+        var result = mp.parse(hron, s)
         if (result.success) {
             return {doc : result.value, stop : result.state.position}
         } else {

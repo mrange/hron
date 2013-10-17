@@ -74,97 +74,72 @@ var HRON;
 
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
-    function whitespace() {
-        return mp.satisfy(mp.satisyWhitespace);
-    }
+    var whitespace = mp.satisfy(mp.satisyWhitespace);
 
-    function emptyString() {
-        return mp.manyString(whitespace().except(mp.EOL()));
-    }
+    var emptyString = mp.manyString(whitespace.except(mp.EOL()));
 
-    function string_() {
-        return mp.manyString(mp.anyChar().except(mp.EOL()));
-    }
+    var string_ = mp.manyString(mp.anyChar().except(mp.EOL()));
 
-    function commentString() {
-        return mp.anyIndention().keepLeft(mp.skipString("#")).keepRight(string_());
-    }
+    var commentString = mp.anyIndention().keepLeft(mp.skipString("#")).keepRight(string_);
 
-    function preprocessor() {
-        return mp.skipString("!").keepRight(string_()).keepLeft(mp.EOL());
-    }
+    var preprocessor = mp.skipString("!").keepRight(string_).keepLeft(mp.EOL());
 
-    function preprocessors() {
-        return mp.many(preprocessor());
-    }
+    var preprocessors = mp.many(preprocessor);
 
-    function emptyLine() {
-        return emptyLine().keepLeft(mp.EOL());
-    }
+    var emptyLine = emptyString.keepLeft(mp.EOL());
 
-    function commentLine() {
-        return commentString().keepLeft(mp.EOL());
-    }
+    var commentLine = commentString.keepLeft(mp.EOL());
 
-    function nonEmptyLine() {
-        return mp.indention().keepRight(string_()).keepLeft(mp.EOL());
-    }
+    var nonEmptyLine = mp.indention().keepRight(string_).keepLeft(mp.EOL());
 
-    function valueLine() {
-        return mp.choice(nonEmptyLine(), commentLine(), emptyLine());
-    }
+    var valueLine = mp.choice(nonEmptyLine, commentLine, emptyLine);
 
-    function valueLines() {
-        return mp.many(valueLine().except(mp.EOL()));
-    }
+    var valueLines = mp.many(valueLine.except(mp.EOL()));
 
-    function value() {
-        var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_().keepLeft(mp.EOL())));
-        var plines = mp.indent().keepRight(valueLines().keepLeft(mp.dedent()));
+    var value = (function () {
+        var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_.keepLeft(mp.EOL())));
+        var plines = mp.indent().keepRight(valueLines.keepLeft(mp.dedent()));
 
         return pname.combine(plines).transform(function (c) {
             return new HRONValue(c.v0, c.v1);
         });
-    }
+    })();
 
-    function empty() {
-        return emptyString().keepLeft(mp.EOL()).transform(function (c) {
-            return new HRONEmpty();
-        });
-    }
+    var empty = emptyString.keepLeft(mp.EOL()).transform(function (c) {
+        return new HRONEmpty();
+    });
 
-    function comment() {
-        return commentString().keepLeft(mp.EOL()).transform(function (c) {
-            return new HRONComment(c);
-        });
-    }
+    var comment = commentString.keepLeft(mp.EOL()).transform(function (c) {
+        return new HRONComment(c);
+    });
 
-    function object() {
-        var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_().keepLeft(mp.EOL())));
-        var pobjects = mp.indent().keepRight(members().keepLeft(mp.dedent()));
+    // object uses members and members uses object implicitly
+    // circular() is used to break circular references
+    var members = mp.circular();
+
+    var object = (function () {
+        var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_.keepLeft(mp.EOL())));
+        var pobjects = mp.indent().keepRight(members.keepLeft(mp.dedent()));
         return pname.combine(pobjects).transform(function (c) {
             return new HRONObject(c.v0, c.v1);
         });
-    }
+    })();
 
-    function member() {
-        return mp.choice(value(), object(), comment(), empty());
-    }
+    var member = mp.choice(value, object, comment, empty);
 
-    function members() {
-        return mp.many(member().except(mp.EOS()));
-    }
+    var membersImpl = mp.many(member.except(mp.EOS()));
 
-    function hron() {
-        return preprocessors().combine(members()).transform(function (c) {
+    var hron = (function () {
+        // Sets up the circular dependency
+        members.parse = membersImpl.parse;
+
+        return preprocessors.combine(members).transform(function (c) {
             return new HRONDocument(c.v0, c.v1);
         });
-    }
-
-    var parserForHRON = hron();
+    })();
 
     function parseHron(s) {
-        var result = mp.parse(parserForHRON, s);
+        var result = mp.parse(hron, s);
         if (result.success) {
             return { doc: result.value, stop: result.state.position };
         } else {
