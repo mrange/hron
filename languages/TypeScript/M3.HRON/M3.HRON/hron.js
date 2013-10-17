@@ -123,6 +123,52 @@ var HRON;
     })();
     HRON.HRONSerializer = HRONSerializer;
 
+    var HRONObjectBuilder = (function () {
+        function HRONObjectBuilder() {
+            this.hron = {};
+        }
+        HRONObjectBuilder.prototype.visitDocument = function (preprocessors, members) {
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter];
+                member.apply(this);
+            }
+        };
+
+        HRONObjectBuilder.prototype.visitValue = function (name, lines) {
+            var sb = new mp.StringBuilder();
+
+            for (var iter = 0; iter < lines.length; ++iter) {
+                var line = lines[iter];
+
+                sb.append(line).newLine();
+            }
+
+            this.hron[name] = sb.toString();
+        };
+
+        HRONObjectBuilder.prototype.visitEmpty = function () {
+        };
+
+        HRONObjectBuilder.prototype.visitComment = function (comment) {
+        };
+
+        HRONObjectBuilder.prototype.visitObject = function (name, members) {
+            var parent = this.hron;
+
+            this.hron = {};
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter];
+                member.apply(this);
+            }
+
+            parent[name] = this.hron;
+            this.hron = parent;
+        };
+        return HRONObjectBuilder;
+    })();
+    HRON.HRONObjectBuilder = HRONObjectBuilder;
+
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
     var whitespace = mp.satisfy(mp.satisyWhitespace);
@@ -199,11 +245,18 @@ var HRON;
     }
     HRON.parseHron = parseHron;
 
-    function writeHRON(doc) {
+    function toString(doc) {
         var v = new HRONSerializer();
         doc.apply(v);
         return v.hron.toString();
     }
-    HRON.writeHRON = writeHRON;
+    HRON.toString = toString;
+
+    function toObject(doc) {
+        var v = new HRONObjectBuilder();
+        doc.apply(v);
+        return v.hron;
+    }
+    HRON.toObject = toObject;
 })(HRON || (HRON = {}));
 //# sourceMappingURL=hron.js.map

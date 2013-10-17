@@ -179,6 +179,52 @@ module HRON {
 
     }
 
+    export class HRONObjectBuilder implements HRONVisitor {
+        public hron : any = {}
+
+        visitDocument(preprocessors : string[], members : HRON[]) : void {
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter]
+                member.apply(this);
+            }
+        }
+
+        visitValue(name : string, lines : string[]) : void {
+            var sb = new mp.StringBuilder()
+
+            for (var iter = 0; iter < lines.length; ++iter) {
+                var line = lines[iter]
+
+                sb.append(line).newLine()
+            }
+
+            this.hron[name] = sb.toString()
+
+        }
+
+        visitEmpty() : void {
+        }
+
+        visitComment(comment : string) : void {
+        }
+
+        visitObject(name : string, members : HRON[]) : void {
+
+            var parent = this.hron
+
+            this.hron = {}
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter]
+                member.apply(this);
+            }
+
+            parent[name] = this.hron
+            this.hron = parent
+        }
+
+    }
+
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
 
@@ -264,11 +310,16 @@ module HRON {
         }
     }
 
-    export function writeHRON(doc : HRONDocument) : string {
+    export function toString(doc : HRONDocument) : string {
         var v = new HRONSerializer()
         doc.apply(v)
         return v.hron.toString()
     }
 
+    export function toObject(doc : HRONDocument) : any {
+        var v = new HRONObjectBuilder()
+        doc.apply(v)
+        return v.hron
+    }
 
 }

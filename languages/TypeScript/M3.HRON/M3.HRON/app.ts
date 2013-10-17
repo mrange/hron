@@ -8,7 +8,8 @@ window.onload = () => {
 
             var result = HRON.parseHron(hron)
 
-            var asString = HRON.writeHRON(result.doc)
+            var asString = HRON.toString(result.doc)
+            var asObject = HRON.toObject(result.doc)
 
             alert(asString)
         }
