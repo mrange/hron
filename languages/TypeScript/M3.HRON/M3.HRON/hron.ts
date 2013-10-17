@@ -17,7 +17,7 @@ module HRON {
 
     import mp               = MonadicParser
 
-    interface HRONVisitor {
+    export interface HRONVisitor {
         VisitDocument(preprocessors : string[], members : HRON[]) : void;
         VisitValue(name : string, lines : string[]) : void;
         VisitEmpty() : void;
@@ -25,11 +25,11 @@ module HRON {
         VisitObject(name : string, members : HRON[]) : void;
     }
 
-    interface HRON {
+    export interface HRON {
         apply(visitor : HRONVisitor) : void;
     }
 
-    class HRONValue implements HRON {
+    export class HRONValue implements HRON {
         name            : string
         lines           : string[]
 
@@ -47,14 +47,14 @@ module HRON {
         }
     }
 
-    class HRONEmpty implements HRON {
+    export class HRONEmpty implements HRON {
 
         apply(visitor : HRONVisitor) : void {
             visitor.VisitEmpty()
         }
     }
 
-    class HRONComment implements HRON {
+    export class HRONComment implements HRON {
         line            : string
 
         constructor (
@@ -69,7 +69,7 @@ module HRON {
         }
     }
 
-    class HRONObject implements HRON {
+    export class HRONObject implements HRON {
         name            : string
         members         : HRON[]
 
@@ -86,7 +86,7 @@ module HRON {
         }
     }
 
-    class HRONDocument implements HRON {
+    export class HRONDocument implements HRON {
         preprocessors   : string[]
         members         : HRON[]
 
@@ -119,15 +119,13 @@ module HRON {
     }
 
     function commentString() : mp.Parser<string> {
-        return 
-            mp.anyIndention()
+        return mp.anyIndention()
                 .keepLeft(mp.skipString("#"))
                 .keepRight(string_())
     }
 
     function preprocessor() : mp.Parser<string> {
-        return 
-            mp.skipString("!")
+        return mp.skipString("!")
                 .keepRight(string_())
                 .keepLeft(mp.EOL())
     }
@@ -145,8 +143,7 @@ module HRON {
     }
 
     function nonEmptyLine() : mp.Parser<string> {
-        return 
-            mp.indention()
+        return mp.indention()
                 .keepRight(string_())
                 .keepLeft(mp.EOL())
     }
@@ -167,22 +164,19 @@ module HRON {
         var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_().keepLeft(mp.EOL())))
         var plines = mp.indent().keepRight(valueLines().keepLeft(mp.dedent()))
 
-        return
-            pname
+        return pname
                 .combine(plines)
                 .transform(function (c : {v0 : string; v1 : string[]}) {return new HRONValue(c.v0, c.v1)})
     }
 
     function empty() : mp.Parser<HRON> {
-        return 
-            emptyString()
+        return emptyString()
                 .keepLeft(mp.EOL())
                 .transform(function (c : string) {return new HRONEmpty()})
     }
 
     function comment() : mp.Parser<HRON> {
-        return 
-            commentString()
+        return commentString()
                 .keepLeft(mp.EOL())
                 .transform(function (c : string) {return new HRONComment(c)})
     }
@@ -190,8 +184,7 @@ module HRON {
     function object() : mp.Parser<HRON> {
         var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_().keepLeft(mp.EOL())))
         var pobjects = mp.indent().keepRight(members().keepLeft(mp.dedent()))
-        return
-            pname
+        return pname
                 .combine(pobjects)
                 .transform(function (c : {v0 : string; v1 : HRON[]}) {return new HRONObject(c.v0, c.v1)})
     }
@@ -211,7 +204,7 @@ module HRON {
 
     var parserForHRON = hron()
 
-    function parseHron(s : string) : {doc : HRONDocument; stop : number} {
+    export function parseHron(s : string) : {doc : HRONDocument; stop : number} {
         var result = mp.parse(parserForHRON, s)
         if (result.success) {
             return {doc : result.value, stop : result.state.position}

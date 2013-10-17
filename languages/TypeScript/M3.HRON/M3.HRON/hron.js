@@ -25,6 +25,7 @@ var HRON;
         };
         return HRONValue;
     })();
+    HRON.HRONValue = HRONValue;
 
     var HRONEmpty = (function () {
         function HRONEmpty() {
@@ -34,6 +35,7 @@ var HRON;
         };
         return HRONEmpty;
     })();
+    HRON.HRONEmpty = HRONEmpty;
 
     var HRONComment = (function () {
         function HRONComment(line) {
@@ -44,6 +46,7 @@ var HRON;
         };
         return HRONComment;
     })();
+    HRON.HRONComment = HRONComment;
 
     var HRONObject = (function () {
         function HRONObject(name, members) {
@@ -55,6 +58,7 @@ var HRON;
         };
         return HRONObject;
     })();
+    HRON.HRONObject = HRONObject;
 
     var HRONDocument = (function () {
         function HRONDocument(preprocessors, members) {
@@ -66,6 +70,7 @@ var HRON;
         };
         return HRONDocument;
     })();
+    HRON.HRONDocument = HRONDocument;
 
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
@@ -82,13 +87,11 @@ var HRON;
     }
 
     function commentString() {
-        return;
-        mp.anyIndention().keepLeft(mp.skipString("#")).keepRight(string_());
+        return mp.anyIndention().keepLeft(mp.skipString("#")).keepRight(string_());
     }
 
     function preprocessor() {
-        return;
-        mp.skipString("!").keepRight(string_()).keepLeft(mp.EOL());
+        return mp.skipString("!").keepRight(string_()).keepLeft(mp.EOL());
     }
 
     function preprocessors() {
@@ -104,8 +107,7 @@ var HRON;
     }
 
     function nonEmptyLine() {
-        return;
-        mp.indention().keepRight(string_()).keepLeft(mp.EOL());
+        return mp.indention().keepRight(string_()).keepLeft(mp.EOL());
     }
 
     function valueLine() {
@@ -120,22 +122,19 @@ var HRON;
         var pname = mp.indention().keepRight(mp.skipString("=").keepRight(string_().keepLeft(mp.EOL())));
         var plines = mp.indent().keepRight(valueLines().keepLeft(mp.dedent()));
 
-        return;
-        pname.combine(plines).transform(function (c) {
+        return pname.combine(plines).transform(function (c) {
             return new HRONValue(c.v0, c.v1);
         });
     }
 
     function empty() {
-        return;
-        emptyString().keepLeft(mp.EOL()).transform(function (c) {
+        return emptyString().keepLeft(mp.EOL()).transform(function (c) {
             return new HRONEmpty();
         });
     }
 
     function comment() {
-        return;
-        commentString().keepLeft(mp.EOL()).transform(function (c) {
+        return commentString().keepLeft(mp.EOL()).transform(function (c) {
             return new HRONComment(c);
         });
     }
@@ -143,8 +142,7 @@ var HRON;
     function object() {
         var pname = mp.indention().keepRight(mp.skipString("@").keepRight(string_().keepLeft(mp.EOL())));
         var pobjects = mp.indent().keepRight(members().keepLeft(mp.dedent()));
-        return;
-        pname.combine(pobjects).transform(function (c) {
+        return pname.combine(pobjects).transform(function (c) {
             return new HRONObject(c.v0, c.v1);
         });
     }
@@ -173,5 +171,6 @@ var HRON;
             return { doc: null, stop: result.state.position };
         }
     }
+    HRON.parseHron = parseHron;
 })(HRON || (HRON = {}));
 //# sourceMappingURL=hron.js.map
