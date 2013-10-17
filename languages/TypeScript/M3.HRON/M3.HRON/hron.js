@@ -94,41 +94,161 @@ var HRON;
         return ParseResult;
     })();
 
+    var Parser = (function () {
+        function Parser(p) {
+            this.parse = p;
+        }
+        Parser.prototype.combine = function (pOther) {
+            return parser(function (ps) {
+                var snapshot = ps.snapshot();
+
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.fail();
+                }
+
+                var pOtherResult = pOther.parse(ps);
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot);
+                    return ps.fail();
+                }
+
+                var result = { v0: pResult.value, v1: pOtherResult.value };
+
+                return ps.succeed(result);
+            });
+        };
+
+        Parser.prototype.keepLeft = function (pOther) {
+            return parser(function (ps) {
+                var snapshot = ps.snapshot();
+
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.fail();
+                }
+
+                var pOtherResult = pOther.parse(ps);
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot);
+                    return ps.fail();
+                }
+
+                return ps.succeed(pResult.value);
+            });
+        };
+
+        Parser.prototype.keepRight = function (pOther) {
+            return parser(function (ps) {
+                var snapshot = ps.snapshot();
+
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.fail();
+                }
+
+                var pOtherResult = pOther.parse(ps);
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot);
+                    return ps.fail();
+                }
+
+                return ps.succeed(pOtherResult.value);
+            });
+        };
+
+        Parser.prototype.except = function (pOther) {
+            return parser(function (ps) {
+                var snapshot = ps.snapshot();
+
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.fail();
+                }
+
+                var pOtherResult = pOther.parse(ps);
+
+                if (pOtherResult.success) {
+                    ps.restore(snapshot);
+                    return ps.fail();
+                }
+
+                return ps.succeed(pResult.value);
+            });
+        };
+
+        Parser.prototype.opt = function () {
+            return parser(function (ps) {
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.succeed(null);
+                }
+
+                return ps.succeed(pResult.value);
+            });
+        };
+
+        Parser.prototype.transform = function (transform) {
+            return parser(function (ps) {
+                var pResult = this.parse(ps);
+
+                if (!pResult.success) {
+                    return ps.succeed(null);
+                }
+
+                return ps.succeed(transform(pResult.value));
+            });
+        };
+        return Parser;
+    })();
+
+    function parser(p) {
+        return new Parser(p);
+    }
+
     function parse(p, s) {
         var ps = new ParserState(s);
-        return p(ps);
+        return p.parse(ps);
     }
 
     function success(value) {
-        return function (ps) {
+        return parser(function (ps) {
             return ps.succeed(value);
-        };
+        });
     }
 
     function fail() {
-        return function (ps) {
+        return parser(function (ps) {
             return ps.fail();
-        };
+        });
     }
 
     function indent() {
-        return function (ps) {
+        return parser(function (ps) {
             ps.increaseIndent();
             return ps.succeed(undefined);
-        };
+        });
     }
 
     function dedent() {
-        return function (ps) {
+        return parser(function (ps) {
             if (!ps.decreaseIndent()) {
                 return ps.fail();
             }
             return ps.succeed(undefined);
-        };
+        });
     }
 
     function anyChar() {
-        return function (ps) {
+        return parser(function (ps) {
             if (ps.isEOS()) {
                 ps.fail();
             }
@@ -138,21 +258,21 @@ var HRON;
             ++ps.position;
 
             return ps.succeed(ch);
-        };
+        });
     }
 
     function EOS() {
-        return function (ps) {
+        return parser(function (ps) {
             if (!ps.isEOS()) {
                 ps.fail();
             }
 
             return ps.succeed(undefined);
-        };
+        });
     }
 
     function EOL() {
-        return function (ps) {
+        return parser(function (ps) {
             if (ps.isEOS()) {
                 return ps.succeed(undefined);
             }
@@ -176,11 +296,11 @@ var HRON;
             }
 
             return ps.fail();
-        };
+        });
     }
 
     function satisfy(satisfy) {
-        return function (ps) {
+        return parser(function (ps) {
             if (ps.isEOS()) {
                 ps.fail();
             }
@@ -194,19 +314,19 @@ var HRON;
             ++ps.position;
 
             return ps.succeed(ch);
-        };
+        });
     }
 
     function satisfyMany(satisfy) {
-        return function (ps) {
+        return parser(function (ps) {
             return ps.succeed(ps.advance(satisfy));
-        };
+        });
     }
 
     function skipSatisfyMany(satisfy) {
-        return function (ps) {
+        return parser(function (ps) {
             return ps.succeed(ps.skipAdvance(satisfy));
-        };
+        });
     }
 
     function satisyWhitespace(str, pos) {
@@ -218,7 +338,7 @@ var HRON;
     }
 
     function skipString(str) {
-        return function (ps) {
+        return parser(function (ps) {
             var snapshot = ps.snapshot();
 
             var ss = str;
@@ -233,145 +353,35 @@ var HRON;
                 ps.restore(snapshot);
                 return ps.fail();
             }
-        };
-    }
-
-    function combine(p0, p1) {
-        return function (ps) {
-            var snapshot = ps.snapshot();
-
-            var p0Result = p0(ps);
-
-            if (!p0Result.success) {
-                return ps.fail();
-            }
-
-            var p1Result = p1(ps);
-
-            if (!p1Result.success) {
-                ps.restore(snapshot);
-                return ps.fail();
-            }
-
-            var result = { v0: p0Result.value, v1: p1Result.value };
-
-            return ps.succeed(result);
-        };
-    }
-
-    function keepLeft(p0, p1) {
-        return function (ps) {
-            var snapshot = ps.snapshot();
-
-            var p0Result = p0(ps);
-
-            if (!p0Result.success) {
-                return ps.fail();
-            }
-
-            var p1Result = p1(ps);
-
-            if (!p1Result.success) {
-                ps.restore(snapshot);
-                return ps.fail();
-            }
-
-            return ps.succeed(p0Result.value);
-        };
-    }
-
-    function keepRight(p0, p1) {
-        return function (ps) {
-            var snapshot = ps.snapshot();
-
-            var p0Result = p0(ps);
-
-            if (!p0Result.success) {
-                return ps.fail();
-            }
-
-            var p1Result = p1(ps);
-
-            if (!p1Result.success) {
-                ps.restore(snapshot);
-                return ps.fail();
-            }
-
-            return ps.succeed(p1Result.value);
-        };
-    }
-
-    function except(p0, p1) {
-        return function (ps) {
-            var snapshot = ps.snapshot();
-
-            var p0Result = p0(ps);
-
-            if (!p0Result.success) {
-                return ps.fail();
-            }
-
-            var p1Result = p1(ps);
-
-            if (p1Result.success) {
-                ps.restore(snapshot);
-                return ps.fail();
-            }
-
-            return ps.succeed(p0Result.value);
-        };
+        });
     }
 
     function many(p) {
-        return function (ps) {
+        return parser(function (ps) {
             var result = [];
 
             var pResult;
 
-            while ((pResult = p(ps)).success) {
+            while ((pResult = p.parse(ps)).success) {
                 result.push(pResult.value);
             }
 
             return ps.succeed(result);
-        };
+        });
     }
 
     function manyString(p) {
-        return function (ps) {
+        return parser(function (ps) {
             var result = "";
 
             var pResult;
 
-            while ((pResult = p(ps)).success) {
+            while ((pResult = p.parse(ps)).success) {
                 result += pResult.value;
             }
 
             return ps.succeed(result);
-        };
-    }
-
-    function opt(p) {
-        return function (ps) {
-            var pResult = p(ps);
-
-            if (!pResult.success) {
-                return ps.succeed(null);
-            }
-
-            return ps.succeed(pResult.value);
-        };
-    }
-
-    function transform(p, transform) {
-        return function (ps) {
-            var pResult = p(ps);
-
-            if (!pResult.success) {
-                return ps.succeed(null);
-            }
-
-            return ps.succeed(transform(pResult.value));
-        };
+        });
     }
 
     function choice() {
@@ -379,11 +389,11 @@ var HRON;
         for (var _i = 0; _i < (arguments.length - 0); _i++) {
             choices[_i] = arguments[_i + 0];
         }
-        return function (ps) {
+        return parser(function (ps) {
             for (var iter = 0; iter < choices.length; ++iter) {
-                var parser = choices[iter];
+                var p = choices[iter];
 
-                var pResult = parser(ps);
+                var pResult = p.parse(ps);
 
                 if (pResult.success) {
                     return ps.succeed(pResult.value);
@@ -391,7 +401,7 @@ var HRON;
             }
 
             return ps.fail();
-        };
+        });
     }
 
     function anyIndention() {
@@ -399,7 +409,7 @@ var HRON;
     }
 
     function indention() {
-        return function (ps) {
+        return parser(function (ps) {
             var snapshot = ps.snapshot();
 
             var tabs = ps.skipAdvance(satisyTab);
@@ -410,7 +420,7 @@ var HRON;
             }
 
             return ps.succeed(tabs);
-        };
+        });
     }
 
     var HRONValue = (function () {
@@ -471,19 +481,21 @@ var HRON;
     }
 
     function emptyString() {
-        return manyString(except(whitespace(), EOL()));
+        return manyString(whitespace().except(EOL()));
     }
 
     function string_() {
-        return manyString(except(anyChar(), EOL()));
+        return manyString(anyChar().except(EOL()));
     }
 
     function commentString() {
-        return keepRight(keepLeft(anyIndention(), skipString("#")), string_());
+        return;
+        anyIndention().keepLeft(skipString("#")).keepRight(string_());
     }
 
     function preprocessor() {
-        return keepLeft(keepRight(skipString("!"), string_()), EOL());
+        return;
+        skipString("!").keepRight(string_()).keepLeft(EOL());
     }
 
     function preprocessors() {
@@ -491,15 +503,16 @@ var HRON;
     }
 
     function emptyLine() {
-        return keepLeft(emptyLine(), EOL());
+        return emptyLine().keepLeft(EOL());
     }
 
     function commentLine() {
-        return keepLeft(commentString(), EOL());
+        return commentString().keepLeft(EOL());
     }
 
     function nonEmptyLine() {
-        return keepLeft(keepRight(indention(), string_()), EOL());
+        return;
+        indention().keepRight(string_()).keepLeft(EOL());
     }
 
     function valueLine() {
@@ -507,37 +520,38 @@ var HRON;
     }
 
     function valueLines() {
-        return many(except(valueLine(), EOL()));
+        return many(valueLine().except(EOL()));
     }
 
     function value() {
-        var p = keepRight(indention(), keepRight(skipString("="), combine(keepLeft(string_(), EOL()), keepRight(indent(), keepLeft(valueLines(), dedent())))));
+        var pname = indention().keepRight(skipString("=").keepRight(string_().keepLeft(EOL())));
+        var plines = indent().keepRight(valueLines().keepLeft(dedent()));
 
-        return transform(p, function (c) {
+        return;
+        pname.combine(plines).transform(function (c) {
             return new HRONValue(c.v0, c.v1);
         });
     }
 
     function empty() {
-        var p = keepLeft(emptyString(), EOL());
-
-        return transform(p, function (c) {
+        return;
+        emptyString().keepLeft(EOL()).transform(function (c) {
             return new HRONEmpty();
         });
     }
 
     function comment() {
-        var p = keepLeft(commentString(), EOL());
-
-        return transform(p, function (c) {
+        return;
+        commentString().keepLeft(EOL()).transform(function (c) {
             return new HRONComment(c);
         });
     }
 
     function object() {
-        var p = keepRight(indention(), keepRight(skipString("@"), combine(keepLeft(string_(), EOL()), keepRight(indent(), keepLeft(members(), dedent())))));
-
-        return transform(p, function (c) {
+        var pname = indention().keepRight(skipString("@").keepRight(string_().keepLeft(EOL())));
+        var pobjects = indent().keepRight(members().keepLeft(dedent()));
+        return;
+        pname.combine(pobjects).transform(function (c) {
             return new HRONObject(c.v0, c.v1);
         });
     }
@@ -547,7 +561,7 @@ var HRON;
     }
 
     function members() {
-        return many(except(member(), EOS()));
+        return many(member().except(EOS()));
     }
 })(HRON || (HRON = {}));
 //# sourceMappingURL=hron.js.map

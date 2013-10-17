@@ -99,42 +99,162 @@ module HRON {
         value   : T
     }
 
-    interface Parser<T> {
-        (ps : ParserState) : ParseResult<T>
+    class Parser<T> {
+        parse       :   (ps : ParserState) => ParseResult<T>
+
+        constructor (p : (ps : ParserState) => ParseResult<T>) {
+            this.parse = p
+        }
+
+        combine<TOther>(pOther : Parser<TOther>) : Parser<{v0 : T; v1 : TOther}> {
+            return parser (function (ps : ParserState) { 
+                var snapshot = ps.snapshot()
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.fail<{v0 : T; v1 : TOther}>()
+                }
+
+                var pOtherResult = pOther.parse(ps)
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot)
+                    return ps.fail<{v0 : T; v1 : TOther}>()
+                }
+
+                var result = {v0 : pResult.value, v1 : pOtherResult.value}
+
+                return ps.succeed(result)
+            })
+        }
+
+        keepLeft<TOther>(pOther : Parser<TOther>) : Parser<T> {
+            return parser (function (ps : ParserState) { 
+                var snapshot = ps.snapshot()
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.fail<T>()
+                }
+
+                var pOtherResult = pOther.parse(ps)
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot)
+                    return ps.fail<T>()
+                }
+
+                return ps.succeed(pResult.value)
+            })
+        }
+
+        keepRight<TOther>(pOther : Parser<TOther>) : Parser<TOther> {
+            return parser (function (ps : ParserState) { 
+                var snapshot = ps.snapshot()
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.fail<TOther>()
+                }
+
+                var pOtherResult = pOther.parse(ps)
+
+                if (!pOtherResult.success) {
+                    ps.restore(snapshot)
+                    return ps.fail<TOther>()
+                }
+
+                return ps.succeed(pOtherResult.value)
+            })
+        }
+
+        except<TOther>(pOther : Parser<TOther>) : Parser<T> {
+            return parser (function (ps : ParserState) { 
+                var snapshot = ps.snapshot()
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.fail<T>()
+                }
+
+                var pOtherResult = pOther.parse(ps)
+
+                if (pOtherResult.success) {
+                    ps.restore(snapshot)
+                    return ps.fail<T>()
+                }
+
+                return ps.succeed(pResult.value)
+            })
+        }
+
+        opt() : Parser<T> {
+            return parser (function (ps : ParserState) { 
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.succeed<T>(null)
+                }
+
+                return ps.succeed(pResult.value)
+            })
+        }
+
+        transform<TTo>(transform : (T) => TTo) : Parser<TTo> {
+            return parser (function (ps : ParserState) { 
+
+                var pResult = this.parse(ps)
+
+                if (!pResult.success) {
+                    return ps.succeed<TTo>(null)
+                }
+
+                return ps.succeed(transform(pResult.value))
+            })
+        }
+    }
+
+    function parser<T> (p : (ps : ParserState) => ParseResult<T>) {
+        return new Parser<T> (p)
     }
 
     function parse<T>(p : Parser<T>, s : string) : ParseResult<T> {
         var ps = new ParserState(s)
-        return p(ps)
+        return p.parse(ps)
     }
 
     function success<T>(value : T) : Parser<T> {
-        return function (ps : ParserState) { return ps.succeed(value) }
+        return parser (function (ps : ParserState) { return ps.succeed(value) })
     }
 
     function fail<T>() : Parser<T> {
-        return function (ps : ParserState) { return ps.fail<T>() }
+        return parser (function (ps : ParserState) { return ps.fail<T>() })
     }
 
    
     function indent() : Parser<void> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             ps.increaseIndent()
             return ps.succeed<void>(undefined)
-        }
+        })
     }
 
     function dedent() : Parser<void> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             if (!ps.decreaseIndent()) {
                 return ps.fail<void>()
             }
             return ps.succeed<void>(undefined)
-        }
+        })
     }
 
     function anyChar() : Parser<string> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
@@ -144,21 +264,21 @@ module HRON {
             ++ps.position
 
             return ps.succeed(ch)
-        }
+        })
     }
 
     function EOS() : Parser<void> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             if (!ps.isEOS()) {
                 ps.fail<void>()
             }
 
             return ps.succeed<void>(undefined)
-        }
+        })
     }
 
     function EOL() : Parser<void> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             if (ps.isEOS()) {
                 return ps.succeed<void>(undefined)
             }
@@ -182,11 +302,11 @@ module HRON {
             }
 
             return ps.fail<void>()
-        }
+        })
     }
 
     function satisfy(satisfy : (string, number) => boolean) : Parser<string> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             if (ps.isEOS()) {
                 ps.fail<string>()
             }
@@ -200,15 +320,15 @@ module HRON {
             ++ps.position
 
             return ps.succeed(ch)
-        }
+        })
     }
 
     function satisfyMany(satisfy : (string, number) => boolean) : Parser<string> {
-        return function (ps : ParserState) { return ps.succeed(ps.advance(satisfy)) }
+        return parser (function (ps : ParserState) { return ps.succeed(ps.advance(satisfy)) })
     }
 
     function skipSatisfyMany(satisfy : (string, number) => boolean) : Parser<number> {
-        return function (ps : ParserState) { return ps.succeed(ps.skipAdvance(satisfy)) }
+        return parser (function (ps : ParserState) { return ps.succeed(ps.skipAdvance(satisfy)) })
     }
 
     function satisyWhitespace(str : string, pos : number) {
@@ -219,9 +339,8 @@ module HRON {
         return str === "\t"
     }
 
-
     function skipString(str : string) : Parser<void> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             var snapshot = ps.snapshot()
 
             var ss = str
@@ -236,159 +355,46 @@ module HRON {
                 ps.restore(snapshot)
                 return ps.fail<void>()
             }
-        }
-    }
-
-    function combine<T0, T1>(p0 : Parser<T0>, p1 : Parser<T1>) : Parser<{v0 : T0; v1 : T1}> {
-        return function (ps : ParserState) { 
-            var snapshot = ps.snapshot()
-
-            var p0Result = p0(ps)
-
-            if (!p0Result.success) {
-                return ps.fail<{v0 : T0; v1 : T1}>()
-            }
-
-            var p1Result = p1(ps)
-
-            if (!p1Result.success) {
-                ps.restore(snapshot)
-                return ps.fail<{v0 : T0; v1 : T1}>()
-            }
-
-            var result = {v0 : p0Result.value, v1 : p1Result.value}
-
-            return ps.succeed(result)
-        }
-    }
-
-    function keepLeft<T0, T1>(p0 : Parser<T0>, p1 : Parser<T1>) : Parser<T0> {
-        return function (ps : ParserState) { 
-            var snapshot = ps.snapshot()
-
-            var p0Result = p0(ps)
-
-            if (!p0Result.success) {
-                return ps.fail<T0>()
-            }
-
-            var p1Result = p1(ps)
-
-            if (!p1Result.success) {
-                ps.restore(snapshot)
-                return ps.fail<T0>()
-            }
-
-            return ps.succeed(p0Result.value)
-        }
-    }
-
-    function keepRight<T0, T1>(p0 : Parser<T0>, p1 : Parser<T1>) : Parser<T1> {
-        return function (ps : ParserState) { 
-            var snapshot = ps.snapshot()
-
-            var p0Result = p0(ps)
-
-            if (!p0Result.success) {
-                return ps.fail<T1>()
-            }
-
-            var p1Result = p1(ps)
-
-            if (!p1Result.success) {
-                ps.restore(snapshot)
-                return ps.fail<T1>()
-            }
-
-            return ps.succeed(p1Result.value)
-        }
-    }
-
-    function except<T0,T1>(p0 : Parser<T0>, p1 : Parser<T1>) : Parser<T0> {
-        return function (ps : ParserState) { 
-            var snapshot = ps.snapshot()
-
-            var p0Result = p0(ps)
-
-            if (!p0Result.success) {
-                return ps.fail<T0>()
-            }
-
-            var p1Result = p1(ps)
-
-            if (p1Result.success) {
-                ps.restore(snapshot)
-                return ps.fail<T0>()
-            }
-
-            return ps.succeed(p0Result.value)
-        }
+        })
     }
 
     function many<T>(p : Parser<T>) : Parser<T[]> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
 
             var result : T[] = []
 
             var pResult : ParseResult<T>
 
-            while((pResult = p(ps)).success) {
+            while((pResult = p.parse(ps)).success) {
                 result.push(pResult.value)
             }
 
             return ps.succeed(result)
-        }
+        })
     }
 
     function manyString(p : Parser<string>) : Parser<string> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
 
             var result = ""
 
             var pResult : ParseResult<string>
 
-            while((pResult = p(ps)).success) {
+            while((pResult = p.parse(ps)).success) {
                 result += pResult.value
             }
 
             return ps.succeed(result)
-        }
+        })
     }
-
-    function opt<T>(p : Parser<T>) : Parser<T> {
-        return function (ps : ParserState) { 
-
-            var pResult = p(ps)
-
-            if (!pResult.success) {
-                return ps.succeed<T>(null)
-            }
-
-            return ps.succeed(pResult.value)
-        }
-    }
-
-    function transform<T0, T1>(p : Parser<T0>, transform : (T0) => T1) : Parser<T1> {
-        return function (ps : ParserState) { 
-
-            var pResult = p(ps)
-
-            if (!pResult.success) {
-                return ps.succeed<T1>(null)
-            }
-
-            return ps.succeed(transform(pResult.value))
-        }
-    }
-
 
     function choice<T>(... choices : Parser<T>[]) : Parser<T> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
 
             for (var iter = 0; iter < choices.length; ++iter) {
-                var parser = choices[iter]
+                var p = choices[iter]
 
-                var pResult = parser(ps)
+                var pResult = p.parse(ps)
 
                 if (pResult.success) {
                     return ps.succeed(pResult.value)
@@ -397,7 +403,7 @@ module HRON {
             }
 
             return ps.fail<T>()
-        }
+        })
     }
 
     function anyIndention() : Parser<number> {
@@ -405,7 +411,7 @@ module HRON {
     }
 
     function indention() : Parser<number> {
-        return function (ps : ParserState) { 
+        return parser (function (ps : ParserState) { 
             var snapshot = ps.snapshot()
 
             var tabs = ps.skipAdvance(satisyTab)
@@ -416,7 +422,7 @@ module HRON {
             }
 
             return ps.succeed(tabs)
-        }
+        })
     }
 
     // Defining HRON AST
@@ -508,40 +514,31 @@ module HRON {
     }
 
     // Defining HRON grammar
+
     function whitespace() : Parser<string> {
         return satisfy(satisyWhitespace)
     }
 
     function emptyString() : Parser<string> {
-        return manyString(
-            except(whitespace(), EOL())
-            )
+        return manyString(whitespace().except(EOL()))
     }
 
     function string_() : Parser<string> {
-        return manyString(
-            except(anyChar(), EOL())
-            )
+        return manyString(anyChar().except(EOL()))
     }
 
     function commentString() : Parser<string> {
-        return keepRight(
-            keepLeft(
-                anyIndention(), 
-                skipString("#")
-                )
-            , string_()
-            )
+        return 
+            anyIndention()
+                .keepLeft(skipString("#"))
+                .keepRight(string_())
     }
 
     function preprocessor() : Parser<string> {
-        return keepLeft(
-            keepRight(
-                skipString("!"), 
-                string_()
-                ), 
-            EOL()
-            )
+        return 
+            skipString("!")
+                .keepRight(string_())
+                .keepLeft(EOL())
     }
 
     function preprocessors() : Parser<string[]> {
@@ -549,120 +546,63 @@ module HRON {
     }
 
     function emptyLine() : Parser<string> {
-        return keepLeft(emptyLine(), EOL())
+        return emptyLine().keepLeft(EOL())
     }
 
     function commentLine() : Parser<string> {
-        return keepLeft(commentString(), EOL())
+        return commentString().keepLeft(EOL())
     }
 
     function nonEmptyLine() : Parser<string> {
-        return keepLeft(
-            keepRight(
-                indention(), 
-                string_()
-                ), 
-            EOL()
-            )
+        return 
+            indention()
+                .keepRight(string_())
+                .keepLeft(EOL())
     }
 
     function valueLine() : Parser<string> {
         return choice(
-            nonEmptyLine(), 
-            commentLine(), 
+            nonEmptyLine()  , 
+            commentLine()   , 
             emptyLine()
             )
     }
 
     function valueLines() : Parser<string[]> {
-        return many(
-            except(
-                valueLine(), 
-                EOL()
-                )
-            )
+        return many(valueLine().except(EOL()))
     }
 
     function value() : Parser<HRON> {
-        var p = keepRight(
-            indention(), 
-            keepRight(
-                skipString("="),
-                combine(
-                    keepLeft(
-                        string_(),
-                        EOL()
-                        ),
-                    keepRight(
-                        indent(),
-                        keepLeft(
-                            valueLines(),
-                            dedent()
-                        )
-                    )
-                )
-            )
-        )
+        var pname = indention().keepRight(skipString("=").keepRight(string_().keepLeft(EOL())))
+        var plines = indent().keepRight(valueLines().keepLeft(dedent()))
 
-        return transform(
-            p,
-            function (c : {v0 : string; v1 : string[]}) {
-                return new HRONValue(c.v0, c.v1)
-            })
+        return
+            pname
+                .combine(plines)
+                .transform(function (c : {v0 : string; v1 : string[]}) {return new HRONValue(c.v0, c.v1)})
     }
 
     function empty() : Parser<HRON> {
-        var p = keepLeft(
-            emptyString(),
-            EOL()
-        )
-
-        return transform(
-            p,
-            function (c : string) {
-                return new HRONEmpty()
-            })
+        return 
+            emptyString()
+                .keepLeft(EOL())
+                .transform(function (c : string) {return new HRONEmpty()})
     }
 
     function comment() : Parser<HRON> {
-        var p = keepLeft(
-            commentString(),
-            EOL()
-        )
-
-        return transform(
-            p,
-            function (c : string) {
-                return new HRONComment(c)
-            })
+        return 
+            commentString()
+                .keepLeft(EOL())
+                .transform(function (c : string) {return new HRONComment(c)})
     }
 
     function object() : Parser<HRON> {
-        var p = keepRight(
-            indention(), 
-            keepRight(
-                skipString("@"),
-                combine(
-                    keepLeft(
-                        string_(),
-                        EOL()
-                        ),
-                    keepRight(
-                        indent(),
-                        keepLeft(
-                            members(),
-                            dedent()
-                        )
-                    )
-                )
-            )
-        )
-
-        return transform(
-            p,
-            function (c : {v0 : string; v1 : HRON[]}) {
-                return new HRONObject(c.v0, c.v1)
-            })
+        var pname = indention().keepRight(skipString("@").keepRight(string_().keepLeft(EOL())))
+        var pobjects = indent().keepRight(members().keepLeft(dedent()))
+        return
+            pname
+                .combine(pobjects)
+                .transform(function (c : {v0 : string; v1 : HRON[]}) {return new HRONObject(c.v0, c.v1)})
     }
 
     function member() : Parser<HRON> {
@@ -670,12 +610,7 @@ module HRON {
     }
 
     function members() : Parser<HRON[]> {
-        return many(
-            except(
-                member(),
-                EOS()
-                )
-            )
+        return many(member().except(EOS()))
     }
 
 }
