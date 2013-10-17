@@ -22,6 +22,12 @@ module HRON {
         position: number
         indent  : number
 
+        constructor (s : string) {
+            this.text       = s || ""
+            this.position   = 0
+            this.indent     = 0
+        }
+
         snapshot() : Snapshot {
             return { position : this.position, indent : this.indent }
         }
@@ -55,7 +61,7 @@ module HRON {
 
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
             }
 
             this.position = pos
@@ -69,7 +75,7 @@ module HRON {
 
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
             }
 
             this.position = pos
@@ -95,6 +101,11 @@ module HRON {
 
     interface Parser<T> {
         (ps : ParserState) : ParseResult<T>
+    }
+
+    function parse<T>(p : Parser<T>, s : string) : ParseResult<T> {
+        var ps = new ParserState(s)
+        return p(ps)
     }
 
     function success<T>(value : T) : Parser<T> {
@@ -216,7 +227,7 @@ module HRON {
             var ss = str
 
             var result = ps.skipAdvance(function (s, pos) {
-                return pos < ss.length && ss.charAt(pos) === s.charAt(pos)
+                return pos < ss.length && ss.charCodeAt(pos) === s.charCodeAt(pos)
                 })
 
             if (result = ss.length) {

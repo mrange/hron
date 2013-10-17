@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
 // This source code is subject to terms and conditions of the Microsoft Public License. A
@@ -18,7 +18,10 @@ var HRON;
     })();
 
     var ParserState = (function () {
-        function ParserState() {
+        function ParserState(s) {
+            this.text = s || "";
+            this.position = 0;
+            this.indent = 0;
         }
         ParserState.prototype.snapshot = function () {
             return { position: this.position, indent: this.indent };
@@ -53,7 +56,7 @@ var HRON;
 
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
             }
 
             this.position = pos;
@@ -67,7 +70,7 @@ var HRON;
 
             var pos = begin;
 
-            for (; pos < end && satisfy(this.text.charAt(pos), pos); ++pos) {
+            for (; pos < end && satisfy(this.text.charCodeAt(pos), pos); ++pos) {
             }
 
             this.position = pos;
@@ -90,6 +93,11 @@ var HRON;
         }
         return ParseResult;
     })();
+
+    function parse(p, s) {
+        var ps = new ParserState(s);
+        return p(ps);
+    }
 
     function success(value) {
         return function (ps) {
@@ -216,7 +224,7 @@ var HRON;
             var ss = str;
 
             var result = ps.skipAdvance(function (s, pos) {
-                return pos < ss.length && ss.charAt(pos) === s.charAt(pos);
+                return pos < ss.length && ss.charCodeAt(pos) === s.charCodeAt(pos);
             });
 
             if (result = ss.length) {
