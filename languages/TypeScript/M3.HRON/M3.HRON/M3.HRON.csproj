@@ -22,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="monadicparser.ts" />
     <TypeScriptCompile Include="hron.ts" />
   </ItemGroup>
   <ItemGroup>
