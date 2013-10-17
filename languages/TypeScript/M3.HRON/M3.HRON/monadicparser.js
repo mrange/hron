@@ -11,6 +11,36 @@
 // ----------------------------------------------------------------------------------------------
 var MonadicParser;
 (function (MonadicParser) {
+    var StringBuilder = (function () {
+        function StringBuilder() {
+            this.data = [];
+        }
+        StringBuilder.prototype.indent = function (n, indent) {
+            if (typeof indent === "undefined") { indent = "\t"; }
+            for (var iter = 0; iter < n; ++iter) {
+                this.append(indent);
+            }
+
+            return this;
+        };
+
+        StringBuilder.prototype.newLine = function () {
+            return this.append("\r\n");
+        };
+
+        StringBuilder.prototype.append = function (s) {
+            this.data[this.data.length] = s || "";
+            return this;
+        };
+
+        StringBuilder.prototype.toString = function (delimiter) {
+            if (typeof delimiter === "undefined") { delimiter = ""; }
+            return this.data.join(delimiter || "");
+        };
+        return StringBuilder;
+    })();
+    MonadicParser.StringBuilder = StringBuilder;
+
     var Snapshot = (function () {
         function Snapshot() {
         }
@@ -37,7 +67,7 @@ var MonadicParser;
                 return false;
             }
 
-            --this.position;
+            --this.indent;
 
             return true;
         };
@@ -218,6 +248,24 @@ var MonadicParser;
                 return ps.succeed(transform(pResult.value));
             });
         };
+
+        // log parser is useful for debugging
+        Parser.prototype.log = function (name) {
+            var _this = this;
+            return parser(function (ps) {
+                console.info("MonadicParser: %s: begin", name);
+
+                var pResult = _this.parse(ps);
+
+                if (pResult.success) {
+                    console.info("MonadicParser: %s: success", name);
+                } else {
+                    console.info("MonadicParser: %s: failed", name);
+                }
+
+                return pResult;
+            });
+        };
         return Parser;
     })();
     MonadicParser.Parser = Parser;
@@ -268,7 +316,7 @@ var MonadicParser;
     function anyChar() {
         return parser(function (ps) {
             if (ps.isEOS()) {
-                ps.fail();
+                return ps.fail();
             }
 
             var ch = ps.text.charCodeAt(ps.position);
@@ -323,13 +371,13 @@ var MonadicParser;
     function satisfy(satisfy) {
         return parser(function (ps) {
             if (ps.isEOS()) {
-                ps.fail();
+                return ps.fail();
             }
 
             var ch = ps.text.charCodeAt(ps.position);
 
             if (!satisfy(ch, 0)) {
-                ps.fail();
+                return ps.fail();
             }
 
             ++ps.position;
@@ -398,7 +446,7 @@ var MonadicParser;
             var pResult;
 
             while ((pResult = p.parse(ps)).success) {
-                result.push(pResult.value);
+                result[result.length] = pResult.value;
             }
 
             return ps.succeed(result);
@@ -412,11 +460,13 @@ var MonadicParser;
 
             var pResult;
 
+            var data = [];
+
             while ((pResult = p.parse(ps)).success) {
-                result += String.fromCharCode(pResult.value);
+                data[data.length] = String.fromCharCode(pResult.value);
             }
 
-            return ps.succeed(result);
+            return ps.succeed(data.join(""));
         });
     }
     MonadicParser.manyString = manyString;
@@ -451,7 +501,14 @@ var MonadicParser;
         return parser(function (ps) {
             var snapshot = ps.snapshot();
 
-            var tabs = ps.skipAdvance(satisyTab);
+            if (ps.indent === 0) {
+                return ps.succeed(0);
+            }
+
+            var satisy = function (ch, pos) {
+                return pos < ps.indent && ch === 0x09;
+            };
+            var tabs = ps.skipAdvance(satisy);
 
             if (tabs !== ps.indent) {
                 ps.restore(snapshot);

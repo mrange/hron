@@ -18,11 +18,11 @@ module HRON {
     import mp               = MonadicParser
 
     export interface HRONVisitor {
-        VisitDocument(preprocessors : string[], members : HRON[]) : void;
-        VisitValue(name : string, lines : string[]) : void;
-        VisitEmpty() : void;
-        VisitComment(lin : string) : void;
-        VisitObject(name : string, members : HRON[]) : void;
+        visitDocument(preprocessors : string[], members : HRON[]) : void;
+        visitValue(name : string, lines : string[]) : void;
+        visitEmpty() : void;
+        visitComment(comment : string) : void;
+        visitObject(name : string, members : HRON[]) : void;
     }
 
     export interface HRON {
@@ -43,29 +43,29 @@ module HRON {
 
 
         apply(visitor : HRONVisitor) : void {
-            visitor.VisitValue(this.name, this.lines)
+            visitor.visitValue(this.name, this.lines)
         }
     }
 
     export class HRONEmpty implements HRON {
 
         apply(visitor : HRONVisitor) : void {
-            visitor.VisitEmpty()
+            visitor.visitEmpty()
         }
     }
 
     export class HRONComment implements HRON {
-        line            : string
+        comment         : string
 
         constructor (
-            line           : string
+            comment     : string
             ) {
-            this.line   = line
+            this.comment= comment
         }
 
 
         apply(visitor : HRONVisitor) : void {
-            visitor.VisitComment(this.line)
+            visitor.visitComment(this.comment)
         }
     }
 
@@ -82,7 +82,7 @@ module HRON {
         }
 
         apply(visitor : HRONVisitor) : void {
-            visitor.VisitObject(this.name, this.members)
+            visitor.visitObject(this.name, this.members)
         }
     }
 
@@ -99,8 +99,84 @@ module HRON {
         }
 
         apply(visitor : HRONVisitor) : void {
-            visitor.VisitDocument(this.preprocessors, this.members)
+            visitor.visitDocument(this.preprocessors, this.members)
         }
+    }
+
+    export class HRONSerializer implements HRONVisitor {
+        public hron = new mp.StringBuilder()
+
+        indent = 0 
+
+        visitDocument(preprocessors : string[], members : HRON[]) : void {
+            for (var iter = 0; iter < preprocessors.length; ++iter) {
+                var preprocessor = preprocessors[0]
+                this
+                    .hron
+                    .append("!")
+                    .append(preprocessor)
+                    .newLine()
+            }
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter]
+                member.apply(this);
+            }
+        }
+
+        visitValue(name : string, lines : string[]) : void {
+            this
+                .hron
+                .indent(this.indent)
+                .append("=")
+                .append(name)
+                .newLine()
+
+            for (var iter = 0; iter < lines.length; ++iter) {
+                var line = lines[iter]
+
+                this
+                    .hron
+                    .indent(this.indent + 1)
+                    .append(line)
+                    .newLine()
+            }
+
+        }
+
+        visitEmpty() : void {
+            this
+                .hron
+                .newLine()
+        }
+
+        visitComment(comment : string) : void {
+            this
+                .hron
+                .append("#")
+                .append(comment)
+                .newLine()
+        }
+
+        visitObject(name : string, members : HRON[]) : void {
+
+            this
+                .hron
+                .indent(this.indent)
+                .append("@")
+                .append(name)
+                .newLine()
+
+            ++this.indent
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter]
+                member.apply(this);
+            }
+
+            --this.indent
+        }
+
     }
 
     // Defining HRON grammar
@@ -167,7 +243,7 @@ module HRON {
                 .transform((c : {v0 : string; v1 : HRON[]}) => {return new HRONObject(c.v0, c.v1)})
         }()
 
-    var member = mp.choice (value, object, comment, empty)
+    var member = mp.choice (value.log("value"), object.log("object"), comment.log("comment"), empty.log("empty"))
 
     var membersImpl = mp.many(member.except(mp.EOS()))
 
@@ -187,5 +263,12 @@ module HRON {
             return {doc : null, stop : result.state.position}
         }
     }
+
+    export function writeHRON(doc : HRONDocument) : string {
+        var v = new HRONSerializer()
+        doc.apply(v)
+        return v.hron.toString()
+    }
+
 
 }

@@ -8,9 +8,9 @@ window.onload = () => {
 
             var result = HRON.parseHron(hron)
 
-            var x : any = result.doc
+            var asString = HRON.writeHRON(result.doc)
 
-            alert(x)
+            alert(asString)
         }
 
 };

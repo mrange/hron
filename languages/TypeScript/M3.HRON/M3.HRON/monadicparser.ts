@@ -12,6 +12,32 @@
 
 module MonadicParser {
 
+    export class StringBuilder {
+        data    : string[]  = []
+
+        indent(n : number, indent : string = "\t") : StringBuilder {
+
+            for (var iter = 0; iter < n; ++iter) {
+                this.append(indent)
+            }
+
+            return this
+        }
+
+        newLine() : StringBuilder {
+            return this.append("\r\n")
+        }
+
+        append(s : string) : StringBuilder {
+            this.data[this.data.length] = s || ""
+            return this
+        }
+
+        toString(delimiter : string = "") : string {
+            return this.data.join(delimiter || "")
+        }
+    }
+
     export class Snapshot {
         position    : number
         indent      : number
@@ -45,7 +71,7 @@ module MonadicParser {
                 return false
             }
 
-            --this.position
+            --this.indent
 
             return true
         }
@@ -224,6 +250,23 @@ module MonadicParser {
                 return ps.succeed(transform(pResult.value))
             })
         }
+
+        // log parser is useful for debugging
+        log(name : string) : Parser<T> {
+            return parser ((ps : ParserState) => { 
+                console.info ("MonadicParser: %s: begin", name);
+
+                var pResult = this.parse(ps)
+
+                if (pResult.success) {
+                    console.info ("MonadicParser: %s: success", name);
+                } else {
+                    console.info ("MonadicParser: %s: failed", name);
+                }
+
+                return pResult
+            })
+        }
     }
 
     export function parser<T> (p : (ps : ParserState) => ParseResult<T>) {
@@ -263,7 +306,7 @@ module MonadicParser {
     export function anyChar() : Parser<number> {
         return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
-                ps.fail<string>()
+                return ps.fail<number>()
             }
 
             var ch = ps.text.charCodeAt(ps.position)
@@ -315,13 +358,13 @@ module MonadicParser {
     export function satisfy(satisfy : Satisfy) : Parser<number> {
         return parser ((ps : ParserState) => { 
             if (ps.isEOS()) {
-                ps.fail<string>()
+                return ps.fail<number>()
             }
 
             var ch = ps.text.charCodeAt(ps.position)
 
             if (!satisfy(ch,0)) {
-                ps.fail<string>()
+                return ps.fail<number>()
             }
 
             ++ps.position
@@ -382,7 +425,7 @@ module MonadicParser {
             var pResult : ParseResult<T>
 
             while((pResult = p.parse(ps)).success) {
-                result.push(pResult.value)
+                result[result.length] = pResult.value
             }
 
             return ps.succeed(result)
@@ -396,11 +439,13 @@ module MonadicParser {
 
             var pResult : ParseResult<number>
 
+            var data : string[] = []
+
             while((pResult = p.parse(ps)).success) {
-                result += String.fromCharCode(pResult.value)
+                data[data.length] = String.fromCharCode(pResult.value)
             }
 
-            return ps.succeed(result)
+            return ps.succeed(data.join(""))
         })
     }
 
@@ -430,7 +475,13 @@ module MonadicParser {
         return parser ((ps : ParserState) => { 
             var snapshot = ps.snapshot()
 
-            var tabs = ps.skipAdvance(satisyTab)
+            if (ps.indent === 0)
+            {
+                return ps.succeed(0)
+            }
+
+            var satisy : Satisfy = (ch, pos) => pos < ps.indent && ch === 0x09 /*tab*/
+            var tabs = ps.skipAdvance(satisy)
 
             if (tabs !== ps.indent) {
                 ps.restore(snapshot)

@@ -5,9 +5,9 @@ window.onload = function () {
 
         var result = HRON.parseHron(hron);
 
-        var x = result.doc;
+        var asString = HRON.writeHRON(result.doc);
 
-        alert(x);
+        alert(asString);
     };
 };
 //# sourceMappingURL=app.js.map

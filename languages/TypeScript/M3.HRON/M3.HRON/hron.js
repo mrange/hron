@@ -21,7 +21,7 @@ var HRON;
             this.lines = lines;
         }
         HRONValue.prototype.apply = function (visitor) {
-            visitor.VisitValue(this.name, this.lines);
+            visitor.visitValue(this.name, this.lines);
         };
         return HRONValue;
     })();
@@ -31,18 +31,18 @@ var HRON;
         function HRONEmpty() {
         }
         HRONEmpty.prototype.apply = function (visitor) {
-            visitor.VisitEmpty();
+            visitor.visitEmpty();
         };
         return HRONEmpty;
     })();
     HRON.HRONEmpty = HRONEmpty;
 
     var HRONComment = (function () {
-        function HRONComment(line) {
-            this.line = line;
+        function HRONComment(comment) {
+            this.comment = comment;
         }
         HRONComment.prototype.apply = function (visitor) {
-            visitor.VisitComment(this.line);
+            visitor.visitComment(this.comment);
         };
         return HRONComment;
     })();
@@ -54,7 +54,7 @@ var HRON;
             this.members = members;
         }
         HRONObject.prototype.apply = function (visitor) {
-            visitor.VisitObject(this.name, this.members);
+            visitor.visitObject(this.name, this.members);
         };
         return HRONObject;
     })();
@@ -66,11 +66,62 @@ var HRON;
             this.members = members;
         }
         HRONDocument.prototype.apply = function (visitor) {
-            visitor.VisitDocument(this.preprocessors, this.members);
+            visitor.visitDocument(this.preprocessors, this.members);
         };
         return HRONDocument;
     })();
     HRON.HRONDocument = HRONDocument;
+
+    var HRONSerializer = (function () {
+        function HRONSerializer() {
+            this.hron = new mp.StringBuilder();
+            this.indent = 0;
+        }
+        HRONSerializer.prototype.visitDocument = function (preprocessors, members) {
+            for (var iter = 0; iter < preprocessors.length; ++iter) {
+                var preprocessor = preprocessors[0];
+                this.hron.append("!").append(preprocessor).newLine();
+            }
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter];
+                member.apply(this);
+            }
+        };
+
+        HRONSerializer.prototype.visitValue = function (name, lines) {
+            this.hron.indent(this.indent).append("=").append(name).newLine();
+
+            for (var iter = 0; iter < lines.length; ++iter) {
+                var line = lines[iter];
+
+                this.hron.indent(this.indent + 1).append(line).newLine();
+            }
+        };
+
+        HRONSerializer.prototype.visitEmpty = function () {
+            this.hron.newLine();
+        };
+
+        HRONSerializer.prototype.visitComment = function (comment) {
+            this.hron.append("#").append(comment).newLine();
+        };
+
+        HRONSerializer.prototype.visitObject = function (name, members) {
+            this.hron.indent(this.indent).append("@").append(name).newLine();
+
+            ++this.indent;
+
+            for (var iter = 0; iter < members.length; ++iter) {
+                var member = members[iter];
+                member.apply(this);
+            }
+
+            --this.indent;
+        };
+        return HRONSerializer;
+    })();
+    HRON.HRONSerializer = HRONSerializer;
 
     // Defining HRON grammar
     // The grammar can be found here: https://github.com/mrange/hron
@@ -125,7 +176,7 @@ var HRON;
         });
     })();
 
-    var member = mp.choice(value, object, comment, empty);
+    var member = mp.choice(value.log("value"), object.log("object"), comment.log("comment"), empty.log("empty"));
 
     var membersImpl = mp.many(member.except(mp.EOS()));
 
@@ -147,5 +198,12 @@ var HRON;
         }
     }
     HRON.parseHron = parseHron;
+
+    function writeHRON(doc) {
+        var v = new HRONSerializer();
+        doc.apply(v);
+        return v.hron.toString();
+    }
+    HRON.writeHRON = writeHRON;
 })(HRON || (HRON = {}));
 //# sourceMappingURL=hron.js.map
