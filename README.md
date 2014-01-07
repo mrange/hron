@@ -55,7 +55,7 @@ hron sample
 
 		Just as in Python, indentation is significant in hron
 
-		Idention promotes readability but also allows hron string values 
+		Indentation promotes readability but also allows hron string values 
 		to be multi-line and relieves them from the need for escaping. 
 
 		Let us say that again, there exists _no_ character escaping in hron. 
@@ -94,7 +94,7 @@ two keys: 'Greeting' and 'DataBaseConnection' where the value for key Greeting i
 values and the value for key DataBaseConnection is a list which contains two map objects. For a good examlpe
 of what is an is not valid, take a look at 
 [the parser unit tests](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
-, some which are very descriptive. 
+, some of which are quite descriptive. 
 
 Is There a Parser for Language X?
 ---------------------------------
@@ -106,7 +106,7 @@ in mind (like the java one). Shortly upcoming parsers include scala and c++.
 
 If you can not find a parser in your language, fork the repo and write one! We welcome all contributions. 
 We would especially welcome an implementation in javascript and any insane implementations in long forgotten 
-or obscure languages, because...well because we like computer languages. 
+or obscure languages, because...well because we like computer languages (hey lispers, you listening?). 
 
 We are also working on a standardized set of test files, both positive and negative, which will
 constitute a smoke test for new parsers. 
@@ -116,10 +116,10 @@ hron grammar (EBNF)
 Rules for the grammar notation: 
 
 1. The symbol "::=" serves the same purpose as colon in Bison. 
-2. Unquoted parentheses group. 
+2. Unquoted parentheses group expressions. 
 3. A trailing unquoted asterisk (*) indicates 0 or more repetitions. 
-4. A trailing unquoted plus indicates 1 or more repetitions. 
-5. Unquoted square braces indicate an optional phrase. 
+4. A trailing unquoted plus (+) indicates 1 or more repetitions. 
+5. Unquoted square brackets indicate an optional expression. 
 6. "p EXCEPT q" means that parser succeeds if p succeeds and q fails
 
 EBNF 
@@ -180,5 +180,4 @@ mbjarland@gmail.com
 #### Mattias Karlsson
 Together with Mårten responsible for spawning the idea for hron. Contributions to language 
 specification, invaluable feedback. 
-
 
