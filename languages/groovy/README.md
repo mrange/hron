@@ -2,18 +2,19 @@
 About This Project
 ==================
 This project contains a groovy parser for the hron data format. Hron stands
-for Human Readable Object Notation, please see the (root hron project)[https://github.com/mrange/hron] for 
+for Human Readable Object Notation, please see the [hron root project](https://github.com/mrange/hron) for 
 details on the format.
 
 **Please note**: The groovy implementation of this project is geared 
 towards correctness and compactness of implementation. It can be seen as a 
 reference implementation and the performance aspects of the parser have 
 to a large extent been ignored. For a more performant version, please
-refer to the (java version)[https://github.com/mrange/hron/tree/master/languages/java] 
+refer to the [java version](https://github.com/mrange/hron/tree/master/languages/java)
 of the parser. 
 
-The parser mimics the (JsonSlurper)[http://groovy.codehaus.org/gapi/groovy/json/JsonSlurper.html] and (XmlParser)[http://groovy.codehaus.org/api/groovy/util/XmlParser.html] usage patterns already available in groovy. It however
-adds to these by also supporting custom visitors which gives you the option to hook into the hron parsing process and
+The parser mimics the [JsonSlurper](http://groovy.codehaus.org/gapi/groovy/json/JsonSlurper.html)
+and [XmlParser](http://groovy.codehaus.org/api/groovy/util/XmlParser.html) usage patterns already 
+available in groovy. It however adds to these by also supporting custom visitors which gives you the option to hook into the hron parsing process and
 do some custom processing when needed.
 
 Following is a typical usage of the parser from groovy:
