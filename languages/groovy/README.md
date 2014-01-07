@@ -19,45 +19,51 @@ do some custom processing when needed.
 Following is a typical usage of the parser from groovy:
 
     import org.m3.hron.HronParser
-    
+
     def hronBlob = """\
     @welcome
-    	=title
-    		Welcome to HRON
-    	=copy
-    		HRON is a new data format
-    		which is easy to read and
-    		supports multi line strings.
-    		
-    		Best,
-    		The Developers
-    	@authors
-    		=firstName
-    			Bob
-    		=lastName
-    			Developer
-    	@
-    	  =firstName
-    	    Steve
-    	  =lastNAme
-    	    Stevensson
+        =title
+            Welcome to HRON
+        =copy
+            HRON is a new data format
+            which is easy to read and
+            supports multi line strings.
+            
+            Best,
+            The Developers
+        @authors
+            =firstName
+                Bob
+            =lastName
+                Developer
+        @
+            =firstName
+                Steve
+            =lastName
+                Stevensson
     """
-    
+        
     def hron = new HronParser().parseText(hronBlob)
-    
+        
     assert hron instanceof Map 
     assert hron.welcome.title == "Welcome to HRON"
     assert hron.welcome.copy.readLines()[5] == "The Developers"
-    assert hron.welcome.author instanceof Map
-    assert hron.welcome.author.firstName == "Bob"
-    
+    // Note, the groovy parser currently does not handle the hron 
+    // list notation correctly. The commented out assertions should 
+    // work, but do not. 
+    // assert hron.welcome.authors instanceof List
+    assert hron.welcome.authors instanceof Map
+    // assert hron.welcome.authors[0].firstName == "Bob"
+    assert hron.welcome.authors.firstName == "Bob"
+
     println "Hron sample successfully executed!"
 
-Note that indentation is significant in the hron format and that indentation is performed using TAB characters. The above example can be run 
-by (first build the project jar file and then execute a sample groovy script against it): 
+Note that indentation is significant in the hron format and that indentation is performed using either TAB characters 
+or spaces. The above example can be run by (first build the project jar file and 
+then execute a sample groovy script against it): 
 
     > gradlew clean build 
-    > groovy -cp build/libs/hron-parser-1.0.jar src/samples/sample.groovy
+    > groovy -cp build/libs/hron-parser-groovy-1.0.jar src/samples/sample.groovy
     Hron sample successfully executed!
 
 For a few more examples of how you can use the parser, take a look at the [spock specification](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
