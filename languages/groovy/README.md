@@ -58,8 +58,7 @@ Following is a typical usage of the parser from groovy:
 
     println "Hron sample successfully executed!"
 
-Note that indentation is significant in the hron format and that indentation is performed using either TAB characters 
-or spaces. The above example can be run by (first build the project jar file and 
+Note that indentation is significant in the hron format and that indentation is performed using either TAB characters. The above example can be run by (first build the project jar file and 
 then execute a sample groovy script against it): 
 
     > gradlew clean build 
