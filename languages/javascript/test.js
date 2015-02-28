@@ -12,16 +12,19 @@ function downloadTestData(identity) {
 	return result
 }
 
-testdataFiles = [
-	"helloworld",
-	"random",
-	"simple"
-];
+function runTests() {
+	testdataFiles = [
+		"helloworld",
+		"random",
+		"simple"
+	];
 
-testdata = []
+	testdata = []
 
-testdataFiles.forEach(function(file) {
-	item = downloadTestData(file)
-	testdata.push(item)	
-})
+	testdataFiles.forEach(function(file) {
+		item = downloadTestData(file)
+		testdata.push(item)	
+	})
 
+	hron.parse(testdata[0].text);	
+}

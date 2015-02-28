@@ -1,6 +1,6 @@
 (function(exports) {
-	var reCommentLine = new RegExp("^\s*#");
-	var reEmptyLine = new RegExp("^\s*$");
+	var reCommentLine = new RegExp("^\\s*#");
+	var reEmptyLine = new RegExp("^\\s*$");
 
 	function isOfArrayType(o) {
 		return Object.prototype.toString.call(o) === '[object Array]';

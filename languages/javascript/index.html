@@ -11,54 +11,7 @@ Sample HRON page
 </p>
 
 <script>
-// ref: http://stackoverflow.com/questions/805107/creating-multiline-strings-in-javascript
-var mydata = (function () {/*
-# object values are started with '@'
-@Common
-	=LogPath
-		Logs\CurrentDay
-	=WelcomeMessage
-		Hello there!
-
-		String values in hron is started with '='
-
-		Just as with Python in hron the indention is important
-
-		Idention promotes readability but also allows hron string values 
-		to be multi-line and hron has no special letters that requires escaping
-		
-		Letters like this causes hron no problems: &<>\'@=
-
-		This helps readability
-
-
-@DataBaseConnection
-	=Name
-		CustomerDB
-	=ConnectionString
-		Data Source=.\SQLEXPRESS;Initial Catalog=Customers
-	=TimeOut
-		10
-	@User
-		=UserName
-			ATestUser
-		=Password
-			123
-@DataBaseConnection
-	=Name
-		PartnerDB
-	=ConnectionString
-		Data Source=.\SQLEXPRESS;Initial Catalog=Partners
-@DataBaseConnection
-	=Name
-		Daniel
-	=ConnectionString
-		Data Source=.\SsssQLEXPRESS;Initial Catalog=Partnsssers
-*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-</script>
-
-<script>
-	hron.parse(mydata);
+	runTests();
 </script>
 
 </body>
