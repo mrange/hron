@@ -1,6 +1,6 @@
 (function(exports) {
 	var reCommentLine = new RegExp("^(\\s*)#(.*)");
-	var reEmptyLine = new RegExp("^\\s*$");
+	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
 
 	function isOfArrayType(o) {
 		return Object.prototype.toString.call(o) === '[object Array]';
@@ -28,13 +28,13 @@
 
 			match = state.currentLine().match(reCommentLine);
 			if (match) {
-				state.skipLine("Comment", match[1].length + "," + match[2]);
+				state.skipLine("CommentLine", match[1].length + "," + match[2]);
 				continue;
 			}
 
-			var match = state.currentLine().match(reEmptyLine);
+			match = state.currentLine().match(reEmptyLine);
 			if (match) {
-				state.skipLine("EmptyLine");
+				state.skipLine("EmptyLine", match[1]);
 				continue;
 			}
 
@@ -100,8 +100,9 @@
 				continue;
 			}
 
-			if (state.currentLine().match(reEmptyLine)) {
-				state.skipLine("EmptyLine");
+			match = state.currentLine().match(reEmptyLine);
+			if (match) {
+				state.skipLine("Empty", match[1]);
 				continue;
 			}		
 

@@ -1,12 +1,18 @@
 function downloadFile(file, ondone) {
 
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("GET","testdata/" + file,false);
+	xmlhttp.open("GET","testdata/" + file, false);
+	console.log("request made for " + file);
 	xmlhttp.onreadystatechange = function() {
-  		if (xmlhttp.readyState==4 && xmlhttp.status==200)
-    		ondone(xmlhttp.responseText);
-    	else
-    		ondone(null);
+		console.log("state changed for " + file + " to " + xmlhttp.readyState);
+  		if (xmlhttp.readyState==4) {
+  			if (xmlhttp.status==200) {
+				ondone(xmlhttp.responseText);
+  			}	
+  			else {
+  				ondone(null);	
+  			}
+  		}     		    		
 	}
 	xmlhttp.send();
 }
@@ -43,16 +49,27 @@ function runSingleTest(identity) {
 		
 		var actionLogRef = files[1].trim();
 		var actionLog = state.actionLog.join("\r\n");
-		addTestResult(identity, actionLogRef === actionLog);
+		var success = actionLogRef === actionLog;
+		if (!success) {
+			console.log("====================================");
+			console.log(identity);
+			console.log("====================================");			
+			console.log("============ action log ============");
+			console.log(actionLog);
+			console.log("============ action log ============");
+			console.log(actionLogRef);
+		}
+
+		addTestResult(identity, success);
 	});
 }
 
 
 function runTests() {
 	tests = [
-		"helloworld",
+		//"helloworld",
 		"random",
-		"simple"
+		//"simple"
 	];
 
 	runMany(runSingleTest, tests);
