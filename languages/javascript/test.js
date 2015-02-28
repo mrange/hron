@@ -8,7 +8,7 @@ function downloadTestFile(file) {
 function downloadTestData(identity) {
 	result = {}
 	result.text = downloadTestFile(identity + ".hron")
-	result.actions = downloadTestFile(identity + ".hron.actionlog")
+	result.actionLog = downloadTestFile(identity + ".hron.actionlog")
 	return result
 }
 
@@ -26,5 +26,16 @@ function runTests() {
 		testdata.push(item)	
 	})
 
-	hron.parse(testdata[0].text);	
+	var state = new hron.ParseState(testdata[0].text);
+	state.enableLogging(); 
+	hron.parse(state);
+	
+	var actionLogRef = testdata[0].actionLog.trim();
+	var actionLog = state.actionLog.join("\r\n");
+	if (actionLogRef === actionLog) {
+		console.log("success");
+	}	
+	else {
+		console.log("fail");	
+	}
 }

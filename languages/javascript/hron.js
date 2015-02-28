@@ -1,16 +1,128 @@
 (function(exports) {
-	var reCommentLine = new RegExp("^\\s*#");
+	var reCommentLine = new RegExp("^(\\s*)#(.*)");
 	var reEmptyLine = new RegExp("^\\s*$");
 
 	function isOfArrayType(o) {
 		return Object.prototype.toString.call(o) === '[object Array]';
 	}
 
-	function ParseState(text) {
-		this.lines = text.split("\n").slice(1);
+	function parsePreprocessors(state) {
+		var match;
+		while(match = state.currentLine().match(/^!(.*)/)) {
+			state.skipLine("PreProcessor", match[1]);
+		}
+	}
+
+	function parseValueLines(state) {
+		var reNonEmptyLine = new RegExp("^\\t{" + state.currentIndent + "}(.*)");
+		var match;
+		var stop = false;
+		var result = [];
+		while(!stop && !state.eos()) {
+			match = state.currentLine().match(reNonEmptyLine) 
+			if (match) {
+				result.push(match[1]);
+				state.skipLine("ContentLine", match[1]);
+				continue;
+			}	
+
+			match = state.currentLine().match(reCommentLine);
+			if (match) {
+				state.skipLine("Comment", match[1].length + "," + match[2]);
+				continue;
+			}
+
+			var match = state.currentLine().match(reEmptyLine);
+			if (match) {
+				state.skipLine("EmptyLine");
+				continue;
+			}
+
+			stop = true;
+		} 
+
+		return result.join("\n");
+	}
+
+	function tryParseValue(state) {
+		var re = new RegExp("^\\t{" + state.currentIndent + "}=(.*)");
+		var match = state.currentLine().match(re);
+		var result;
+		if (match) {
+			state.skipLine("Value_Begin", match[1]);
+			result = { key: match[1] }
+			++state.currentIndent;
+			result.value = parseValueLines(state);
+			--state.currentIndent;
+			state.log("Value_End", match[1]);
+		}
+
+		return result;
+	}
+
+	function tryParseObject(state) {
+		var re = new RegExp("^\\t{" + state.currentIndent + "}@(.*)");
+		var match = state.currentLine().match(re);
+		var result;
+		if (match) {
+			state.skipLine("Object_Begin", match[1]);
+			result = { key: match[1] }
+			++state.currentIndent;
+			state.objectStack.push({});
+			parseMembers(state);
+			result.value = state.currentObject();
+			state.objectStack.pop();
+			--state.currentIndent;
+			state.log("Object_End", match[1]);
+		}
+
+		return result;
+	}
+
+	function parseMembers(state) {
+		var stop = false;
+		while(!stop && !state.eos()) {
+			var value = tryParseValue(state);
+			if (value) {
+				state.addPropertyToCurrentObject(value.key, value.value);
+				continue;
+			}		
+
+			var object = tryParseObject(state);
+			if (object) {
+				state.addPropertyToCurrentObject(object.key, object.value);
+				continue;
+			}
+
+			var match = state.currentLine().match(reCommentLine); 
+			if (match) {
+				state.skipLine("Comment", match[1].length + "," + match[2]);
+				continue;
+			}
+
+			if (state.currentLine().match(reEmptyLine)) {
+				state.skipLine("EmptyLine");
+				continue;
+			}		
+
+			stop = true;
+		}
+	}
+
+	exports.ParseState = function(text) {
+		this.lines = text.split("\n");
 		this.index = 0;
 		this.currentIndent = 0;	
 		this.objectStack = [{}];
+		this.actionLog = null;
+		this.enableLogging = function() {
+			this.actionLog = [];
+		}
+		this.log = function(action, info) {
+			if (action && this.actionLog) {
+				this.actionLog.push(action + ":" + (info || ""));
+			}
+		};
 		this.currentObject = function() {
 			return this.objectStack[this.objectStack.length-1];
 		};
@@ -29,8 +141,8 @@
 		this.currentLine = function() {
 			return this.lines[this.index];
 		};
-		this.skipLine = function() {
-			console.log(this.currentLine());
+		this.skipLine = function(action, logtext) {
+			this.log(action, logtext);
 			++this.index;
 		};
 		this.eos = function() {
@@ -38,110 +150,11 @@
 		};	
 	}
 
-	function parsePreprocessors(state) {
-		while(state.currentLine().match(/^!/))
-			state.skipLine();
-	}
-
-	function parseValueLines(state) {
-		var reNonEmptyLine = new RegExp("^\\t{" + state.currentIndent + "}(.*)");
-		var match;
-		var stop = false;
-		var result = [];
-		while(!stop && !state.eos()) {
-			// nonempty_line | comment_line | empty_line
-			match = state.currentLine().match(reNonEmptyLine) 
-			if (match) {
-				result.push(match[1]);
-				state.skipLine();
-				continue;
-			}	
-
-			match = state.currentLine().match(reCommentLine);
-			if (match) {
-				state.skipLine();
-				continue;
-			}
-
-			var match = state.currentLine().match(reEmptyLine);
-			if (match) {
-				state.skipLine();
-				continue;
-			}
-
-			stop = true;
-		} 
-
-		return result.join("\n");
-	}
-
-	function tryParseValue(state) {
-		var re = new RegExp("^\\t{" + state.currentIndent + "}=(.*)");
-		var match = state.currentLine().match(re);
-		var result;
-		if (match) {
-			state.skipLine();
-			result = { key: match[1] }
-			++state.currentIndent;
-			result.value = parseValueLines(state);
-			--state.currentIndent;
-		}
-
-		return result;
-	}
-
-	function tryParseObject(state) {
-		var re = new RegExp("^\\t{" + state.currentIndent + "}@(.*)");
-		var match = state.currentLine().match(re);
-		var result;
-		if (match) {
-			state.skipLine();
-			result = { key: match[1] }
-			++state.currentIndent;
-			state.objectStack.push({});
-			parseMembers(state);
-			result.value = state.currentObject();
-			state.objectStack.pop();
-			--state.currentIndent;
-		}
-
-		return result;
-	}
-
-	function parseMembers(state) {
-		var stop = false;
-		while(!stop && !state.eos()) {
-			// value | object | comment | empty
-			var value = tryParseValue(state);
-			if (value) {
-				state.addPropertyToCurrentObject(value.key, value.value);
-				continue;
-			}		
-
-			var object = tryParseObject(state);
-			if (object) {
-				state.addPropertyToCurrentObject(object.key, object.value);
-				continue;
-			}
-
-			if (state.currentLine().match(reCommentLine)) {
-				state.skipLine();
-				continue;
-			}
-
-			if (state.currentLine().match(reEmptyLine)) {
-				state.skipLine();
-				continue;
-			}		
-
-			stop = true;
-		}
-	}
-
-	exports.parse = function(text) {
-		var state = new ParseState(text);
+	exports.parse = function(arg) {
+		var state = arg instanceof this.ParseState ? arg : new this.ParseState(arg);
 		parsePreprocessors(state);
 		parseMembers(state);
 		return state.currentObject();
 	}
+
 })(this.hron = {});
