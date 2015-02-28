@@ -12,6 +12,12 @@ function downloadTestData(identity) {
 	return result
 }
 
+function addTestResult(description, result) {
+	var x = document.getElementById("testresults");
+	var t = document.createTextNode(description + " - " + (result ? "OK" : "<b>Fail</b>"));
+	x.appendChild(t);
+}
+
 function runTests() {
 	testdataFiles = [
 		"helloworld",
@@ -32,10 +38,5 @@ function runTests() {
 	
 	var actionLogRef = testdata[0].actionLog.trim();
 	var actionLog = state.actionLog.join("\r\n");
-	if (actionLogRef === actionLog) {
-		console.log("success");
-	}	
-	else {
-		console.log("fail");	
-	}
+	addTestResult("helloworld", actionLogRef === actionLog);
 }
