@@ -1,7 +1,7 @@
 function downloadFile(file, ondone) {
 
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("GET","testdata/" + file, false);
+	xmlhttp.open("GET","testdata/" + file, false);  // TODO: fix problem with async load
 	console.log("request made for " + file);
 	xmlhttp.onreadystatechange = function() {
 		console.log("state changed for " + file + " to " + xmlhttp.readyState);
@@ -56,7 +56,7 @@ function runSingleTest(identity) {
 			console.log("====================================");			
 			console.log("============ action log ============");
 			console.log(actionLog);
-			console.log("============ action log ============");
+			console.log("============ action log ref ========");
 			console.log(actionLogRef);
 		}
 
@@ -67,9 +67,10 @@ function runSingleTest(identity) {
 
 function runTests() {
 	tests = [
-		//"helloworld",
+		"helloworld",
 		"random",
-		//"simple"
+		"simple",
+//		"large",  // TODO: large fails. figure out why.
 	];
 
 	runMany(runSingleTest, tests);
