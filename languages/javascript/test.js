@@ -1,9 +1,7 @@
 function downloadFile(file, ondone) {
 	var xmlhttp = new XMLHttpRequest();
 	xmlhttp.open("GET","testdata/" + file);
-	console.log("request made for " + file);
 	xmlhttp.onreadystatechange = function() {
-		console.log("state changed for " + file + " to " + xmlhttp.readyState);
   		if (xmlhttp.readyState==4) {
   			if (xmlhttp.status==200) {
 				ondone(xmlhttp.responseText);
