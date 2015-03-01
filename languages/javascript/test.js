@@ -66,7 +66,7 @@ function runTests() {
 		"helloworld",
 		"random",
 		"simple",
-		"large",   // TODO: large fails. figure out why.
+		"large", 
 	];
 
 	runMany(runSingleTest, tests);
