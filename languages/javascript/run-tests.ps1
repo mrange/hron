@@ -1,7 +1,7 @@
 #Requires -Version 3
 
 Push-Location "$PSScriptRoot\testdata"
-& "copy-here.bat"
+& ".\copy-here.bat"
 Pop-Location
 
 Push-Location $PSScriptRoot
