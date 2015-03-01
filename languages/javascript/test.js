@@ -36,10 +36,10 @@ function runMany(functor, dataArray, ondone) {
 }
 
 function runSingleTest(identity) {
-	function addTestResult(description, result) {
+	function addTestResult(description, result, elapsedTime) {
 		var ul = document.getElementById("testresults");
 		var li = document.createElement("li");
-		var t = document.createTextNode(description + " - " + (result ? "OK" : "Fail"));
+		var t = document.createTextNode(description + " - " + elapsedTime + " ms - " + (result ? "OK" : "Fail"));
 		li.appendChild(t);
 		ul.appendChild(li);
 	}
@@ -47,8 +47,10 @@ function runSingleTest(identity) {
 	runMany(downloadFile, [ identity + ".hron", identity + ".hron.actionlog"], function(files) {
 		var state = new hron.ParseState(files[0]);
 		state.enableLogging(); 
+		var startTime = new Date().getTime();
 		hron.parse(state);
-		
+		var endTime = new Date().getTime();		
+
 		var actionLogRef = files[1].trim();
 		var actionLog = state.actionLog.join("\r\n");
 		var success = actionLogRef === actionLog;
@@ -58,7 +60,7 @@ function runSingleTest(identity) {
 			document.getElementById("logarea2").value = actionLogRef;
 		}
 
-		addTestResult(identity, success);
+		addTestResult(identity, success, endTime - startTime);
 	});
 }
 
