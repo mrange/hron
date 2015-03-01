@@ -3,7 +3,7 @@ param($targetFolder)
 
 $downloadUrl = "http://cesanta.com/cgi-bin/api.cgi?act=dl&id=7NBB80IL1YZZ9ZXN&os=win" 
 if (!$targetFolder) {
-    $targetFolder = Join-Path $PSScriptRoot ".." | Resolve-Path
+    $targetFolder = $PSScriptRoot # Join-Path $PSScriptRoot ".." | Resolve-Path
 }
 $target = Join-Path $targetFolder mongoose-free-5.5.exe
 
