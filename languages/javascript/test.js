@@ -51,13 +51,9 @@ function runSingleTest(identity) {
 		var actionLog = state.actionLog.join("\r\n");
 		var success = actionLogRef === actionLog;
 		if (!success) {
-			console.log("====================================");
-			console.log(identity);
-			console.log("====================================");			
-			console.log("============ action log ============");
-			console.log(actionLog);
-			console.log("============ action log ref ========");
-			console.log(actionLogRef);
+			document.getElementById("test").innerHTML = identity;
+			document.getElementById("logarea").value = actionLog;
+			document.getElementById("logarea2").value = actionLogRef;
 		}
 
 		addTestResult(identity, success);
@@ -70,7 +66,7 @@ function runTests() {
 		"helloworld",
 		"random",
 		"simple",
-//		"large",  // TODO: large fails. figure out why.
+		"large",   // TODO: large fails. figure out why.
 	];
 
 	runMany(runSingleTest, tests);
