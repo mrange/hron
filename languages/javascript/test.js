@@ -1,7 +1,6 @@
 function downloadFile(file, ondone) {
-
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("GET","testdata/" + file, false);  // TODO: fix problem with async load
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.open("GET","testdata/" + file);
 	console.log("request made for " + file);
 	xmlhttp.onreadystatechange = function() {
 		console.log("state changed for " + file + " to " + xmlhttp.readyState);
