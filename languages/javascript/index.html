@@ -1,32 +1,25 @@
 <html>
+
 <head>	
+	<title>HRON javascript test suite</title>
 	<script src="hron.js"></script>
 	<script src="test.js"></script>
 </head>
 
 <body>
+	<h1>Test results</h1>
+	<p id="testresults"></p>
 
-<p>
-Sample HRON page
-</p>
+	<h1>Detailed information</h1>
+	<p id="test"></p>
 
-<p id="testresults">
-</p>
+	<p>actionLog</p>
+	<textarea id="logarea" style="width: 600px; height: 400px;"></textarea>
 
-<p id="test"></p>
+	<p>actionLogRef</p>
+	<textarea id="logarea2" style="width: 600px; height: 400px;"></textarea>
 
-<p>actionLog</p>
-<textarea id="logarea" style="width: 600px; height: 400px;">
-</textarea>
-
-<p>actionLogRef</p>
-<textarea id="logarea2" style="width: 600px; height: 400px;">
-</textarea>
-
-<script>
-	runTests();
-</script>
-
+	<script>runTests();</script>
 </body>
 
 </html>
