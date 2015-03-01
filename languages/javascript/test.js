@@ -37,9 +37,11 @@ function runMany(functor, dataArray, ondone) {
 
 function runSingleTest(identity) {
 	function addTestResult(description, result) {
-		var x = document.getElementById("testresults");
+		var ul = document.getElementById("testresults");
+		var li = document.createElement("li");
 		var t = document.createTextNode(description + " - " + (result ? "OK" : "Fail"));
-		x.appendChild(t);		
+		li.appendChild(t);
+		ul.appendChild(li);
 	}
 
 	runMany(downloadFile, [ identity + ".hron", identity + ".hron.actionlog"], function(files) {
