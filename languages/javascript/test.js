@@ -44,6 +44,25 @@ function runSingleTest(identity) {
 		ul.appendChild(li);
 	}
 
+	function addActionLog(identity, actionLog, actionLogRef) {
+		var textAreaStyle = "width: 500px; height: 300px;";
+		var ta1 = document.createElement("textarea");
+		ta1.setAttribute("style", textAreaStyle);
+		ta1.value = actionLog;
+		var ta2 = document.createElement("textarea");
+		ta2.setAttribute("style", textAreaStyle);
+		ta2.value = actionLogRef;
+		var actionLogs = document.getElementById("actionLogs");		
+		actionLogs.appendChild(document.createTextNode(identity + " - actionlog"));		
+		actionLogs.appendChild(document.createElement("br"));
+		actionLogs.appendChild(ta1);
+		actionLogs.appendChild(document.createElement("br"));
+		actionLogs.appendChild(document.createTextNode(identity + " - actionlogRef"));		
+		actionLogs.appendChild(document.createElement("br"));
+		actionLogs.appendChild(ta2);
+		actionLogs.appendChild(document.createElement("br"));
+	}
+
 	runMany(downloadFile, [ identity + ".hron", identity + ".hron.actionlog"], function(files) {
 		var state = new hron.ParseState(files[0]);
 		state.enableLogging(); 
@@ -54,13 +73,11 @@ function runSingleTest(identity) {
 		var actionLogRef = files[1].trim();
 		var actionLog = state.actionLog.join("\r\n");
 		var success = actionLogRef === actionLog;
-		if (!success) {
-			document.getElementById("test").innerHTML = identity;
-			document.getElementById("logarea").value = actionLog;
-			document.getElementById("logarea2").value = actionLogRef;
-		}
 
 		addTestResult(identity, success, endTime - startTime);
+		if (!success) {
+			addActionLog(identity, actionLog, actionLogRef);			
+		}
 	});
 }
 
