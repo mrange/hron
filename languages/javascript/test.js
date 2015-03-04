@@ -32,34 +32,34 @@ function runMany(functor, dataArray, ondone) {
 	});
 }
 
+function addTestResult(description, result, elapsedTime) {
+	var ul = document.getElementById("testresults");
+	var li = document.createElement("li");
+	var t = document.createTextNode(description + " - " + elapsedTime + " ms - " + (result ? "OK" : "Fail"));
+	li.appendChild(t);
+	ul.appendChild(li);
+}
+
+function addActionLog(identity, actionLog, actionLogRef) {
+	var textAreaStyle = "width: 500px; height: 300px;";
+	var ta1 = document.createElement("textarea");
+	ta1.setAttribute("style", textAreaStyle);
+	ta1.value = actionLog;
+	var ta2 = document.createElement("textarea");
+	ta2.setAttribute("style", textAreaStyle);
+	ta2.value = actionLogRef;
+	var actionLogs = document.getElementById("actionLogs");		
+	actionLogs.appendChild(document.createTextNode(identity + " - actionlog"));		
+	actionLogs.appendChild(document.createElement("br"));
+	actionLogs.appendChild(ta1);
+	actionLogs.appendChild(document.createElement("br"));
+	actionLogs.appendChild(document.createTextNode(identity + " - actionlogRef"));		
+	actionLogs.appendChild(document.createElement("br"));
+	actionLogs.appendChild(ta2);
+	actionLogs.appendChild(document.createElement("br"));
+}
+
 function runSingleTest(identity) {
-	function addTestResult(description, result, elapsedTime) {
-		var ul = document.getElementById("testresults");
-		var li = document.createElement("li");
-		var t = document.createTextNode(description + " - " + elapsedTime + " ms - " + (result ? "OK" : "Fail"));
-		li.appendChild(t);
-		ul.appendChild(li);
-	}
-
-	function addActionLog(identity, actionLog, actionLogRef) {
-		var textAreaStyle = "width: 500px; height: 300px;";
-		var ta1 = document.createElement("textarea");
-		ta1.setAttribute("style", textAreaStyle);
-		ta1.value = actionLog;
-		var ta2 = document.createElement("textarea");
-		ta2.setAttribute("style", textAreaStyle);
-		ta2.value = actionLogRef;
-		var actionLogs = document.getElementById("actionLogs");		
-		actionLogs.appendChild(document.createTextNode(identity + " - actionlog"));		
-		actionLogs.appendChild(document.createElement("br"));
-		actionLogs.appendChild(ta1);
-		actionLogs.appendChild(document.createElement("br"));
-		actionLogs.appendChild(document.createTextNode(identity + " - actionlogRef"));		
-		actionLogs.appendChild(document.createElement("br"));
-		actionLogs.appendChild(ta2);
-		actionLogs.appendChild(document.createElement("br"));
-	}
-
 	runMany(downloadFile, [ identity + ".hron", identity + ".hron.actionlog"], function(files) {
 		var state = new hron.ParseState(files[0]);
 		state.enableLogging(); 
@@ -78,14 +78,73 @@ function runSingleTest(identity) {
 	});
 }
 
-
-function runTests() {
+function runParseTests() {
 	tests = [
 		"helloworld",
 		"random",
 		"simple",
-		"large", 
+		//"large", 
 	];
 
-	runMany(runSingleTest, tests);
+	runMany(runSingleTest, tests);	
+}
+
+function runSerializationTests() {
+	var o = {
+		intVal: 10,
+		floatVal: 59.2,
+		stringVal: 'apa\nbepa\ncepa',
+		listVal: [6,5.22,'abc', { x:'x1',y:'y1'}],
+		objectVal: {
+			a: 1,
+			b: 2,
+			c: {
+				d: '3'
+			}
+		}
+	};
+
+	var serializedRef = 
+		"=floatVal\n" 	+
+		"\t59.2\n"		+
+		"=intVal\n" 	+
+		"\t10\n"		+
+		"=listVal\n" 	+
+		"\t6\n" 		+
+		"=listVal\n" 	+
+		"\t5.22\n" 		+
+		"=listVal\n" 	+
+		"\tabc\n" 		+	
+		"@listVal\n" 	+
+		"\t=x\n" 		+	
+		"\t\tx1\n" 		+	
+		"\t=y\n" 		+	
+		"\t\ty1\n" 		+	
+		"@objectVal\n" 	+
+		"\t=a\n" 		+
+		"\t\t1\n" 		+
+		"\t=b\n" 		+
+		"\t\t2\n" 		+
+		"\t@c\n" 		+
+		"\t\t=d\n" 		+
+		"\t\t\t3\n" 	+
+		"=stringVal\n"	+
+		"\tapa\n"		+
+		"\tbepa\n"		+
+		"\tcepa";
+
+	var startTime = new Date().getTime();
+	var serialized = hron.serialize(o);
+	var endTime = new Date().getTime();		
+	var success = serialized === serializedRef;
+	var identity = "serialization";
+	addTestResult(identity, success, endTime - startTime);
+	if (!success) {
+		addActionLog(identity, serialized, serializedRef);			
+	}
+}
+
+function runTests() {
+	runParseTests();
+	runSerializationTests();
 }

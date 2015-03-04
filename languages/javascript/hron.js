@@ -158,4 +158,79 @@
 		return state.currentObject();
 	}
 
+	////////////////////////////////////////////////
+
+	function SerializationState() {
+		this.indent = "";
+		this.result = [];
+		this.push = function(str) {
+			this.result.push(this.indent + str);
+		};
+		this.incIndent = function() {
+			this.indent += "\t";
+		};
+		this.decIndent = function() {
+			this.indent = this.indent.substring(0, this.indent.length-1);
+		};
+	}
+
+	function _serializeMembers(state, object) {
+		var keys = [];
+		for (var key in object) {
+			keys.push(key);
+		}
+		keys.sort();
+
+		for (var i=0; i<keys.length; ++i) { 
+			var key = keys[i];
+			var value = object[key];
+			if (isOfArrayType(value)) {
+				var len = value.length;
+				for (var j = 0; j < len; ++j) {
+					var symbol = typeof value[j] === 'object' ? '@' : '='; 
+					state.push(symbol + key);
+					state.incIndent();
+					_serialize(state, value[j]);
+					state.decIndent();				
+				}
+			}
+			else {
+				var symbol = typeof value === 'object' ? '@' : '='; 
+				state.push(symbol + key);
+				state.incIndent();
+				_serialize(state, value);
+				state.decIndent();				
+			}
+		}
+	}
+
+	function _serialize(state, object) {
+		if (object == null) {
+			state.push('null');
+			return;
+		}
+		
+		switch(typeof object) {
+			case 'string':
+				var lines = object.split('\n');
+				var len = lines.length;
+				for (var i = 0; i < len; ++i) {
+					state.push(lines[i]);
+				}
+				break;
+			case 'object':			
+				_serializeMembers(state, object);				
+				break;
+			default:
+				state.push(String(object));
+				break;
+		}
+	}
+
+	exports.serialize = function (object) {
+		var state = new SerializationState();
+		_serializeMembers(state, object);
+		return state.result.join('\n');
+	}
+
 })(this.hron = {});
