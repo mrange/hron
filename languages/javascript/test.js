@@ -83,7 +83,7 @@ function runParseTests() {
 		"helloworld",
 		"random",
 		"simple",
-		//"large", 
+		"large", 
 	];
 
 	runMany(runSingleTest, tests);	

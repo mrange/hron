@@ -112,6 +112,8 @@
 
 	exports.ParseState = function(text) {
 		this.lines = text.split("\n");
+		if (this.lines[this.lines.length-1].length == 0)
+			this.lines.pop();  // empty row at end does not count as an empty line. should be ignored.
 		this.index = 0;
 		this.currentIndent = 0;	
 		this.objectStack = [{}];
