@@ -40,23 +40,23 @@ function addTestResult(description, result, elapsedTime) {
 	ul.appendChild(li);
 }
 
-function addActionLog(identity, actionLog, actionLogRef) {
+function addLog(identity, log, logRef) {
 	var textAreaStyle = "width: 500px; height: 300px;";
 	var ta1 = document.createElement("textarea");
 	ta1.setAttribute("style", textAreaStyle);
-	ta1.value = actionLog;
+	ta1.value = log;
 	var ta2 = document.createElement("textarea");
 	ta2.setAttribute("style", textAreaStyle);
-	ta2.value = actionLogRef;
-	var actionLogs = document.getElementById("actionLogs");		
-	actionLogs.appendChild(document.createTextNode(identity + " - actionlog"));		
-	actionLogs.appendChild(document.createElement("br"));
-	actionLogs.appendChild(ta1);
-	actionLogs.appendChild(document.createElement("br"));
-	actionLogs.appendChild(document.createTextNode(identity + " - actionlogRef"));		
-	actionLogs.appendChild(document.createElement("br"));
-	actionLogs.appendChild(ta2);
-	actionLogs.appendChild(document.createElement("br"));
+	ta2.value = logRef;
+	var logs = document.getElementById("logs");		
+	logs.appendChild(document.createTextNode(identity + " - produced log"));		
+	logs.appendChild(document.createElement("br"));
+	logs.appendChild(ta1);
+	logs.appendChild(document.createElement("br"));
+	logs.appendChild(document.createTextNode(identity + " - expected log"));		
+	logs.appendChild(document.createElement("br"));
+	logs.appendChild(ta2);
+	logs.appendChild(document.createElement("br"));
 }
 
 function runSingleTest(identity) {
@@ -73,7 +73,7 @@ function runSingleTest(identity) {
 
 		addTestResult(identity, success, endTime - startTime);
 		if (!success) {
-			addActionLog(identity, actionLog, actionLogRef);			
+			addLog(identity, actionLog, actionLogRef);			
 		}
 	});
 }
@@ -140,7 +140,7 @@ function runSerializationTests() {
 	var identity = "serialization";
 	addTestResult(identity, success, endTime - startTime);
 	if (!success) {
-		addActionLog(identity, serialized, serializedRef);			
+		addLog(identity, serialized, serializedRef);			
 	}
 }
 
