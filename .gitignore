@@ -13,3 +13,12 @@ _Resharper*
 *.filters
 *.psess
 *.vspx
+languages/javascript/testdata/helloworld.hron
+languages/javascript/testdata/helloworld.hron.actionlog
+languages/javascript/testdata/large.hron
+languages/javascript/testdata/random.hron
+languages/javascript/testdata/random.hron.actionlog
+languages/javascript/testdata/simple.hron.actionlog
+languages/javascript/testdata/simple.hron
+languages/javascript/testdata/large.hron.actionlog
+languages/javascript/mongoose-free-5.5.exe
