@@ -15,6 +15,29 @@
 	var reCommentLine = new RegExp("^(\\s*)#(.*)");
 	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
 
+	function RegExCache(regexFactory) {
+		var cacheSize = 10;
+		var cache = [];
+		for(indent = 0; indent < cacheSize; ++indent) {
+			cache.push(regexFactory(indent));
+		}
+		this.get = function(indent) {
+			return indent < cacheSize ? cache[indent] : regexFactory(indent);
+		}
+	}
+
+	var reNonEmptyLineCache = new RegExCache(function(indent) {
+		return new RegExp("^\\t{" + indent + "}(.*)");
+	});
+
+	var reValueDefCache = new RegExCache(function(indent) {
+		return new RegExp("^\\t{" + indent + "}=(.*)");
+	});
+
+	var reObjectDefCache = new RegExCache(function(indent) {
+		return new RegExp("^\\t{" + indent + "}@(.*)");
+	});
+
 	function deserializePreprocessors(state) {
 		var match;
 		while(match = state.currentLine().match(/^!(.*)/)) {
@@ -23,7 +46,7 @@
 	}
 
 	function deserializeValueLines(state) {
-		var reNonEmptyLine = new RegExp("^\\t{" + state.currentIndent + "}(.*)");
+		var reNonEmptyLine = reNonEmptyLineCache.get(state.currentIndent);
 		var match;
 		var stop = false;
 		var result = [];
@@ -54,7 +77,7 @@
 	}
 
 	function tryDeserializeValue(state) {
-		var re = new RegExp("^\\t{" + state.currentIndent + "}=(.*)");
+		var re = reValueDefCache.get(state.currentIndent);
 		var match = state.currentLine().match(re);
 		var result;
 		if (match) {
@@ -70,7 +93,7 @@
 	}
 
 	function tryDeserializeObject(state) {
-		var re = new RegExp("^\\t{" + state.currentIndent + "}@(.*)");
+		var re = reObjectDefCache.get(state.currentIndent);
 		var match = state.currentLine().match(re);
 		var result;
 		if (match) {
