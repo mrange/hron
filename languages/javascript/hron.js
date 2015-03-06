@@ -1,19 +1,28 @@
 (function(exports) {
-	var reCommentLine = new RegExp("^(\\s*)#(.*)");
-	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
+
+	////////////////////////////////////////////////////////////////////
+	// Utilities
+	////////////////////////////////////////////////////////////////////
 
 	function isOfArrayType(o) {
 		return Object.prototype.toString.call(o) === '[object Array]';
 	}
 
-	function parsePreprocessors(state) {
+	////////////////////////////////////////////////////////////////////
+	// deserialization (parsing)
+	////////////////////////////////////////////////////////////////////
+
+	var reCommentLine = new RegExp("^(\\s*)#(.*)");
+	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
+
+	function deserializePreprocessors(state) {
 		var match;
 		while(match = state.currentLine().match(/^!(.*)/)) {
 			state.skipLine("PreProcessor", match[1]);
 		}
 	}
 
-	function parseValueLines(state) {
+	function deserializeValueLines(state) {
 		var reNonEmptyLine = new RegExp("^\\t{" + state.currentIndent + "}(.*)");
 		var match;
 		var stop = false;
@@ -44,7 +53,7 @@
 		return result.join("\n");
 	}
 
-	function tryParseValue(state) {
+	function tryDeserializeValue(state) {
 		var re = new RegExp("^\\t{" + state.currentIndent + "}=(.*)");
 		var match = state.currentLine().match(re);
 		var result;
@@ -52,7 +61,7 @@
 			state.skipLine("Value_Begin", match[1]);
 			result = { key: match[1] }
 			++state.currentIndent;
-			result.value = parseValueLines(state);
+			result.value = deserializeValueLines(state);
 			--state.currentIndent;
 			state.log("Value_End", match[1]);
 		}
@@ -60,7 +69,7 @@
 		return result;
 	}
 
-	function tryParseObject(state) {
+	function tryDeserializeObject(state) {
 		var re = new RegExp("^\\t{" + state.currentIndent + "}@(.*)");
 		var match = state.currentLine().match(re);
 		var result;
@@ -69,7 +78,7 @@
 			result = { key: match[1] }
 			++state.currentIndent;
 			state.objectStack.push({});
-			parseMembers(state);
+			deserializeMembers(state);
 			result.value = state.currentObject();
 			state.objectStack.pop();
 			--state.currentIndent;
@@ -79,18 +88,31 @@
 		return result;
 	}
 
-	function parseMembers(state) {
+	function addPropertyToCurrentObject(state, name, value) {
+		var o = state.currentObject();
+		if (isOfArrayType(o[name])) {
+			o[name].push(value);
+		}
+		else if (o[name]) {
+			o[name] = [o[name], value];
+		}
+		else {
+			o[name] = value;
+		}
+	}
+
+	function deserializeMembers(state) {
 		var stop = false;
 		while(!stop && !state.eos()) {
-			var value = tryParseValue(state);
+			var value = tryDeserializeValue(state);
 			if (value) {
-				state.addPropertyToCurrentObject(value.key, value.value);
+				addPropertyToCurrentObject(state, value.key, value.value);
 				continue;
 			}		
 
-			var object = tryParseObject(state);
+			var object = tryDeserializeObject(state);
 			if (object) {
-				state.addPropertyToCurrentObject(object.key, object.value);
+				addPropertyToCurrentObject(state, object.key, object.value);
 				continue;
 			}
 
@@ -110,7 +132,7 @@
 		}
 	}
 
-	exports.ParseState = function(text) {
+	function DeserializationState(text) {
 		this.lines = text.split("\n");
 		if (this.lines[this.lines.length-1].length == 0)
 			this.lines.pop();  // empty row at end does not count as an empty line. should be ignored.
@@ -129,18 +151,6 @@
 		this.currentObject = function() {
 			return this.objectStack[this.objectStack.length-1];
 		};
-		this.addPropertyToCurrentObject = function(name, value) {
-			var o = this.currentObject();
-			if (isOfArrayType(o[name])) {
-				o[name].push(value);
-			}
-			else if (o[name]) {
-				o[name] = [o[name], value];
-			}
-			else {
-				o[name] = value;
-			}
-		}
 		this.currentLine = function() {
 			return this.lines[this.index];
 		};
@@ -153,14 +163,16 @@
 		};	
 	}
 
-	exports.parse = function(arg) {
-		var state = arg instanceof this.ParseState ? arg : new this.ParseState(arg);
-		parsePreprocessors(state);
-		parseMembers(state);
+	function deserialize(arg) {
+		var state = arg instanceof DeserializationState ? arg : new DeserializationState(arg);
+		deserializePreprocessors(state);
+		deserializeMembers(state);
 		return state.currentObject();
 	}
 
-	////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	// serialization
+	////////////////////////////////////////////////////////////////////
 
 	function SerializationState() {
 		this.indent = "";
@@ -176,7 +188,7 @@
 		};
 	}
 
-	function _serializeMembers(state, object) {
+	function serializeMembers(state, object) {
 		var keys = [];
 		for (var key in object) {
 			keys.push(key);
@@ -189,50 +201,54 @@
 			if (isOfArrayType(value)) {
 				var len = value.length;
 				for (var j = 0; j < len; ++j) {
-					var symbol = typeof value[j] === 'object' ? '@' : '='; 
-					state.push(symbol + key);
-					state.incIndent();
-					_serialize(state, value[j]);
-					state.decIndent();				
+					serializeInstance(state, key, value[j]);
 				}
 			}
 			else {
-				var symbol = typeof value === 'object' ? '@' : '='; 
-				state.push(symbol + key);
-				state.incIndent();
-				_serialize(state, value);
-				state.decIndent();				
+				serializeInstance(state, key, value);
 			}
 		}
 	}
 
-	function _serialize(state, object) {
-		if (object == null) {
-			state.push('null');
-			return;
-		}
+	function serializeInstance(state, name, instance) {		
+		var symbol = typeof instance === 'object' ? '@' : '='; 
+		state.push(symbol + name);
+		state.incIndent();
 		
-		switch(typeof object) {
+		switch(typeof instance) {
 			case 'string':
-				var lines = object.split('\n');
+				var lines = instance.split('\n');
 				var len = lines.length;
 				for (var i = 0; i < len; ++i) {
 					state.push(lines[i]);
 				}
 				break;
 			case 'object':			
-				_serializeMembers(state, object);				
+				serializeMembers(state, instance);				
 				break;
 			default:
-				state.push(String(object));
+				if (instance) {
+					state.push(String(instance));
+				}
 				break;
 		}
+		
+		state.decIndent();				
 	}
 
-	exports.serialize = function (object) {
+	function serialize(object) {
 		var state = new SerializationState();
-		_serializeMembers(state, object);
+		serializeMembers(state, object);
 		return state.result.join('\n');
 	}
+
+
+	////////////////////////////////////////////////////////////////////
+	// Exports
+	////////////////////////////////////////////////////////////////////
+
+	exports.ParseState = DeserializationState;
+	exports.parse = deserialize;
+	exports.serialize = serialize;
 
 })(this.hron = {});

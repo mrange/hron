@@ -78,7 +78,7 @@ function runSingleTest(identity) {
 	});
 }
 
-function runParseTests() {
+function runDeserializationTests() {
 	tests = [
 		"helloworld",
 		"random",
@@ -145,6 +145,6 @@ function runSerializationTests() {
 }
 
 function runTests() {
-	runParseTests();
+	runDeserializationTests();
 	runSerializationTests();
 }
