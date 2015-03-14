@@ -1,4 +1,14 @@
+/*!
+ * HRON v0.7.2
+ * A Javascript module for parsing and serializing HRON
+ * https://github.com/mrange/hron
+ * Microsoft Public License (Ms-PL)
+ * by Daniel Brännström
+ */
+
 (function(exports) {
+
+	'use strict';
 
 	////////////////////////////////////////////////////////////////////
 	// Utilities
@@ -18,12 +28,12 @@
 	function RegExCache(regexFactory) {
 		var cacheSize = 10;
 		var cache = [];
-		for(indent = 0; indent < cacheSize; ++indent) {
+		for(var indent = 0; indent < cacheSize; ++indent) {
 			cache.push(regexFactory(indent));
 		}
 		this.get = function(indent) {
 			return indent < cacheSize ? cache[indent] : regexFactory(indent);
-		}
+		};
 	}
 
 	var reNonEmptyLineCache = new RegExCache(function(indent) {
@@ -39,10 +49,12 @@
 	});
 
 	function deserializePreprocessors(state) {
+		/* jshint -W084 */
 		var match;
 		while(match = state.currentLine().match(/^!(.*)/)) {
 			state.skipLine("PreProcessor", match[1]);
 		}
+		/* jshint +W084 */
 	}
 
 	function deserializeValueLines(state) {
@@ -51,7 +63,7 @@
 		var stop = false;
 		var result = [];
 		while(!stop && !state.eos()) {
-			match = state.currentLine().match(reNonEmptyLine) 
+			match = state.currentLine().match(reNonEmptyLine); 
 			if (match) {
 				result.push(match[1]);
 				state.skipLine("ContentLine", match[1]);
@@ -82,10 +94,10 @@
 		var result;
 		if (match) {
 			state.skipLine("Value_Begin", match[1]);
-			result = { key: match[1] }
-			++state.currentIndent;
+			result = { key: match[1] };
+			state.currentIndent++;
 			result.value = deserializeValueLines(state);
-			--state.currentIndent;
+			state.currentIndent--;
 			state.log("Value_End", match[1]);
 		}
 
@@ -98,13 +110,13 @@
 		var result;
 		if (match) {
 			state.skipLine("Object_Begin", match[1]);
-			result = { key: match[1] }
-			++state.currentIndent;
+			result = { key: match[1] };
+			state.currentIndent++;
 			state.objectStack.push({});
 			deserializeMembers(state);
 			result.value = state.currentObject();
 			state.objectStack.pop();
-			--state.currentIndent;
+			state.currentIndent--;
 			state.log("Object_End", match[1]);
 		}
 
@@ -157,7 +169,7 @@
 
 	function DeserializationState(text) {
 		this.lines = text.split("\n");
-		if (this.lines[this.lines.length-1].length == 0)
+		if (this.lines[this.lines.length-1].length === 0)
 			this.lines.pop();  // empty row at end does not count as an empty line. should be ignored.
 		this.index = 0;
 		this.currentIndent = 0;	
@@ -165,7 +177,7 @@
 		this.actionLog = null;
 		this.enableLogging = function() {
 			this.actionLog = [];
-		}
+		};
 		this.log = function(action, info) {
 			if (action && this.actionLog) {
 				this.actionLog.push(action + ":" + (info || ""));
@@ -213,17 +225,19 @@
 
 	function serializeMembers(state, object) {
 		var keys = [];
-		for (var key in object) {
+		var key;
+		for (key in object) {
 			keys.push(key);
 		}
 		keys.sort();
 
-		for (var i=0; i<keys.length; ++i) { 
-			var key = keys[i];
+		var len = keys.length;
+		for (var i=0; i<len; ++i) { 
+			key = keys[i];
 			var value = object[key];
 			if (isOfArrayType(value)) {
-				var len = value.length;
-				for (var j = 0; j < len; ++j) {
+				var len_ = value.length;
+				for (var j = 0; j < len_; ++j) {
 					serializeInstance(state, key, value[j]);
 				}
 			}
@@ -274,4 +288,4 @@
 	exports.parse = deserialize;
 	exports.serialize = serialize;
 
-})(this.hron = {});
+})(typeof exports === 'undefined'? this.hron = {} : exports);
