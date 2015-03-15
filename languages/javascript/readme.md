@@ -22,24 +22,24 @@ The following snippet is a minimal sample of the HRON library usage
 <script src="hron.js"></script>
 <script>
 // Parsing
-var object = hron.parse(hronString)
+var object = hron.parse(hronString);
 // Serializing
-var hronString = hron.serialize(object)
+var hronString = hron.serialize(object);
 </script>
 ```
 
 Using the library, server side
 ------------------------------
-Having that done, the usage is very simple. The following code will produce a object given a HRON string:
+The following snippet is a minimal sample of the HRON library usage
 
 ```javascript
-var hron = require('hron'),
+var hron = require('hron');
 // Parsing
-var object = hron.parse(hronString)
+var object = hron.parse(hronString);
 // Serializing
-var hronString = hron.serialize(object)
+var hronString = hron.serialize(object);
 ```
 
 License
 -------
-This library is release under Microsoft Public License (Ms-PL).
+This library is released under Microsoft Public License (Ms-PL).
