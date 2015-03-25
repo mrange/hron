@@ -1,5 +1,5 @@
 /*!
- * HRON v0.7.8
+ * HRON v0.7.9
  * A Javascript module for parsing and serializing HRON
  * https://github.com/mrange/hron
  * Microsoft Public License (Ms-PL)
