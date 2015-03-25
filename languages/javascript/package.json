@@ -1,16 +1,20 @@
 {
   "name": "hron.js",
-  "version": "0.7.7",
+  "version": "0.7.9",
   "description": "A Javascript module for parsing and serializing HRON",
   "author": "Daniel Brännström",
   "dependencies": {},
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.11.0",
+    "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-contrib-uglify": "^0.8.0"
   },
   "main": "hron.js",
-  "files": ["hron.js", "hron.min.js"],
+  "files": [
+    "hron.js",
+    "hron.min.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/mrange/hron"
@@ -21,6 +25,6 @@
   ],
   "license": "Microsoft Public License (Ms-PL)",
   "scripts": {
-    "test": "powershell.exe run-tests.ps1"
+    "test": "nodeunit test-nodeunit.js"
   }
 }

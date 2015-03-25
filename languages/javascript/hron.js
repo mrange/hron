@@ -1,5 +1,5 @@
 /*!
- * HRON v0.7.7
+ * HRON v0.7.9
  * A Javascript module for parsing and serializing HRON
  * https://github.com/mrange/hron
  * Microsoft Public License (Ms-PL)
@@ -24,6 +24,7 @@
 
 	var reCommentLine = new RegExp("^(\\s*)#(.*)");
 	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
+	var rePreprocessorLine = new RegExp("^!(.*)");
 
 	function RegExCache(regexFactory) {
 		var cacheSize = 10;
@@ -51,7 +52,7 @@
 	function deserializePreprocessors(state) {
 		/* jshint -W084 */
 		var match;
-		while(match = state.currentLine().match(/^!(.*)/)) {
+		while(match = state.currentLine().match(rePreprocessorLine)) {
 			state.skipLine("PreProcessor", match[1]);
 		}
 		/* jshint +W084 */
@@ -95,9 +96,9 @@
 		if (match) {
 			state.skipLine("Value_Begin", match[1]);
 			result = { key: match[1] };
-			state.currentIndent++;
+			++state.currentIndent;
 			result.value = deserializeValueLines(state);
-			state.currentIndent--;
+			--state.currentIndent;
 			state.log("Value_End", match[1]);
 		}
 
@@ -111,12 +112,12 @@
 		if (match) {
 			state.skipLine("Object_Begin", match[1]);
 			result = { key: match[1] };
-			state.currentIndent++;
+			++state.currentIndent;
 			state.objectStack.push({});
 			deserializeMembers(state);
 			result.value = state.currentObject();
 			state.objectStack.pop();
-			state.currentIndent--;
+			--state.currentIndent;
 			state.log("Object_End", match[1]);
 		}
 
