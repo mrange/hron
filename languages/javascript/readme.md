@@ -45,19 +45,13 @@ Developer
 Development has been done on windows and som traces of that is still visible. This can quite easily be addressed if needed.
 
 Grunt is used to run the build tasks which currently include
+* Unit testing by nodeunit
 * Static code analysis by jshint
 * Minification (building artifact hron.min.js) by ugglify
 
 ```Batchfile
 >grunt
 ```
-
-Tests are run using a powershell script as illustraded below:
-
-```Powershell
->.\run-tests.ps1
-```
-The test script will download mongoose (for windows) and launch it it the project root folder. This will trigger the default brower to launch and to request index.html which uses test.js as a testing framework and displays the result directly on the page. Test data are downloaded from the local server using XMLHttpRequests.
 
 To publish a new nodejs package execute the line below. Remember to update version information first though otherwise npm will complain.
 
@@ -72,11 +66,8 @@ Version information is currently duplicated in two places:
 
 Possible improvements
 ----------------------------
-A few possible improvements from the top of my head:
-
- - Replace custom testing framework with nodejs script now that server side modules are supported by the library.
  - Support other package managers than npm such as bower
- - Remove dependency to windows for developer environment
+ - Test both server side and client side
 
 License
 -------
