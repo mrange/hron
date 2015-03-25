@@ -25,6 +25,6 @@
   ],
   "license": "Microsoft Public License (Ms-PL)",
   "scripts": {
-    "test": "powershell.exe run-tests.ps1"
+    "test": "nodeunit test-nodeunit.js"
   }
 }
