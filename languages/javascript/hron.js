@@ -1,5 +1,5 @@
 /*!
- * HRON v0.7.7
+ * HRON v0.8.0
  * A Javascript module for parsing and serializing HRON
  * https://github.com/mrange/hron
  * Microsoft Public License (Ms-PL)
@@ -18,12 +18,30 @@
 		return Object.prototype.toString.call(o) === '[object Array]';
 	}
 
+	// ref: http://gomakethings.com/vanilla-javascript-version-of-jquery-extend/
+	function extend (defaults, options) {
+	    var extended = {};
+	    var prop;
+	    for (prop in defaults) {
+	        if (Object.prototype.hasOwnProperty.call(defaults, prop)) {
+	            extended[prop] = defaults[prop];
+	        }
+	    }
+	    for (prop in options) {
+	        if (Object.prototype.hasOwnProperty.call(options, prop)) {
+	            extended[prop] = options[prop];
+	        }
+	    }
+	    return extended;
+	}
+
 	////////////////////////////////////////////////////////////////////
 	// Deserialization (parsing)
 	////////////////////////////////////////////////////////////////////
 
 	var reCommentLine = new RegExp("^(\\s*)#(.*)");
 	var reEmptyLine = new RegExp("^(\\s*?)\\r?$");
+	var rePreprocessorLine = new RegExp("^!(.*)");
 
 	function RegExCache(regexFactory) {
 		var cacheSize = 10;
@@ -51,7 +69,7 @@
 	function deserializePreprocessors(state) {
 		/* jshint -W084 */
 		var match;
-		while(match = state.currentLine().match(/^!(.*)/)) {
+		while(match = state.currentLine().match(rePreprocessorLine)) {
 			state.skipLine("PreProcessor", match[1]);
 		}
 		/* jshint +W084 */
@@ -95,10 +113,10 @@
 		if (match) {
 			state.skipLine("Value_Begin", match[1]);
 			result = { key: match[1] };
-			state.currentIndent++;
+			++state.currentIndent;
 			result.value = deserializeValueLines(state);
-			state.currentIndent--;
-			state.log("Value_End", match[1]);
+			--state.currentIndent;
+			state.logAction("Value_End", match[1]);
 		}
 
 		return result;
@@ -111,13 +129,13 @@
 		if (match) {
 			state.skipLine("Object_Begin", match[1]);
 			result = { key: match[1] };
-			state.currentIndent++;
+			++state.currentIndent;
 			state.objectStack.push({});
 			deserializeMembers(state);
 			result.value = state.currentObject();
 			state.objectStack.pop();
-			state.currentIndent--;
-			state.log("Object_End", match[1]);
+			--state.currentIndent;
+			state.logAction("Object_End", match[1]);
 		}
 
 		return result;
@@ -167,39 +185,35 @@
 		}
 	}
 
-	function DeserializationState(text) {
-		this.lines = text.split("\n");
-		if (this.lines[this.lines.length-1].length === 0)
-			this.lines.pop();  // empty row at end does not count as an empty line. should be ignored.
-		this.index = 0;
+	function DeserializationState(text, options) {
+		var defaults = { actionLog : null };
+		var settings = extend(defaults, options);
+		var lines = text.replace(/\n$/,"").split("\n"); // use replace to avoid empty line at the end
+		var lineIndex = 0;
 		this.currentIndent = 0;	
 		this.objectStack = [{}];
-		this.actionLog = null;
-		this.enableLogging = function() {
-			this.actionLog = [];
-		};
-		this.log = function(action, info) {
-			if (action && this.actionLog) {
-				this.actionLog.push(action + ":" + (info || ""));
+		this.logAction = function(action, info) {
+			if (action && settings.actionLog) {
+				settings.actionLog.push(action + ":" + (info || ""));
 			}
 		};
 		this.currentObject = function() {
 			return this.objectStack[this.objectStack.length-1];
 		};
 		this.currentLine = function() {
-			return this.lines[this.index];
+			return lines[lineIndex];
 		};
 		this.skipLine = function(action, logtext) {
-			this.log(action, logtext);
-			++this.index;
+			this.logAction(action, logtext);
+			++lineIndex;
 		};
 		this.eos = function() {
-			return this.index >= this.lines.length;	
+			return lineIndex >= lines.length;	
 		};	
 	}
 
-	function deserialize(arg) {
-		var state = arg instanceof DeserializationState ? arg : new DeserializationState(arg);
+	function deserialize(text, options) {
+		var state = new DeserializationState(text, options);
 		deserializePreprocessors(state);
 		deserializeMembers(state);
 		return state.currentObject();
@@ -284,7 +298,6 @@
 	// Exports
 	////////////////////////////////////////////////////////////////////
 
-	exports.ParseState = DeserializationState;
 	exports.parse = deserialize;
 	exports.serialize = serialize;
 
