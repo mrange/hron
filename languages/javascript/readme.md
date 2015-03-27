@@ -40,6 +40,41 @@ var object = hron.parse(hronString);
 var hronString = hron.serialize(object);
 ```
 
+Value interpretation
+-------------------
+The hron format handles string values only. Values can be converted to other types using the build in type converters in javascript. For example, give the following hron document
+
+    =stringVal
+        test
+    =numericVal
+        10
+    =boolVal
+        false
+
+The following is valid
+
+```javascript
+var object = hron.parse(...);
+assert.equal(object.stringVal, "test");
+assert.equal(Number(object.numericVal), 10);
+assert.equal(Boolean(object.boolVal), false);
+```
+
+Advanced
+------------------
+The hron.parse method also accepts an additional, optional argument for parse options as illustrated below.
+
+```javascript
+var actionLog = [];
+var object = hron.parse(hronString, { actionLog: actionLog })
+```
+
+The following options are available:
+
+| option           | default       | meaning                     |
+| ---------------- | ------------- | --------------------------- |
+| actionLog        | null          | this is for testing purposes only. the parameter can be set to a list object to retrieve internal log |
+
 Developer
 -------------
 Development has been done on windows and som traces of that is still visible. This can quite easily be addressed if needed.
@@ -53,16 +88,11 @@ Grunt is used to run the build tasks which currently include
 >grunt
 ```
 
-To publish a new nodejs package execute the line below. Remember to update version information first though otherwise npm will complain.
+To publish a new nodejs package execute the line below. Remember to update version information in package.json first though otherwise npm will complain.
 
 ```Batchfile
 >npm publish
 ```
-
-Version information is currently duplicated in two places:
- - package.json (version tag)
- - hron.js (header)
-
 
 Possible improvements
 ----------------------------

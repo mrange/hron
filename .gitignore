@@ -17,3 +17,4 @@ languages/javascript/testdata/*.hron
 languages/javascript/testdata/*.hron.actionlog
 languages/javascript/mongoose-free-5.5.exe
 node_modules/
+npm-debug.log

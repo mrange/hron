@@ -37,12 +37,9 @@ testdata.random = getTestData("random");
 testdata.large = getTestData("large");
 
 function run(test, testdata) {
-	var state = new hron.ParseState(testdata.text);
-	state.enableLogging(); 
-	hron.parse(state);
-
-	var actionLog = state.actionLog.join("\r\n");
-	test.equal(actionLog, testdata.actionLog);
+	var actionLog = [];
+	hron.parse(testdata.text, { actionLog: actionLog });
+	test.equal(actionLog.join("\r\n"), testdata.actionLog);
 }
 
 exports.testHelloWorld = function(test) {
