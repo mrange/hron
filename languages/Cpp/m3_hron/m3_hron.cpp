@@ -91,7 +91,7 @@ namespace
         auto f = path.find_last_of (L'\\');
         if (f != std::wstring::npos)
         {
-            path = path.substr(0, f + 1) + L"..\\..\\..\\..\\..\\reference-data\\";
+            path = path.substr(0, f + 1) + L"..\\..\\..\\..\\reference-data\\";
         }
 
         return path;
