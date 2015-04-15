@@ -1,2 +1,2 @@
-﻿<#@ output      extension   = ".c"                          #>
+﻿<#@ output      extension   = ".i"                          #>
 <#@ include     file        = "Header.ttinclude"            #>

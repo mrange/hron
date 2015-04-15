@@ -82,6 +82,11 @@ namespace
             &&  (fa & FILE_ATTRIBUTE_DIRECTORY);
     }
 
+    bool create_directory (std::wstring const & path)
+    {
+        return CreateDirectory (path.c_str (), NULL) != FALSE;
+    }
+
     std::wstring get__reference_datum_path ()
     {
         wchar_t raw_path[MAX_PATH] = {};
@@ -91,7 +96,7 @@ namespace
         auto f = path.find_last_of (L'\\');
         if (f != std::wstring::npos)
         {
-            path = path.substr(0, f + 1) + L"..\\..\\..\\..\\..\\reference-data\\";
+            path = path.substr(0, f + 1) + L"..\\..\\..\\..\\reference-data\\";
         }
 
         return path;
@@ -423,11 +428,13 @@ int main()
         if (!directory_exists (reference_datum_path))
         {
             wprintf(L"Exiting due to missing reference datum directory (%s)\r\n", reference_datum_path.c_str ());
+            return 999;
         }
 
-        if (!directory_exists (action_logs_path))
+        if (!directory_exists (action_logs_path) && !create_directory (action_logs_path))
         {
-            wprintf(L"Exiting due to missing action log directory (%s)\r\n", action_logs_path.c_str ());
+            wprintf(L"Exiting due to missing action log directory couldn't be created (%s)\r\n", action_logs_path.c_str ());
+            return 999;
         }
 
         unit_test           (reference_datum_path, action_logs_path);

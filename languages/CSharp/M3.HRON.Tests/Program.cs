@@ -21,7 +21,7 @@ namespace M3.HRON.Tests
         // Right now just basic sanity chcking
         static void Main(string[] args)
         {
-            using (var randomized = new StreamReader(@"..\..\..\..\..\..\reference-data\random.hron"))
+            using (var randomized = new StreamReader(@"..\..\..\..\..\reference-data\random.hron"))
             {
                 dynamic randomHron = randomized.ParseAsHRON();
                 Log.Info("{0}", randomHron != null);

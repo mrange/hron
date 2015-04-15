@@ -35,7 +35,7 @@ namespace M3.HRON.Validate
             {
                 Log.Info("Looking for reference data...");
                 var hrons = Directory
-                    .GetFiles(@"..\..\..\..\..\..\reference-data", "*.hron")
+                    .GetFiles(@"..\..\..\..\..\reference-data", "*.hron")
                     .Select(Path.GetFullPath)
                     .ToArray()
                     ;

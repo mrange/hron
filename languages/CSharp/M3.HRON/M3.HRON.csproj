@@ -34,12 +34,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Generated_Parser.cs">
-      <Link>Generated_Parser.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\..\tools\M3.HRON.Generator\M3.HRON.Generator\Parser.cs">
-      <Link>Parser.cs</Link>
-    </Compile>
+    <Compile Include="Generated_Parser.cs" />
     <Compile Include="HRONDynamicSerialization.cs" />
     <Compile Include="HRONSerialization.cs" />
     <Compile Include="HRONSerializationExtensions.cs" />
@@ -48,6 +43,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
