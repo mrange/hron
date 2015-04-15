@@ -98,6 +98,8 @@ namespace ParserValidator.Source.ConsoleApp
 
     partial class Runner
     {
+        const string ParserValidatorConfig = "parser_validator_config.hron";
+
         static readonly ClassDescriptor s_classDescriptor = typeof (TestRunConfiguration).GetClassDescriptor();
 
         static int MaxErrors = 10;
@@ -365,7 +367,7 @@ namespace ParserValidator.Source.ConsoleApp
                 var hasIdenticalTag = 
                         referenceTag == resultTag
                     ||  (
-                            testResult.Configuration.Equivalence.EmptyContentLinesAndEmptyLines
+                            testResult.Configuration.Equivalence.CommentsAndCommentLines
                             && IsComment(referenceTag)
                             && IsComment(resultTag)
                         );
@@ -550,7 +552,7 @@ namespace ParserValidator.Source.ConsoleApp
 
             Log.Info ("Processing test result in: {0}", result.Name);
 
-            var configurationFilePath = Path.Combine(testResultPath, "parser_validator_config.hron");
+            var configurationFilePath = Path.Combine(testResultPath, ParserValidatorConfig);
             var configurationFileName = Path.GetFileName (configurationFilePath);
             if (File.Exists(configurationFilePath))
             {
@@ -607,6 +609,11 @@ namespace ParserValidator.Source.ConsoleApp
 
             foreach (var referenceData in Directory.EnumerateFiles(referenceDataPath, "*.hron"))
             {
+                if (Path.GetFileName (referenceData).ToLowerInvariant () == ParserValidatorConfig)
+                {
+                  continue;
+                }
+
                 var actionLog = referenceData + ".actionlog";
                 if (File.Exists(actionLog))
                 {
