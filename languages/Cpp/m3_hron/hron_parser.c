@@ -49,7 +49,7 @@ struct tag__secret__parser_state
 // -----------------------------------------------------------------------------
 typedef struct tag__secret__parser_state secret__parser_state; 
 // -----------------------------------------------------------------------------
-#include "generated_hron_parser.c"
+#include "generated_hron_parser.i"
 // -----------------------------------------------------------------------------
 HRON_PRELUDE static void empty_void_method (void* pl)
 {

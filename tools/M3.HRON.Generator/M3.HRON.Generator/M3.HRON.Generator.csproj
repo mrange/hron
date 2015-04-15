@@ -99,6 +99,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\languages\Cpp\m3_hron\generated_hron_parser.tt">
+      <Link>generated_hron_parser.tt</Link>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>generated_hron_parser.i</LastGenOutput>
+    </None>
     <None Include="..\..\..\languages\CSharp\M3.HRON\Generated_Parser.tt">
       <Link>Generated_Parser.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -108,10 +113,6 @@
     <None Include="Generated_JSParser.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_JSParser.js</LastGenOutput>
-    </None>
-    <None Include="Generated_CParser.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Generated_CParser.c</LastGenOutput>
     </None>
     <None Include="packages.config" />
     <None Include="T4\CHeader.ttinclude" />
@@ -132,10 +133,11 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Generated_CParser.c">
+    <Content Include="..\..\..\languages\Cpp\m3_hron\generated_hron_parser.i">
+      <Link>generated_hron_parser.i</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Generated_CParser.tt</DependentUpon>
+      <DependentUpon>generated_hron_parser.tt</DependentUpon>
     </Content>
     <Content Include="Generated_JSParser.js">
       <AutoGen>True</AutoGen>
