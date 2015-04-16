@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 // -----------------------------------------------------------------------------
-#include "hron_parser.hpp"
+#include "hron_parser/hron_parser.hpp"
 // -----------------------------------------------------------------------------
 namespace
 {
