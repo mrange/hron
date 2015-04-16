@@ -99,7 +99,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\languages\Cpp\m3_hron\generated_hron_parser.tt">
+    <None Include="..\..\..\languages\Cpp\m3_hron\hron_parser\generated_hron_parser.tt">
       <Link>generated_hron_parser.tt</Link>
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>generated_hron_parser.i</LastGenOutput>
@@ -133,7 +133,7 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\languages\Cpp\m3_hron\generated_hron_parser.i">
+    <Content Include="..\..\..\languages\Cpp\m3_hron\hron_parser\generated_hron_parser.i">
       <Link>generated_hron_parser.i</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

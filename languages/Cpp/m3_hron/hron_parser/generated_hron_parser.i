@@ -183,7 +183,6 @@ apply:
                                 ,   SST_From_Error__To_Error
                                 );
                     break;
-
                 }
             break;
         case SS_WrongTagError:
@@ -198,7 +197,6 @@ apply:
                                 ,   SST_From_WrongTagError__To_Error
                                 );
                     break;
-
                 }
             break;
         case SS_NonEmptyTagError:
@@ -213,7 +211,6 @@ apply:
                                 ,   SST_From_NonEmptyTagError__To_Error
                                 );
                     break;
-
                 }
             break;
         case SS_PreProcessing:
@@ -238,7 +235,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_Indention:
@@ -298,7 +294,6 @@ apply:
                     }
                     goto apply;
                     break;
-
                 }
             break;
         case SS_TagExpected:
@@ -350,7 +345,6 @@ apply:
                                 ,   SST_From_TagExpected__To_WrongTagError
                                 );
                     break;
-
                 }
             break;
         case SS_NoContentTagExpected:
@@ -384,7 +378,6 @@ apply:
                                 ,   SST_From_NoContentTagExpected__To_WrongTagError
                                 );
                     break;
-
                 }
             break;
         case SS_PreProcessorTag:
@@ -398,7 +391,6 @@ apply:
                                 ,   SST_From_PreProcessorTag__To_PreProcessorTag
                                 );
                     break;
-
                 }
             break;
         case SS_ObjectTag:
@@ -412,7 +404,6 @@ apply:
                                 ,   SST_From_ObjectTag__To_ObjectTag
                                 );
                     break;
-
                 }
             break;
         case SS_ValueTag:
@@ -426,7 +417,6 @@ apply:
                                 ,   SST_From_ValueTag__To_ValueTag
                                 );
                     break;
-
                 }
             break;
         case SS_EmptyTag:
@@ -450,7 +440,6 @@ apply:
                                 ,   SST_From_EmptyTag__To_NonEmptyTagError
                                 );
                     break;
-
                 }
             break;
         case SS_CommentTag:
@@ -464,7 +453,6 @@ apply:
                                 ,   SST_From_CommentTag__To_CommentTag
                                 );
                     break;
-
                 }
             break;
         case SS_EndOfPreProcessorTag:
@@ -480,7 +468,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_EndOfObjectTag:
@@ -496,7 +483,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_EndOfEmptyTag:
@@ -512,7 +498,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_EndOfValueTag:
@@ -528,7 +513,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_EndOfCommentTag:
@@ -544,7 +528,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         case SS_ValueLine:
@@ -558,7 +541,6 @@ apply:
                                 ,   SST_From_ValueLine__To_ValueLine
                                 );
                     break;
-
                 }
             break;
         case SS_EndOfValueLine:
@@ -574,7 +556,6 @@ apply:
                                 );
                     goto apply;
                     break;
-
                 }
             break;
         default:
