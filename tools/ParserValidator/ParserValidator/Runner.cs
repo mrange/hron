@@ -1,10 +1,10 @@
 ﻿// ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -159,7 +159,7 @@ namespace ParserValidator.Source.ConsoleApp
             finally
             {
                 Log.HighLight("Validation has completed");
-                var isSuccess = Log.SuccessCount > 0 && Log.ErrorCount == 0; 
+                var isSuccess = Log.SuccessCount > 0 && Log.ErrorCount == 0;
                 Log.Success("#{0} Successes", Log.SuccessCount);
                 Log.Warning("#{0} Warnings", Log.WarningCount);
                 Log.Error("#{0} Errors", Log.ErrorCount);
@@ -222,9 +222,9 @@ namespace ParserValidator.Source.ConsoleApp
 
             public ActionLog(string name, string[] lines)
             {
-                Name  = name ?? "NoName"; 
+                Name  = name ?? "NoName";
                 Lines = lines ?? Array<string>.Empty;
-                
+
             }
 
             public bool Advance()
@@ -258,7 +258,7 @@ namespace ParserValidator.Source.ConsoleApp
                 Log.Error(
                     "{0}@{1} - {2} - {3}{4}",
                     Name,
-                    LineNo + 1, 
+                    LineNo + 1,
                     tag,
                     failure ?? "Unknown",
                     skipLine ? "- Skipping line" : ""
@@ -354,7 +354,7 @@ namespace ParserValidator.Source.ConsoleApp
                 var resultTag = matchResultLine.Groups["tag"].Value;
                 var resultData = matchResultLine.Groups["data"].Value;
 
-                var isIdentical = IsIdentical(testResult.Configuration, referenceTag, resultTag, referenceData, resultData); 
+                var isIdentical = IsIdentical(testResult.Configuration, referenceTag, resultTag, referenceData, resultData);
 
                 if (isIdentical)
                 {
@@ -364,7 +364,7 @@ namespace ParserValidator.Source.ConsoleApp
 
                 var referenceOption = config.Lookup(referenceTag);
 
-                var hasIdenticalTag = 
+                var hasIdenticalTag =
                         referenceTag == resultTag
                     ||  (
                             testResult.Configuration.Equivalence.CommentsAndCommentLines
@@ -506,7 +506,7 @@ namespace ParserValidator.Source.ConsoleApp
             if (!Directory.Exists(testResultsPath))
             {
                 Log.Warning("Test results directory doesn't exists");
-                yield break;                
+                yield break;
             }
 
             foreach (var testResult in Directory.EnumerateDirectories(testResultsPath))
@@ -583,7 +583,7 @@ namespace ParserValidator.Source.ConsoleApp
                     result.Configuration.Value_End      = config.Value_End      ;
                     result.Configuration.Comment        = config.Comment        ;
                     result.Configuration.Empty          = config.Empty          ;
-                    result.Configuration.ContentLine    = config.ContentLine    ; 
+                    result.Configuration.ContentLine    = config.ContentLine    ;
                     result.Configuration.EmptyLine      = config.EmptyLine      ;
                     result.Configuration.CommentLine    = config.CommentLine    ;
                 }
@@ -632,7 +632,7 @@ namespace ParserValidator.Source.ConsoleApp
                         );
                 }
             }
-            
+
         }
     }
 }

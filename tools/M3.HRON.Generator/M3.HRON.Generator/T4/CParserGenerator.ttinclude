@@ -2,7 +2,7 @@
 
 
 <#
-    
+
     var defaultState = model
         .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
 #>
@@ -56,10 +56,10 @@ enum tag__scanner_result
     SR_Done    ,
 };
 
-typedef enum    tag__scanner_state              scanner_state           ;    
-typedef enum    tag__scanner_state_transition   scanner_state_transition;    
-typedef enum    tag__scanner_state_choice       scanner_state_choice    ;    
-typedef enum    tag__scanner_result             scanner_result          ;    
+typedef enum    tag__scanner_state              scanner_state           ;
+typedef enum    tag__scanner_state_transition   scanner_state_transition;
+typedef enum    tag__scanner_state_choice       scanner_state_choice    ;
+typedef enum    tag__scanner_result             scanner_result          ;
 
 struct tag__secret__scanner_state
 {
@@ -120,7 +120,7 @@ HRON_PRELUDE scanner_result scanner_accept_line (secret__scanner_state * ss, hro
     ss->current_line_begin  = begin                 ;
     ss->current_line_end    = end                   ;
     ss->current_char        = ss->current_line[iter];
-    
+
     scanner_begin_line (ss);
 
     for (iter = begin; iter < end; ++iter)
@@ -130,8 +130,8 @@ apply:
         if (ss->result != SR_Continue)
         {
             break;
-        } 
-        
+        }
+
         switch (ss->state)
         {
 <#
@@ -186,11 +186,11 @@ apply:
         }
         else
         {
-            var name = nextParserState.Names[0]; 
+            var name = nextParserState.Names[0];
             if (name != parserState.Name)
             {
 #>
-                    ss->state = SS_<#=name#>; 
+                    ss->state = SS_<#=name#>;
 <#
             }
             OutputStateTransition (parserState, name);
@@ -205,7 +205,7 @@ apply:
                     break;
 <#
     }
-#>    
+#>
                 }
             break;
 <#
@@ -214,14 +214,14 @@ apply:
         default:
             ss->result = SR_Error;
             break;
-        }        
+        }
     }
 
     if (ss->result == SR_Error)
     {
         goto end;
-    } 
-        
+    }
+
     switch (ss->state)
     {
 <#
@@ -258,11 +258,11 @@ apply:
         }
         else
         {
-            var name = nextParserState.Names[0]; 
+            var name = nextParserState.Names[0];
             if (name != parserState.Name)
             {
 #>
-            ss->state = SS_<#=name#>; 
+            ss->state = SS_<#=name#>;
 <#
             }
             OutputStateTransition (parserState, name);

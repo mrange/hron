@@ -94,10 +94,10 @@ enum tag__scanner_result
     SR_Done    ,
 };
 
-typedef enum    tag__scanner_state              scanner_state           ;    
-typedef enum    tag__scanner_state_transition   scanner_state_transition;    
-typedef enum    tag__scanner_state_choice       scanner_state_choice    ;    
-typedef enum    tag__scanner_result             scanner_result          ;    
+typedef enum    tag__scanner_state              scanner_state           ;
+typedef enum    tag__scanner_state_transition   scanner_state_transition;
+typedef enum    tag__scanner_state_choice       scanner_state_choice    ;
+typedef enum    tag__scanner_result             scanner_result          ;
 
 struct tag__secret__scanner_state
 {
@@ -158,7 +158,7 @@ HRON_PRELUDE scanner_result scanner_accept_line (secret__scanner_state * ss, hro
     ss->current_line_begin  = begin                 ;
     ss->current_line_end    = end                   ;
     ss->current_char        = ss->current_line[iter];
-    
+
     scanner_begin_line (ss);
 
     for (iter = begin; iter < end; ++iter)
@@ -168,8 +168,8 @@ apply:
         if (ss->result != SR_Continue)
         {
             break;
-        } 
-        
+        }
+
         switch (ss->state)
         {
         case SS_Error:
@@ -183,14 +183,14 @@ apply:
                                 ,   SST_From_Error__To_Error
                                 );
                     break;
-    
+
                 }
             break;
         case SS_WrongTagError:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Error; 
+                    ss->state = SS_Error;
                             scanner_statetransition (
                                     ss
                                 ,   SS_WrongTagError
@@ -198,14 +198,14 @@ apply:
                                 ,   SST_From_WrongTagError__To_Error
                                 );
                     break;
-    
+
                 }
             break;
         case SS_NonEmptyTagError:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Error; 
+                    ss->state = SS_Error;
                             scanner_statetransition (
                                     ss
                                 ,   SS_NonEmptyTagError
@@ -213,14 +213,14 @@ apply:
                                 ,   SST_From_NonEmptyTagError__To_Error
                                 );
                     break;
-    
+
                 }
             break;
         case SS_PreProcessing:
             switch (ss->current_char)
             {
             case '!':
-                    ss->state = SS_PreProcessorTag; 
+                    ss->state = SS_PreProcessorTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_PreProcessing
@@ -229,7 +229,7 @@ apply:
                                 );
                     break;
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_PreProcessing
@@ -238,7 +238,7 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_Indention:
@@ -298,14 +298,14 @@ apply:
                     }
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_TagExpected:
             switch (ss->current_char)
             {
             case '@':
-                    ss->state = SS_ObjectTag; 
+                    ss->state = SS_ObjectTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -314,7 +314,7 @@ apply:
                                 );
                     break;
             case '=':
-                    ss->state = SS_ValueTag; 
+                    ss->state = SS_ValueTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -323,7 +323,7 @@ apply:
                                 );
                     break;
             case '#':
-                    ss->state = SS_CommentTag; 
+                    ss->state = SS_CommentTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -333,7 +333,7 @@ apply:
                     break;
             case '\t':
             case ' ':
-                    ss->state = SS_EmptyTag; 
+                    ss->state = SS_EmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -342,7 +342,7 @@ apply:
                                 );
                     break;
             default:
-                    ss->state = SS_WrongTagError; 
+                    ss->state = SS_WrongTagError;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -350,14 +350,14 @@ apply:
                                 ,   SST_From_TagExpected__To_WrongTagError
                                 );
                     break;
-    
+
                 }
             break;
         case SS_NoContentTagExpected:
             switch (ss->current_char)
             {
             case '#':
-                    ss->state = SS_CommentTag; 
+                    ss->state = SS_CommentTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_NoContentTagExpected
@@ -367,7 +367,7 @@ apply:
                     break;
             case '\t':
             case ' ':
-                    ss->state = SS_EmptyTag; 
+                    ss->state = SS_EmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_NoContentTagExpected
@@ -376,7 +376,7 @@ apply:
                                 );
                     break;
             default:
-                    ss->state = SS_WrongTagError; 
+                    ss->state = SS_WrongTagError;
                             scanner_statetransition (
                                     ss
                                 ,   SS_NoContentTagExpected
@@ -384,7 +384,7 @@ apply:
                                 ,   SST_From_NoContentTagExpected__To_WrongTagError
                                 );
                     break;
-    
+
                 }
             break;
         case SS_PreProcessorTag:
@@ -398,7 +398,7 @@ apply:
                                 ,   SST_From_PreProcessorTag__To_PreProcessorTag
                                 );
                     break;
-    
+
                 }
             break;
         case SS_ObjectTag:
@@ -412,7 +412,7 @@ apply:
                                 ,   SST_From_ObjectTag__To_ObjectTag
                                 );
                     break;
-    
+
                 }
             break;
         case SS_ValueTag:
@@ -426,7 +426,7 @@ apply:
                                 ,   SST_From_ValueTag__To_ValueTag
                                 );
                     break;
-    
+
                 }
             break;
         case SS_EmptyTag:
@@ -442,7 +442,7 @@ apply:
                                 );
                     break;
             default:
-                    ss->state = SS_NonEmptyTagError; 
+                    ss->state = SS_NonEmptyTagError;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EmptyTag
@@ -450,7 +450,7 @@ apply:
                                 ,   SST_From_EmptyTag__To_NonEmptyTagError
                                 );
                     break;
-    
+
                 }
             break;
         case SS_CommentTag:
@@ -464,14 +464,14 @@ apply:
                                 ,   SST_From_CommentTag__To_CommentTag
                                 );
                     break;
-    
+
                 }
             break;
         case SS_EndOfPreProcessorTag:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_PreProcessing; 
+                    ss->state = SS_PreProcessing;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfPreProcessorTag
@@ -480,14 +480,14 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_EndOfObjectTag:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfObjectTag
@@ -496,14 +496,14 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_EndOfEmptyTag:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfEmptyTag
@@ -512,14 +512,14 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_EndOfValueTag:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfValueTag
@@ -528,14 +528,14 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_EndOfCommentTag:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfCommentTag
@@ -544,7 +544,7 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         case SS_ValueLine:
@@ -558,14 +558,14 @@ apply:
                                 ,   SST_From_ValueLine__To_ValueLine
                                 );
                     break;
-    
+
                 }
             break;
         case SS_EndOfValueLine:
             switch (ss->current_char)
             {
             default:
-                    ss->state = SS_Indention; 
+                    ss->state = SS_Indention;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EndOfValueLine
@@ -574,24 +574,24 @@ apply:
                                 );
                     goto apply;
                     break;
-    
+
                 }
             break;
         default:
             ss->result = SR_Error;
             break;
-        }        
+        }
     }
 
     if (ss->result == SR_Error)
     {
         goto end;
-    } 
-        
+    }
+
     switch (ss->state)
     {
     case SS_Indention:
-            ss->state = SS_EndOfEmptyTag; 
+            ss->state = SS_EndOfEmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_Indention
@@ -600,7 +600,7 @@ apply:
                                 );
         break;
     case SS_TagExpected:
-            ss->state = SS_EndOfEmptyTag; 
+            ss->state = SS_EndOfEmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_TagExpected
@@ -609,7 +609,7 @@ apply:
                                 );
         break;
     case SS_NoContentTagExpected:
-            ss->state = SS_EndOfEmptyTag; 
+            ss->state = SS_EndOfEmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_NoContentTagExpected
@@ -618,7 +618,7 @@ apply:
                                 );
         break;
     case SS_PreProcessorTag:
-            ss->state = SS_EndOfPreProcessorTag; 
+            ss->state = SS_EndOfPreProcessorTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_PreProcessorTag
@@ -627,7 +627,7 @@ apply:
                                 );
         break;
     case SS_ObjectTag:
-            ss->state = SS_EndOfObjectTag; 
+            ss->state = SS_EndOfObjectTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_ObjectTag
@@ -636,7 +636,7 @@ apply:
                                 );
         break;
     case SS_ValueTag:
-            ss->state = SS_EndOfValueTag; 
+            ss->state = SS_EndOfValueTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_ValueTag
@@ -645,7 +645,7 @@ apply:
                                 );
         break;
     case SS_EmptyTag:
-            ss->state = SS_EndOfEmptyTag; 
+            ss->state = SS_EndOfEmptyTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_EmptyTag
@@ -654,7 +654,7 @@ apply:
                                 );
         break;
     case SS_CommentTag:
-            ss->state = SS_EndOfCommentTag; 
+            ss->state = SS_EndOfCommentTag;
                             scanner_statetransition (
                                     ss
                                 ,   SS_CommentTag
@@ -663,7 +663,7 @@ apply:
                                 );
         break;
     case SS_ValueLine:
-            ss->state = SS_EndOfValueLine; 
+            ss->state = SS_EndOfValueLine;
                             scanner_statetransition (
                                     ss
                                 ,   SS_ValueLine

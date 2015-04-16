@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -18,8 +18,8 @@
 #include <stdlib.h>
 // -----------------------------------------------------------------------------
 #define HRON_UNUSED(p) p
-#define HRON_PRELUDE __declspec(noalias) __declspec (safebuffers)  
-#define HRON_EXT_PRELUDE HRON_PRELUDE  
+#define HRON_PRELUDE __declspec(noalias) __declspec (safebuffers)
+#define HRON_EXT_PRELUDE HRON_PRELUDE
 // -----------------------------------------------------------------------------
 struct tag__secret__parser_state
 {
@@ -47,7 +47,7 @@ struct tag__secret__parser_state
     accept_error_method_type    error              ;
 };
 // -----------------------------------------------------------------------------
-typedef struct tag__secret__parser_state secret__parser_state; 
+typedef struct tag__secret__parser_state secret__parser_state;
 // -----------------------------------------------------------------------------
 #include "generated_hron_parser.i"
 // -----------------------------------------------------------------------------
@@ -216,13 +216,13 @@ HRON_PRELUDE static void scanner_statetransition (
 }
 // -----------------------------------------------------------------------------
 #define HRON_COALESCE_EMPTY_METHOD(method)  \
-    ps.method   = visitor->method ? visitor->method : empty_void_method 
+    ps.method   = visitor->method ? visitor->method : empty_void_method
 
 #define HRON_COALESCE_STRING_METHOD(method)  \
-    ps.method   = visitor->method ? visitor->method : empty_string_method 
+    ps.method   = visitor->method ? visitor->method : empty_string_method
 
 #define HRON_COALESCE_ERROR_METHOD(method)  \
-    ps.method   = visitor->method ? visitor->method : empty_error_method 
+    ps.method   = visitor->method ? visitor->method : empty_error_method
 
 // -----------------------------------------------------------------------------
 hron__parser_state  hron__initialize    (hron__visitor*     visitor   )
@@ -294,14 +294,14 @@ void                hron__accept_line   (hron__parser_state parser_state, hron_s
 
     if (!line)
     {
-        line = empty; 
+        line = empty;
     }
 
     if (begin < 0)
     {
         begin = 0;
     }
-    
+
     if (end < begin)
     {
         end = begin;
@@ -321,7 +321,7 @@ enum tag__read_line_state
     RLS_ConsumedCR  ,
 };
 
-typedef enum tag__read_line_state read_line_state; 
+typedef enum tag__read_line_state read_line_state;
 
 void                hron__read_lines    (hron_string_type line, int begin, int end, read_lines_method_type visitor)
 {
@@ -333,14 +333,14 @@ void                hron__read_lines    (hron_string_type line, int begin, int e
 
     if (!line)
     {
-        line = empty; 
+        line = empty;
     }
 
     if (begin < 0)
     {
         begin = 0;
     }
-    
+
     if (end < begin)
     {
         end = begin;
@@ -378,7 +378,7 @@ void                hron__read_lines    (hron_string_type line, int begin, int e
                         state = RLS_Inline;
                         break;
                 }
-    
+
                 break;
             case RLS_NewLine:
                 start       = iter;

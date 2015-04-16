@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -65,8 +65,8 @@ namespace hron
             v.value__line         = &parser::value__line        ;
             v.value__end          = &parser::value__end         ;
             v.error               = &parser::error              ;
-            
-            state = hron__initialize (&v);            
+
+            state = hron__initialize (&v);
         }
 
         parser (parser && p) throw ()
@@ -83,7 +83,7 @@ namespace hron
 
         ~parser () throw ()
         {
-            hron__finalize (state);            
+            hron__finalize (state);
         }
 
         inline void accept_line (hron_string_type b, hron_string_type e) throw ()
@@ -200,7 +200,7 @@ namespace hron
     {
         std::size_t             error_count ;
         hron_value              root        ;
-        
+
         bool                    value_first ;
         hron_value::string_type value_name  ;
         hron_value::string_type value       ;
@@ -214,7 +214,7 @@ namespace hron
         {
         }
 
-        virtual void    document__begin () 
+        virtual void    document__begin ()
         {
             context.push (std::addressof (root));
         }
@@ -224,7 +224,7 @@ namespace hron
         virtual void    comment         (hron_string_type b, hron_string_type e) {}
         virtual void    empty           (hron_string_type b, hron_string_type e) {}
 
-        virtual void    object__begin   (hron_string_type b, hron_string_type e) 
+        virtual void    object__begin   (hron_string_type b, hron_string_type e)
         {
             auto obj = context.top ();
             auto iterator = obj->children.insert (hron_value::values_type::value_type (
@@ -234,12 +234,12 @@ namespace hron
             context.push (std::addressof (iterator->second));
 
         }
-        virtual void    object__end     () 
+        virtual void    object__end     ()
         {
             context.pop ();
         }
 
-        virtual void    value__begin    (hron_string_type b, hron_string_type e) 
+        virtual void    value__begin    (hron_string_type b, hron_string_type e)
         {
             hron_value::string_type name (b, e);
             name.swap (value_name);
@@ -247,7 +247,7 @@ namespace hron
             value_first = true;
         }
 
-        virtual void    value__line     (hron_string_type b, hron_string_type e) 
+        virtual void    value__line     (hron_string_type b, hron_string_type e)
         {
             if (value_first)
             {
@@ -262,7 +262,7 @@ namespace hron
             value.append (b,e);
         }
 
-        virtual void    value__end      () 
+        virtual void    value__end      ()
         {
             auto obj = context.top ();
             hron_value hv;
@@ -273,9 +273,9 @@ namespace hron
                 );
         }
 
-        virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg) 
-        { 
-            ++error_count; 
+        virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg)
+        {
+            ++error_count;
         }
     };
 }

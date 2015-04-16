@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -55,7 +55,7 @@ void                hron__finalize      (hron__parser_state parser_state);
 
 void                hron__accept_line   (hron__parser_state parser_state, hron_string_type line, int begin, int end);
 
-void                hron__read_lines    (hron_string_type line, int begin, int end, read_lines_method_type visitor); 
+void                hron__read_lines    (hron_string_type line, int begin, int end, read_lines_method_type visitor);
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------

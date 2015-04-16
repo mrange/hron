@@ -1,10 +1,10 @@
 ﻿// ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -21,7 +21,7 @@ open Parser
 type ValueLine      =
     |   EmptyLine   of string
     |   CommentLine of int*string
-    |   ContentLine of string          
+    |   ContentLine of string
 
 type Member         =
     |   Empty   of string
@@ -40,67 +40,67 @@ module HRONParser =
     let p_object_tag        = p_char '@'
     let p_comment_tag       = p_char '#'
 
-    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(cs)) 
+    let p_empty_string  = p_many (p_whitespace >>! p_eol) >>? (fun cs -> new string(cs))
     let p_string        = p_many (p_any_char >>! p_eol) >>? (fun cs -> new string(cs))
     let p_any_indention = p_many p_tab >>? (fun cs -> cs.Length)
     let p_comment_string= p_any_indention
-                            .>> p_comment_tag 
-                            >>  p_string 
+                            .>> p_comment_tag
+                            >>  p_string
 
     let p_preprocessor  = p_preprocessor_tag
                             >>. p_string
                             .>> p_eol
 
-    let p_preprocessors = p_many p_preprocessor                              
+    let p_preprocessors = p_many p_preprocessor
 
-    let p_empty_line    = p_empty_string 
-                            .>> p_eol 
+    let p_empty_line    = p_empty_string
+                            .>> p_eol
                             >>? EmptyLine
     let p_comment_line  = p_comment_string
-                            .>> p_eol 
+                            .>> p_eol
                             >>? CommentLine
-    let p_nonempty_line = p_indention 
-                            >>. p_string 
+    let p_nonempty_line = p_indention
+                            >>. p_string
                             .>> p_eol
                             >>? ContentLine
 
     let p_value_line    = p_choose [
                             p_nonempty_line ;
-                            p_comment_line  ; 
+                            p_comment_line  ;
                             p_empty_line    ;
                             ]
     let p_value_lines   = p_many (p_value_line >>! p_eos)
 
-    let p_value         = p_indention 
-                            >>. p_value_tag 
-                            >>. p_string 
-                            .>> p_eol 
-                            .>> p_indent 
-                            >>  p_value_lines  
+    let p_value         = p_indention
+                            >>. p_value_tag
+                            >>. p_string
+                            .>> p_eol
+                            .>> p_indent
+                            >>  p_value_lines
                             .>> p_dedent >>? Value
 
-    let p_empty         = p_empty_string 
-                            .>> p_eol 
+    let p_empty         = p_empty_string
+                            .>> p_eol
                             >>? Empty
 
     let p_comment       = p_comment_string
-                            .>> p_eol 
+                            .>> p_eol
                             >>? Comment
 
-    let rec p_members ps= (p_many (p_member >>! p_eos)) ps 
-    and p_object ps     = (p_indention 
-                            >>. p_object_tag 
-                            >>. p_string 
-                            .>> p_eol 
-                            .>> p_indent 
-                            >> p_members  
+    let rec p_members ps= (p_many (p_member >>! p_eos)) ps
+    and p_object ps     = (p_indention
+                            >>. p_object_tag
+                            >>. p_string
+                            .>> p_eol
+                            .>> p_indent
+                            >> p_members
                             .>> p_dedent >>? Object
                             ) ps
 
     and p_member ps     = (p_choose [
-                            p_value     ; 
-                            p_object    ; 
-                            p_comment   ; 
+                            p_value     ;
+                            p_object    ;
+                            p_comment   ;
                             p_empty     ;
                             ]) ps
 
@@ -121,7 +121,7 @@ module HRONParser =
                     for m' in ms do
                        ignore (member_to_string sb (i + 1) m')
                     sb
-                |   Value (nm, vs)      ->                         
+                |   Value (nm, vs)      ->
                     ignore (sb.Append('\t', i).Append('=').Append(nm).AppendLine())
                     for v' in vs do
                        ignore (value_to_string sb (i + 1) v')

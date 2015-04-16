@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference", "M3.HRON.Reference\M3.HRON.Reference.fsproj", "{7B07EC34-C008-4C37-96C3-F37236E83E65}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.Reference.Tests", "M3.HRON.Reference.Tests\M3.HRON.Reference.Tests.fsproj", "{47BC4B21-179D-45FD-98DA-9DF5875E7095}"

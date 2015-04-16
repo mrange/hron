@@ -12,10 +12,10 @@
         public ParserState (string name, bool isDefault = false)
         {
             Name        = name ?? S_NoName  ;
-            IsDefault   = isDefault         ; 
+            IsDefault   = isDefault         ;
         }
 
-        public bool OnlyHasDefault 
+        public bool OnlyHasDefault
         {
             get
             {
@@ -72,9 +72,9 @@
         public readonly bool        HandOver    ;
 
         public NextParserState (
-            string[] names, 
-            string characters, 
-            bool isTerminator, 
+            string[] names,
+            string characters,
+            bool isTerminator,
             bool handOver
             )
         {
@@ -104,7 +104,7 @@
             }
         }
 
-        public bool IsChoice 
+        public bool IsChoice
         {
             get
             {

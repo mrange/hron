@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
-// This source code is subject to terms and conditions of the Microsoft Public License. A 
-// copy of the license can be found in the License.html file at the root of this distribution. 
-// If you cannot locate the  Microsoft Public License, please send an email to 
-// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+// This source code is subject to terms and conditions of the Microsoft Public License. A
+// copy of the license can be found in the License.html file at the root of this distribution.
+// If you cannot locate the  Microsoft Public License, please send an email to
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 //  by the terms of the Microsoft Public License.
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
@@ -64,7 +64,7 @@ namespace
         return scope_guard<TPredicate> (std::forward<TPredicate> (predicate));
     }
 
-    struct exitcode_exception : std::exception 
+    struct exitcode_exception : std::exception
     {
         int const exitcode;
 
@@ -77,8 +77,8 @@ namespace
     bool directory_exists (std::wstring const & path)
     {
         auto fa = GetFileAttributes (path.c_str ());
-        return 
-                fa != INVALID_FILE_ATTRIBUTES 
+        return
+                fa != INVALID_FILE_ATTRIBUTES
             &&  (fa & FILE_ATTRIBUTE_DIRECTORY);
     }
 
@@ -104,7 +104,7 @@ namespace
 
     std::vector<std::wstring> get__reference_datum (std::wstring const & reference_data_path)
     {
-        auto search_for = reference_data_path + L"*.hron"; 
+        auto search_for = reference_data_path + L"*.hron";
         WIN32_FIND_DATA ff = {};
         auto handle = FindFirstFileW (search_for.c_str (), &ff);
         if (handle == INVALID_HANDLE_VALUE)
@@ -155,11 +155,11 @@ namespace
     {
         visitor_state & vs = *reinterpret_cast<visitor_state*> (payload);
 
-        vs.output 
-            << "Comment:" 
+        vs.output
+            << "Comment:"
             << b - 1
             << ","
-            << std::string (s + b, s + e) 
+            << std::string (s + b, s + e)
             << std::endl
             ;
     }
@@ -202,7 +202,7 @@ namespace
 
     static bool test_bom (std::ifstream & input)
     {
-        return 
+        return
                 input.peek () != 0xEF
             ||  (
                     input.get() == 0xEF
@@ -238,7 +238,7 @@ namespace
 
         virtual void    error           (int line_no, hron_string_type b, hron_string_type e, hron_string_type msg){wprintf(L"error\r\n");}
     };
-    
+
     void unit_test (
             std::wstring const & reference_datum_path
         ,   std::wstring const & action_logs_path
@@ -449,12 +449,12 @@ int main()
     }
     catch (std::exception const & e)
     {
-        wprintf(L"Exiting due to error: %S\r\n", e.what ()); 
+        wprintf(L"Exiting due to error: %S\r\n", e.what ());
         return 999;
     }
     catch (...)
     {
-        wprintf(L"Exiting due to unrecognized error\r\n"); 
+        wprintf(L"Exiting due to unrecognized error\r\n");
         return 999;
     }
 }
