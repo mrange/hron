@@ -146,6 +146,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>generated_hron_parser.tt</DependentUpon>
     </Content>
+    <Content Include="..\..\..\languages\java2\src\main\java\org\m3\hron\GeneratedHRONParser.java">
+      <Link>GeneratedHRONParser.java</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeneratedHRONParser.tt</DependentUpon>
+    </Content>
     <Content Include="Generated_JSParser.js">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
