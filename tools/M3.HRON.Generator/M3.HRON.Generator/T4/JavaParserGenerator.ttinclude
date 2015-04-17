@@ -1,9 +1,19 @@
-﻿<#@ include file="JavaHeader.ttinclude" #>
+﻿// ---------------------------------------------------------------------------------------------- 
+// Copyright (c) Mårten Rånge. 
+// ---------------------------------------------------------------------------------------------- 
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License. 
+// ---------------------------------------------------------------------------------------------- 
+// You must not remove this notice, or any other, from this software. 
+// ---------------------------------------------------------------------------------------------- 
+
+<#@ include file="JavaHeader.ttinclude" #>
 
 package org.m3.hron;
-
 <#
-
     var defaultState = model
         .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
 #>
@@ -80,25 +90,27 @@ class Scanner extends BaseScanner {
 
         scannerBeginLine ();
 
-        for (int iter = currentLineBegin; iter < currentLineEnd; ++iter)
-        {
+        for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
             currentChar = currentLine.charAt (iter);
-/*
-apply:
-        if (ss->result != SR_Continue)
-        {
-            break;
+
+            while (apply ()) { }
         }
 
-        switch (ss->state)
-        {
+        applyEndOfLine ();
+
+        scannerEndLine ();
+
+        return result;
+    }
+
+    boolean apply () {
+        switch (state) {
 <#
     foreach (var parserState in model)
     {
 #>
-        case SS_<#=parserState.Name#>:
-            switch (ss->current_char)
-            {
+        case <#=parserState.Name#>:
+            switch (currentChar) {
 <#
     foreach (var nextParserState in parserState.NextStates (defaultState))
     {
@@ -122,22 +134,21 @@ apply:
             OutputStateChoice (parserState, nextParserState);
 #>
 
-                switch (ss->state)
-                {
+                switch (state) {
 <#
         foreach (var name in nextParserState.Names)
         {
 #>
-                case SS_<#=name#>:
+                case <#=name#>:
 <#
                         OutputStateTransition (parserState, name);
 #>
-                    break;
+                        break;
 <#
         }
 #>
                     default:
-                        ss->result = SR_Error;
+                        result = ScannerResult.Error;
                         break;
                     }
 <#
@@ -148,7 +159,7 @@ apply:
             if (name != parserState.Name)
             {
 #>
-                    ss->state = SS_<#=name#>;
+                    state = ScannerState.<#=name#>;
 <#
             }
             OutputStateTransition (parserState, name);
@@ -156,37 +167,40 @@ apply:
     if (nextParserState.HandOver)
     {
 #>
-                    goto apply;
+                    return true;
+<#
+    }
+    else
+    {
+#>
+                    return false;
 <#
     }
 #>
-                    break;
 <#
     }
 #>
                 }
-            break;
 <#
     }
 #>
         default:
-            ss->result = SR_Error;
-            break;
+            result = ScannerResult.Error;
+            return false;
         }
     }
 
-    if (ss->result == SR_Error)
-    {
-        goto end;
-    }
+    void applyEndOfLine () {
+        if (result == ScannerResult.Error) {
+            return;
+        }
 
-    switch (ss->state)
-    {
+        switch (state) {
 <#
     foreach (var parserState in model.Where (ps => ps.Any (nps => nps.IsTerminator)))
     {
 #>
-    case SS_<#=parserState.Name#>:
+        case <#=parserState.Name#>:
 <#
         var nextParserState = parserState.First (nps => nps.IsTerminator);
         if (nextParserState.IsChoice)
@@ -194,23 +208,22 @@ apply:
             OutputStateChoice (parserState, nextParserState);
 #>
 
-        switch (ss->state)
-        {
+            switch (state) {
 <#
         foreach (var name in nextParserState.Names)
         {
 #>
-        case SS_<#=name#>:
+            case <#=name#>:
 <#
             OutputStateTransition (parserState, name);
 #>
-            break;
+                break;
 <#
         }
 #>
-        default:
-            ss->result = SR_Error;
-            break;
+            default:
+                result = ScannerResult.Error;
+                break;
     }
 <#
         }
@@ -220,25 +233,18 @@ apply:
             if (name != parserState.Name)
             {
 #>
-            ss->state = SS_<#=name#>;
+            state = ScannerState.<#=name#>;
 <#
             }
             OutputStateTransition (parserState, name);
         }
 #>
-        break;
+            break;
 <#
     }
 #>
-    }
-
-end:
-*/      
         }
 
-        scannerEndLine ();
-
-        return result;
     }
 }
 
@@ -249,9 +255,8 @@ end:
     void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
     {
 #>
-                    scanner_statechoice (
-                            ss
-                        ,   SSC_From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
+                    scannerStateChoice (
+                            ScannerStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
                         );
 <#+
     }
@@ -261,12 +266,11 @@ end:
     void OutputStateTransition (ParserState parserState, string to)
     {
 #>
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_<#=parserState.Name#>
-                                ,   SS_<#=to#>
-                                ,   SST_From_<#=parserState.Name#>__To_<#=to#>
-                                );
+                    scannerStateTransition (
+                            ScannerState.<#=parserState.Name#>
+                        ,   ScannerState.<#=to#>
+                        ,   ScannerStateTransition.From_<#=parserState.Name#>__To_<#=to#>
+                        );
 <#+
     }
 #>

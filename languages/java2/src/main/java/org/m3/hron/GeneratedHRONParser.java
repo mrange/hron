@@ -1,5 +1,17 @@
 
 
+// ---------------------------------------------------------------------------------------------- 
+// Copyright (c) M?rten R?nge. 
+// ---------------------------------------------------------------------------------------------- 
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License. 
+// ---------------------------------------------------------------------------------------------- 
+// You must not remove this notice, or any other, from this software. 
+// ---------------------------------------------------------------------------------------------- 
+
 // ############################################################################
 // #                                                                          #
 // #        ---==>  T H I S  F I L E  I S   G E N E R A T E D  <==---         #
@@ -14,7 +26,6 @@
 
 
 package org.m3.hron;
-
 
 enum ScannerState {
     Error,
@@ -118,507 +129,414 @@ class Scanner extends BaseScanner {
 
         scannerBeginLine ();
 
-        for (int iter = currentLineBegin; iter < currentLineEnd; ++iter)
-        {
+        for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
             currentChar = currentLine.charAt (iter);
-/*
-apply:
-        if (ss->result != SR_Continue)
-        {
-            break;
+
+            while (apply ()) { }
         }
 
-        switch (ss->state)
-        {
-        case SS_Error:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Error
-                                ,   SS_Error
-                                ,   SST_From_Error__To_Error
-                                );
-                    break;
-                }
-            break;
-        case SS_WrongTagError:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Error;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_WrongTagError
-                                ,   SS_Error
-                                ,   SST_From_WrongTagError__To_Error
-                                );
-                    break;
-                }
-            break;
-        case SS_NonEmptyTagError:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Error;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_NonEmptyTagError
-                                ,   SS_Error
-                                ,   SST_From_NonEmptyTagError__To_Error
-                                );
-                    break;
-                }
-            break;
-        case SS_PreProcessing:
-            switch (ss->current_char)
-            {
-            case '!':
-                    ss->state = SS_PreProcessorTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_PreProcessing
-                                ,   SS_PreProcessorTag
-                                ,   SST_From_PreProcessing__To_PreProcessorTag
-                                );
-                    break;
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_PreProcessing
-                                ,   SS_Indention
-                                ,   SST_From_PreProcessing__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_Indention:
-            switch (ss->current_char)
-            {
-            case '\t':
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_Indention
-                                ,   SST_From_Indention__To_Indention
-                                );
-                    break;
-            default:
-                    scanner_statechoice (
-                            ss
-                        ,   SSC_From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error
-                        );
-
-                switch (ss->state)
-                {
-                case SS_TagExpected:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_TagExpected
-                                ,   SST_From_Indention__To_TagExpected
-                                );
-                    break;
-                case SS_NoContentTagExpected:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_NoContentTagExpected
-                                ,   SST_From_Indention__To_NoContentTagExpected
-                                );
-                    break;
-                case SS_ValueLine:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_ValueLine
-                                ,   SST_From_Indention__To_ValueLine
-                                );
-                    break;
-                case SS_Error:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_Error
-                                ,   SST_From_Indention__To_Error
-                                );
-                    break;
-                    default:
-                        ss->result = SR_Error;
-                        break;
-                    }
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_TagExpected:
-            switch (ss->current_char)
-            {
-            case '@':
-                    ss->state = SS_ObjectTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_ObjectTag
-                                ,   SST_From_TagExpected__To_ObjectTag
-                                );
-                    break;
-            case '=':
-                    ss->state = SS_ValueTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_ValueTag
-                                ,   SST_From_TagExpected__To_ValueTag
-                                );
-                    break;
-            case '#':
-                    ss->state = SS_CommentTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_CommentTag
-                                ,   SST_From_TagExpected__To_CommentTag
-                                );
-                    break;
-            case '\t':
-            case ' ':
-                    ss->state = SS_EmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_EmptyTag
-                                ,   SST_From_TagExpected__To_EmptyTag
-                                );
-                    break;
-            default:
-                    ss->state = SS_WrongTagError;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_WrongTagError
-                                ,   SST_From_TagExpected__To_WrongTagError
-                                );
-                    break;
-                }
-            break;
-        case SS_NoContentTagExpected:
-            switch (ss->current_char)
-            {
-            case '#':
-                    ss->state = SS_CommentTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_NoContentTagExpected
-                                ,   SS_CommentTag
-                                ,   SST_From_NoContentTagExpected__To_CommentTag
-                                );
-                    break;
-            case '\t':
-            case ' ':
-                    ss->state = SS_EmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_NoContentTagExpected
-                                ,   SS_EmptyTag
-                                ,   SST_From_NoContentTagExpected__To_EmptyTag
-                                );
-                    break;
-            default:
-                    ss->state = SS_WrongTagError;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_NoContentTagExpected
-                                ,   SS_WrongTagError
-                                ,   SST_From_NoContentTagExpected__To_WrongTagError
-                                );
-                    break;
-                }
-            break;
-        case SS_PreProcessorTag:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_PreProcessorTag
-                                ,   SS_PreProcessorTag
-                                ,   SST_From_PreProcessorTag__To_PreProcessorTag
-                                );
-                    break;
-                }
-            break;
-        case SS_ObjectTag:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ObjectTag
-                                ,   SS_ObjectTag
-                                ,   SST_From_ObjectTag__To_ObjectTag
-                                );
-                    break;
-                }
-            break;
-        case SS_ValueTag:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ValueTag
-                                ,   SS_ValueTag
-                                ,   SST_From_ValueTag__To_ValueTag
-                                );
-                    break;
-                }
-            break;
-        case SS_EmptyTag:
-            switch (ss->current_char)
-            {
-            case '\t':
-            case ' ':
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EmptyTag
-                                ,   SS_EmptyTag
-                                ,   SST_From_EmptyTag__To_EmptyTag
-                                );
-                    break;
-            default:
-                    ss->state = SS_NonEmptyTagError;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EmptyTag
-                                ,   SS_NonEmptyTagError
-                                ,   SST_From_EmptyTag__To_NonEmptyTagError
-                                );
-                    break;
-                }
-            break;
-        case SS_CommentTag:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_CommentTag
-                                ,   SS_CommentTag
-                                ,   SST_From_CommentTag__To_CommentTag
-                                );
-                    break;
-                }
-            break;
-        case SS_EndOfPreProcessorTag:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_PreProcessing;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfPreProcessorTag
-                                ,   SS_PreProcessing
-                                ,   SST_From_EndOfPreProcessorTag__To_PreProcessing
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_EndOfObjectTag:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfObjectTag
-                                ,   SS_Indention
-                                ,   SST_From_EndOfObjectTag__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_EndOfEmptyTag:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfEmptyTag
-                                ,   SS_Indention
-                                ,   SST_From_EndOfEmptyTag__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_EndOfValueTag:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfValueTag
-                                ,   SS_Indention
-                                ,   SST_From_EndOfValueTag__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_EndOfCommentTag:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfCommentTag
-                                ,   SS_Indention
-                                ,   SST_From_EndOfCommentTag__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        case SS_ValueLine:
-            switch (ss->current_char)
-            {
-            default:
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ValueLine
-                                ,   SS_ValueLine
-                                ,   SST_From_ValueLine__To_ValueLine
-                                );
-                    break;
-                }
-            break;
-        case SS_EndOfValueLine:
-            switch (ss->current_char)
-            {
-            default:
-                    ss->state = SS_Indention;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EndOfValueLine
-                                ,   SS_Indention
-                                ,   SST_From_EndOfValueLine__To_Indention
-                                );
-                    goto apply;
-                    break;
-                }
-            break;
-        default:
-            ss->result = SR_Error;
-            break;
-        }
-    }
-
-    if (ss->result == SR_Error)
-    {
-        goto end;
-    }
-
-    switch (ss->state)
-    {
-    case SS_Indention:
-            ss->state = SS_EndOfEmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_Indention
-                                ,   SS_EndOfEmptyTag
-                                ,   SST_From_Indention__To_EndOfEmptyTag
-                                );
-        break;
-    case SS_TagExpected:
-            ss->state = SS_EndOfEmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_TagExpected
-                                ,   SS_EndOfEmptyTag
-                                ,   SST_From_TagExpected__To_EndOfEmptyTag
-                                );
-        break;
-    case SS_NoContentTagExpected:
-            ss->state = SS_EndOfEmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_NoContentTagExpected
-                                ,   SS_EndOfEmptyTag
-                                ,   SST_From_NoContentTagExpected__To_EndOfEmptyTag
-                                );
-        break;
-    case SS_PreProcessorTag:
-            ss->state = SS_EndOfPreProcessorTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_PreProcessorTag
-                                ,   SS_EndOfPreProcessorTag
-                                ,   SST_From_PreProcessorTag__To_EndOfPreProcessorTag
-                                );
-        break;
-    case SS_ObjectTag:
-            ss->state = SS_EndOfObjectTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ObjectTag
-                                ,   SS_EndOfObjectTag
-                                ,   SST_From_ObjectTag__To_EndOfObjectTag
-                                );
-        break;
-    case SS_ValueTag:
-            ss->state = SS_EndOfValueTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ValueTag
-                                ,   SS_EndOfValueTag
-                                ,   SST_From_ValueTag__To_EndOfValueTag
-                                );
-        break;
-    case SS_EmptyTag:
-            ss->state = SS_EndOfEmptyTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_EmptyTag
-                                ,   SS_EndOfEmptyTag
-                                ,   SST_From_EmptyTag__To_EndOfEmptyTag
-                                );
-        break;
-    case SS_CommentTag:
-            ss->state = SS_EndOfCommentTag;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_CommentTag
-                                ,   SS_EndOfCommentTag
-                                ,   SST_From_CommentTag__To_EndOfCommentTag
-                                );
-        break;
-    case SS_ValueLine:
-            ss->state = SS_EndOfValueLine;
-                            scanner_statetransition (
-                                    ss
-                                ,   SS_ValueLine
-                                ,   SS_EndOfValueLine
-                                ,   SST_From_ValueLine__To_EndOfValueLine
-                                );
-        break;
-    }
-
-end:
-*/      
-        }
+        applyEndOfLine ();
 
         scannerEndLine ();
 
         return result;
+    }
+
+    boolean apply () {
+        switch (state) {
+        case Error:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.Error
+                        ,   ScannerState.Error
+                        ,   ScannerStateTransition.From_Error__To_Error
+                        );
+                    return false;
+                }
+        case WrongTagError:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Error;
+                    scannerStateTransition (
+                            ScannerState.WrongTagError
+                        ,   ScannerState.Error
+                        ,   ScannerStateTransition.From_WrongTagError__To_Error
+                        );
+                    return false;
+                }
+        case NonEmptyTagError:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Error;
+                    scannerStateTransition (
+                            ScannerState.NonEmptyTagError
+                        ,   ScannerState.Error
+                        ,   ScannerStateTransition.From_NonEmptyTagError__To_Error
+                        );
+                    return false;
+                }
+        case PreProcessing:
+            switch (currentChar) {
+            case '!':
+                    state = ScannerState.PreProcessorTag;
+                    scannerStateTransition (
+                            ScannerState.PreProcessing
+                        ,   ScannerState.PreProcessorTag
+                        ,   ScannerStateTransition.From_PreProcessing__To_PreProcessorTag
+                        );
+                    return false;
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.PreProcessing
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_PreProcessing__To_Indention
+                        );
+                    return true;
+                }
+        case Indention:
+            switch (currentChar) {
+            case '\t':
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_Indention__To_Indention
+                        );
+                    return false;
+            default:
+                    scannerStateChoice (
+                            ScannerStateChoice.From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error
+                        );
+
+                switch (state) {
+                case TagExpected:
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.TagExpected
+                        ,   ScannerStateTransition.From_Indention__To_TagExpected
+                        );
+                        break;
+                case NoContentTagExpected:
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.NoContentTagExpected
+                        ,   ScannerStateTransition.From_Indention__To_NoContentTagExpected
+                        );
+                        break;
+                case ValueLine:
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.ValueLine
+                        ,   ScannerStateTransition.From_Indention__To_ValueLine
+                        );
+                        break;
+                case Error:
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.Error
+                        ,   ScannerStateTransition.From_Indention__To_Error
+                        );
+                        break;
+                    default:
+                        result = ScannerResult.Error;
+                        break;
+                    }
+                    return true;
+                }
+        case TagExpected:
+            switch (currentChar) {
+            case '@':
+                    state = ScannerState.ObjectTag;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.ObjectTag
+                        ,   ScannerStateTransition.From_TagExpected__To_ObjectTag
+                        );
+                    return false;
+            case '=':
+                    state = ScannerState.ValueTag;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.ValueTag
+                        ,   ScannerStateTransition.From_TagExpected__To_ValueTag
+                        );
+                    return false;
+            case '#':
+                    state = ScannerState.CommentTag;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.CommentTag
+                        ,   ScannerStateTransition.From_TagExpected__To_CommentTag
+                        );
+                    return false;
+            case '\t':
+            case ' ':
+                    state = ScannerState.EmptyTag;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.EmptyTag
+                        ,   ScannerStateTransition.From_TagExpected__To_EmptyTag
+                        );
+                    return false;
+            default:
+                    state = ScannerState.WrongTagError;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.WrongTagError
+                        ,   ScannerStateTransition.From_TagExpected__To_WrongTagError
+                        );
+                    return false;
+                }
+        case NoContentTagExpected:
+            switch (currentChar) {
+            case '#':
+                    state = ScannerState.CommentTag;
+                    scannerStateTransition (
+                            ScannerState.NoContentTagExpected
+                        ,   ScannerState.CommentTag
+                        ,   ScannerStateTransition.From_NoContentTagExpected__To_CommentTag
+                        );
+                    return false;
+            case '\t':
+            case ' ':
+                    state = ScannerState.EmptyTag;
+                    scannerStateTransition (
+                            ScannerState.NoContentTagExpected
+                        ,   ScannerState.EmptyTag
+                        ,   ScannerStateTransition.From_NoContentTagExpected__To_EmptyTag
+                        );
+                    return false;
+            default:
+                    state = ScannerState.WrongTagError;
+                    scannerStateTransition (
+                            ScannerState.NoContentTagExpected
+                        ,   ScannerState.WrongTagError
+                        ,   ScannerStateTransition.From_NoContentTagExpected__To_WrongTagError
+                        );
+                    return false;
+                }
+        case PreProcessorTag:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.PreProcessorTag
+                        ,   ScannerState.PreProcessorTag
+                        ,   ScannerStateTransition.From_PreProcessorTag__To_PreProcessorTag
+                        );
+                    return false;
+                }
+        case ObjectTag:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.ObjectTag
+                        ,   ScannerState.ObjectTag
+                        ,   ScannerStateTransition.From_ObjectTag__To_ObjectTag
+                        );
+                    return false;
+                }
+        case ValueTag:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.ValueTag
+                        ,   ScannerState.ValueTag
+                        ,   ScannerStateTransition.From_ValueTag__To_ValueTag
+                        );
+                    return false;
+                }
+        case EmptyTag:
+            switch (currentChar) {
+            case '\t':
+            case ' ':
+                    scannerStateTransition (
+                            ScannerState.EmptyTag
+                        ,   ScannerState.EmptyTag
+                        ,   ScannerStateTransition.From_EmptyTag__To_EmptyTag
+                        );
+                    return false;
+            default:
+                    state = ScannerState.NonEmptyTagError;
+                    scannerStateTransition (
+                            ScannerState.EmptyTag
+                        ,   ScannerState.NonEmptyTagError
+                        ,   ScannerStateTransition.From_EmptyTag__To_NonEmptyTagError
+                        );
+                    return false;
+                }
+        case CommentTag:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.CommentTag
+                        ,   ScannerState.CommentTag
+                        ,   ScannerStateTransition.From_CommentTag__To_CommentTag
+                        );
+                    return false;
+                }
+        case EndOfPreProcessorTag:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.PreProcessing;
+                    scannerStateTransition (
+                            ScannerState.EndOfPreProcessorTag
+                        ,   ScannerState.PreProcessing
+                        ,   ScannerStateTransition.From_EndOfPreProcessorTag__To_PreProcessing
+                        );
+                    return true;
+                }
+        case EndOfObjectTag:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.EndOfObjectTag
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_EndOfObjectTag__To_Indention
+                        );
+                    return true;
+                }
+        case EndOfEmptyTag:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.EndOfEmptyTag
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_EndOfEmptyTag__To_Indention
+                        );
+                    return true;
+                }
+        case EndOfValueTag:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.EndOfValueTag
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_EndOfValueTag__To_Indention
+                        );
+                    return true;
+                }
+        case EndOfCommentTag:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.EndOfCommentTag
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_EndOfCommentTag__To_Indention
+                        );
+                    return true;
+                }
+        case ValueLine:
+            switch (currentChar) {
+            default:
+                    scannerStateTransition (
+                            ScannerState.ValueLine
+                        ,   ScannerState.ValueLine
+                        ,   ScannerStateTransition.From_ValueLine__To_ValueLine
+                        );
+                    return false;
+                }
+        case EndOfValueLine:
+            switch (currentChar) {
+            default:
+                    state = ScannerState.Indention;
+                    scannerStateTransition (
+                            ScannerState.EndOfValueLine
+                        ,   ScannerState.Indention
+                        ,   ScannerStateTransition.From_EndOfValueLine__To_Indention
+                        );
+                    return true;
+                }
+        default:
+            result = ScannerResult.Error;
+            return false;
+        }
+    }
+
+    void applyEndOfLine () {
+        if (result == ScannerResult.Error) {
+            return;
+        }
+
+        switch (state) {
+        case Indention:
+            state = ScannerState.EndOfEmptyTag;
+                    scannerStateTransition (
+                            ScannerState.Indention
+                        ,   ScannerState.EndOfEmptyTag
+                        ,   ScannerStateTransition.From_Indention__To_EndOfEmptyTag
+                        );
+            break;
+        case TagExpected:
+            state = ScannerState.EndOfEmptyTag;
+                    scannerStateTransition (
+                            ScannerState.TagExpected
+                        ,   ScannerState.EndOfEmptyTag
+                        ,   ScannerStateTransition.From_TagExpected__To_EndOfEmptyTag
+                        );
+            break;
+        case NoContentTagExpected:
+            state = ScannerState.EndOfEmptyTag;
+                    scannerStateTransition (
+                            ScannerState.NoContentTagExpected
+                        ,   ScannerState.EndOfEmptyTag
+                        ,   ScannerStateTransition.From_NoContentTagExpected__To_EndOfEmptyTag
+                        );
+            break;
+        case PreProcessorTag:
+            state = ScannerState.EndOfPreProcessorTag;
+                    scannerStateTransition (
+                            ScannerState.PreProcessorTag
+                        ,   ScannerState.EndOfPreProcessorTag
+                        ,   ScannerStateTransition.From_PreProcessorTag__To_EndOfPreProcessorTag
+                        );
+            break;
+        case ObjectTag:
+            state = ScannerState.EndOfObjectTag;
+                    scannerStateTransition (
+                            ScannerState.ObjectTag
+                        ,   ScannerState.EndOfObjectTag
+                        ,   ScannerStateTransition.From_ObjectTag__To_EndOfObjectTag
+                        );
+            break;
+        case ValueTag:
+            state = ScannerState.EndOfValueTag;
+                    scannerStateTransition (
+                            ScannerState.ValueTag
+                        ,   ScannerState.EndOfValueTag
+                        ,   ScannerStateTransition.From_ValueTag__To_EndOfValueTag
+                        );
+            break;
+        case EmptyTag:
+            state = ScannerState.EndOfEmptyTag;
+                    scannerStateTransition (
+                            ScannerState.EmptyTag
+                        ,   ScannerState.EndOfEmptyTag
+                        ,   ScannerStateTransition.From_EmptyTag__To_EndOfEmptyTag
+                        );
+            break;
+        case CommentTag:
+            state = ScannerState.EndOfCommentTag;
+                    scannerStateTransition (
+                            ScannerState.CommentTag
+                        ,   ScannerState.EndOfCommentTag
+                        ,   ScannerStateTransition.From_CommentTag__To_EndOfCommentTag
+                        );
+            break;
+        case ValueLine:
+            state = ScannerState.EndOfValueLine;
+                    scannerStateTransition (
+                            ScannerState.ValueLine
+                        ,   ScannerState.EndOfValueLine
+                        ,   ScannerStateTransition.From_ValueLine__To_EndOfValueLine
+                        );
+            break;
+        }
+
     }
 }
 
