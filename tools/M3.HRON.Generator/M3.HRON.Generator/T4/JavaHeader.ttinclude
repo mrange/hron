@@ -1,2 +1,2 @@
-﻿<#@ output      extension   = ".java"                       #>
-<#@ include     file        = "Header.ttinclude"            #>
+﻿<#@ output      extension   = ".java"             encoding = "ASCII"  #>
+<#@ include     file        = "Header.ttinclude"                      #>

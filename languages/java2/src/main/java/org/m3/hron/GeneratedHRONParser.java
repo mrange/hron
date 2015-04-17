@@ -38,8 +38,7 @@ enum ScannerState {
     EndOfValueLine,
 }
 
-enum ScannerStateTransition
-{
+enum ScannerStateTransition {
     From_Error__To_Error,
     From_WrongTagError__To_Error,
     From_NonEmptyTagError__To_Error,
@@ -82,90 +81,47 @@ enum ScannerStateTransition
     From_EndOfValueLine__To_Indention,
 }
 
-enum ScannerStateChoice
-{
+enum ScannerStateChoice {
     From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error,
 }
 
-enum ScannerResult
-{
+enum ScannerResult {
     Error   ,
     Continue,
     Done    ,
 }
 
-class ParserState
-{
-    public int            expectedIndent  ;
-    public int            indention       ;
-    public int            lineNo          ;
-    public int            isBuildingValue ;
-}
-
-class ScannerState
-{
+class Scanner extends BaseScanner {
     public ScannerResult  result            ;
     public ScannerState   state             ;
     public String         currentLine       ;
     public int            currentLineBegin  ;
     public int            currentLineEnd    ;
     public char           currentChar       ;
-    public ParserState    parserState       ;
-}
 
+    @Override
+    public void init (ScannerState initialState) {
+        super.init (initialState);
+        result          = ScannerResult.Continue;
+        state           = initialState          ;
+        currentLine     = ""                    ;
+        currentLineBegin= 0                     ;
+        currentLineEnd  = 0                     ;
+        currentChar     = ' '                   ;
+    }
+
+    ScannerResult acceptLine (String line) {
+        currentLine       = line          ;
+        currentLineBegin  = 0             ;
+        currentLineEnd    = line.length() ;
+        currentChar       = ' '           ;
+
+        scannerBeginLine ();
+
+        for (int iter = currentLineBegin; iter < currentLineEnd; ++iter)
+        {
+            currentChar = currentLine.charAt (iter);
 /*
-HRON_EXT_PRELUDE static void scanner_begin_line (secret__scanner_state * ss);
-
-HRON_EXT_PRELUDE static void scanner_end_line (secret__scanner_state * ss);
-
-HRON_EXT_PRELUDE static void scanner_statechoice (
-        secret__scanner_state *     ss
-    ,   scanner_state_choice        choice
-    );
-
-HRON_EXT_PRELUDE static void scanner_statetransition (
-        secret__scanner_state *     ss
-    ,   scanner_state               from
-    ,   scanner_state               to
-    ,   scanner_state_transition    sst
-    );
-
-HRON_PRELUDE static void scanner_init (
-        secret__scanner_state * ss
-    ,   scanner_state           initial_state
-    ,   secret__parser_state *  ps
-    )
-{
-    assert (ss);
-    assert (ps);
-
-    memset (ss, 0, sizeof (secret__scanner_state));
-    ss->result          = SR_Continue   ;
-    ss->state           = initial_state ;
-    ss->parser_state    = *ps           ;
-}
-
-HRON_PRELUDE scanner_result scanner_accept_line (secret__scanner_state * ss, hron_string_type hs, int begin, int end)
-{
-    int iter;
-
-    assert (ss);
-    assert (hs);
-    assert (begin >= 0);
-    assert (end >= begin);
-
-    iter = begin;
-
-    ss->current_line        = hs                    ;
-    ss->current_line_begin  = begin                 ;
-    ss->current_line_end    = end                   ;
-    ss->current_char        = ss->current_line[iter];
-
-    scanner_begin_line (ss);
-
-    for (iter = begin; iter < end; ++iter)
-    {
-        ss->current_char = ss->current_line[iter];
 apply:
         if (ss->result != SR_Continue)
         {
@@ -657,12 +613,15 @@ apply:
     }
 
 end:
-    scanner_end_line (ss);
+*/      
+        }
 
-    return ss->result;
+        scannerEndLine ();
+
+        return result;
+    }
 }
 
-*/
 
 
 
