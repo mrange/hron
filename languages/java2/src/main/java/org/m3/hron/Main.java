@@ -41,10 +41,8 @@ public class Main {
 
                         HronVisitor visitor = new HronVisitor() {
                             public void Document_Begin () {
-                                writer.format ("Document_Begin:\n");
                             }
                             public void Document_End () {
-                                writer.format ("Document_End:\n");
                             }
 
                             public void PreProcessor (String line, int beginIndex, int endIndex) {
