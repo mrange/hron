@@ -12,16 +12,69 @@
 
 package org.m3.hron;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.*;
 
 public class Main {
-  public static void main(String[] args) throws IOException {
-    Main instance = new Main();
-    instance.run();
-  }
+    public static void main (String[] args) throws IOException {
+        Main instance = new Main ();
+        instance.run();
+    }
 
-  private void run() throws IOException {
-    System.out.println("Hello");
+    void run() throws IOException {
+
+        HRONVisitor visitor = new HRONVisitor() {
+            public void Document_Begin () {
+                System.out.format ("Document_Begin:\n");
+            }
+            public void Document_End () {
+                System.out.format ("Document_End:\n");
+            }
+
+            public void PreProcessor (String line, int beginIndex, int endIndex) {
+                System.out.format ("PreProcessor:%s\n", line.substring (beginIndex, endIndex));
+            }
+
+            public void Empty (String line) {
+                System.out.format ("Empty:%s\n", line);
+            }
+
+            public void Comment (int indent, String line, int beginIndex, int endIndex) {
+                System.out.format ("Comment:%i,%s\n", indent, line.substring (beginIndex, endIndex));
+            }
+
+            public void Value_Begin (String line, int beginIndex, int endIndex) {
+                System.out.format ("Value_Begin:%s\n", line.substring (beginIndex, endIndex));
+            }
+            public void Value_Line (String line, int beginIndex, int endIndex) {
+                System.out.format ("ContentLine:%s\n", line.substring (beginIndex, endIndex));
+            }
+            public void Value_End () {
+                System.out.format ("Value_End:\n");
+            }
+
+            public void Object_Begin (String line, int beginIndex, int endIndex) {
+                System.out.format ("Object_Begin:%s\n", line.substring (beginIndex, endIndex));
+            }
+            public void Object_End () {
+                System.out.format ("Object_End:\n");
+            }
+
+            public void Error (int lineNo, String line, String parseError) {
+                System.out.format ("Error:%s\n", line);
+            }
+        };
+
+
+        Path path = FileSystems.getDefault ().getPath ("..", "..", "reference-data");
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, p -> p.toString ().endsWith ("helloworld.hron"))) {
+            for (Path file: stream) {
+                System.out.format("Parsing %s\n", file.getFileName ());
+                try (BufferedReader reader = Files.newBufferedReader (file)) {
+                    HRON.parse (reader, visitor);
+                }
+            }
+    }
   }
 }

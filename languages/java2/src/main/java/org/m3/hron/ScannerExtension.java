@@ -20,6 +20,14 @@ class ScannerExtension {
 
     public HRONVisitor  visitor         ;
 
+    public ScannerExtension (HRONVisitor vis) {
+        expectedIndent  = 0     ;
+        indention       = 0     ;
+        lineNo          = 0     ;
+        isBuildingValue = false ;
+        visitor         = vis   ;
+    }
+
     public static void popContext (Scanner scanner) {
         if (scanner.extension.isBuildingValue && scanner.extension.indention < scanner.extension.expectedIndent) {
             --scanner.extension.expectedIndent;
@@ -31,6 +39,11 @@ class ScannerExtension {
             --scanner.extension.expectedIndent;
             scanner.extension.visitor.Object_End ();
         }
+    }
+
+    public static void endOfDocument (Scanner scanner) {
+        scanner.extension.indention = 0;
+        popContext (scanner);
     }
 
     public static void scannerBeginLine (Scanner scanner) {
@@ -100,30 +113,30 @@ class ScannerExtension {
                 scanner.result = ScannerResult.Done;
                 break;
             case EndOfValueLine:
-                scanner.extension.visitor.Value_Line (scanner.currentLine.substring (scanner.extension.expectedIndent));
+                scanner.extension.visitor.Value_Line (scanner.currentLine, scanner.extension.expectedIndent, scanner.currentLineEnd);
                 break;
             case EndOfPreProcessorTag:
-                scanner.extension.visitor.PreProcessor (scanner.currentLine.substring (scanner.extension.indention + 1));
+                scanner.extension.visitor.PreProcessor (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
                 break;
             case EndOfCommentTag:
-                scanner.extension.visitor.Comment (scanner.extension.indention, scanner.currentLine.substring (scanner.extension.indention + 1));
+                scanner.extension.visitor.Comment (scanner.extension.indention, scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
                 break;
             case EndOfEmptyTag:
                 if (scanner.extension.isBuildingValue) {
-                    scanner.extension.visitor.Value_Line ("");
+                    scanner.extension.visitor.Value_Line ("", 0, 0);
                 } else {
-                    scanner.extension.visitor.Value_Line (scanner.currentLine);
+                    scanner.extension.visitor.Empty (scanner.currentLine);
                 }
                 break;
             case EndOfObjectTag:
                 popContext (scanner);
-                scanner.extension.visitor.Object_Begin (scanner.currentLine.substring (scanner.extension.indention + 1));
+                scanner.extension.visitor.Object_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
                 scanner.extension.expectedIndent = scanner.extension.indention + 1;
                 break;
             case EndOfValueTag:
                 popContext (scanner);
                 scanner.extension.isBuildingValue = true;
-                scanner.extension.visitor.Value_Begin (scanner.currentLine.substring (scanner.extension.indention + 1));
+                scanner.extension.visitor.Value_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
                 scanner.extension.expectedIndent = scanner.extension.indention + 1;
                 break;
             case Error:
