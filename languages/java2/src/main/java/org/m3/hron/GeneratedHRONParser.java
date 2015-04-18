@@ -1,5 +1,6 @@
 
 
+
 // ---------------------------------------------------------------------------------------------- 
 // Copyright (c) M?rten R?nge. 
 // ---------------------------------------------------------------------------------------------- 
@@ -26,6 +27,7 @@
 
 
 package org.m3.hron;
+
 
 enum ScannerState {
     Error,
@@ -102,23 +104,23 @@ enum ScannerResult {
     Done    ,
 }
 
-class Scanner extends BaseScanner {
-    public ScannerResult  result            ;
-    public ScannerState   state             ;
-    public String         currentLine       ;
-    public int            currentLineBegin  ;
-    public int            currentLineEnd    ;
-    public char           currentChar       ;
+class Scanner {
+    public ScannerResult    result            ;
+    public ScannerState     state             ;
+    public String           currentLine       ;
+    public int              currentLineBegin  ;
+    public int              currentLineEnd    ;
+    public char             currentChar       ;
+    public ScannerExtension extension         ;
 
-    @Override
-    public void init (ScannerState initialState) {
-        super.init (initialState);
+    public Scanner (ScannerState initialState, ScannerExtension ext) {
         result          = ScannerResult.Continue;
         state           = initialState          ;
         currentLine     = ""                    ;
         currentLineBegin= 0                     ;
         currentLineEnd  = 0                     ;
         currentChar     = ' '                   ;
+        extension       = ext                   ;
     }
 
     ScannerResult acceptLine (String line) {
@@ -127,7 +129,7 @@ class Scanner extends BaseScanner {
         currentLineEnd    = line.length() ;
         currentChar       = ' '           ;
 
-        scannerBeginLine ();
+        ScannerExtension.scannerBeginLine (this);
 
         for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
             currentChar = currentLine.charAt (iter);
@@ -137,7 +139,7 @@ class Scanner extends BaseScanner {
 
         applyEndOfLine ();
 
-        scannerEndLine ();
+        ScannerExtension.scannerEndLine (this);
 
         return result;
     }
@@ -147,8 +149,9 @@ class Scanner extends BaseScanner {
         case Error:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.Error
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Error
                         ,   ScannerState.Error
                         ,   ScannerStateTransition.From_Error__To_Error
                         );
@@ -158,8 +161,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Error;
-                    scannerStateTransition (
-                            ScannerState.WrongTagError
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.WrongTagError
                         ,   ScannerState.Error
                         ,   ScannerStateTransition.From_WrongTagError__To_Error
                         );
@@ -169,8 +173,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Error;
-                    scannerStateTransition (
-                            ScannerState.NonEmptyTagError
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.NonEmptyTagError
                         ,   ScannerState.Error
                         ,   ScannerStateTransition.From_NonEmptyTagError__To_Error
                         );
@@ -180,16 +185,18 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             case '!':
                     state = ScannerState.PreProcessorTag;
-                    scannerStateTransition (
-                            ScannerState.PreProcessing
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.PreProcessing
                         ,   ScannerState.PreProcessorTag
                         ,   ScannerStateTransition.From_PreProcessing__To_PreProcessorTag
                         );
                     return false;
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.PreProcessing
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.PreProcessing
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_PreProcessing__To_Indention
                         );
@@ -198,42 +205,48 @@ class Scanner extends BaseScanner {
         case Indention:
             switch (currentChar) {
             case '\t':
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_Indention__To_Indention
                         );
                     return false;
             default:
-                    scannerStateChoice (
-                            ScannerStateChoice.From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error
+                    ScannerExtension.scannerStateChoice (
+                            this
+                        ,   ScannerStateChoice.From_Indention__Choose_TagExpected_NoContentTagExpected_ValueLine_Error
                         );
 
                 switch (state) {
                 case TagExpected:
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.TagExpected
                         ,   ScannerStateTransition.From_Indention__To_TagExpected
                         );
                         break;
                 case NoContentTagExpected:
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.NoContentTagExpected
                         ,   ScannerStateTransition.From_Indention__To_NoContentTagExpected
                         );
                         break;
                 case ValueLine:
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.ValueLine
                         ,   ScannerStateTransition.From_Indention__To_ValueLine
                         );
                         break;
                 case Error:
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.Error
                         ,   ScannerStateTransition.From_Indention__To_Error
                         );
@@ -248,24 +261,27 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             case '@':
                     state = ScannerState.ObjectTag;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.ObjectTag
                         ,   ScannerStateTransition.From_TagExpected__To_ObjectTag
                         );
                     return false;
             case '=':
                     state = ScannerState.ValueTag;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.ValueTag
                         ,   ScannerStateTransition.From_TagExpected__To_ValueTag
                         );
                     return false;
             case '#':
                     state = ScannerState.CommentTag;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.CommentTag
                         ,   ScannerStateTransition.From_TagExpected__To_CommentTag
                         );
@@ -273,16 +289,18 @@ class Scanner extends BaseScanner {
             case '\t':
             case ' ':
                     state = ScannerState.EmptyTag;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.EmptyTag
                         ,   ScannerStateTransition.From_TagExpected__To_EmptyTag
                         );
                     return false;
             default:
                     state = ScannerState.WrongTagError;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.WrongTagError
                         ,   ScannerStateTransition.From_TagExpected__To_WrongTagError
                         );
@@ -292,8 +310,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             case '#':
                     state = ScannerState.CommentTag;
-                    scannerStateTransition (
-                            ScannerState.NoContentTagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.NoContentTagExpected
                         ,   ScannerState.CommentTag
                         ,   ScannerStateTransition.From_NoContentTagExpected__To_CommentTag
                         );
@@ -301,16 +320,18 @@ class Scanner extends BaseScanner {
             case '\t':
             case ' ':
                     state = ScannerState.EmptyTag;
-                    scannerStateTransition (
-                            ScannerState.NoContentTagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.NoContentTagExpected
                         ,   ScannerState.EmptyTag
                         ,   ScannerStateTransition.From_NoContentTagExpected__To_EmptyTag
                         );
                     return false;
             default:
                     state = ScannerState.WrongTagError;
-                    scannerStateTransition (
-                            ScannerState.NoContentTagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.NoContentTagExpected
                         ,   ScannerState.WrongTagError
                         ,   ScannerStateTransition.From_NoContentTagExpected__To_WrongTagError
                         );
@@ -319,8 +340,9 @@ class Scanner extends BaseScanner {
         case PreProcessorTag:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.PreProcessorTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.PreProcessorTag
                         ,   ScannerState.PreProcessorTag
                         ,   ScannerStateTransition.From_PreProcessorTag__To_PreProcessorTag
                         );
@@ -329,8 +351,9 @@ class Scanner extends BaseScanner {
         case ObjectTag:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.ObjectTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ObjectTag
                         ,   ScannerState.ObjectTag
                         ,   ScannerStateTransition.From_ObjectTag__To_ObjectTag
                         );
@@ -339,8 +362,9 @@ class Scanner extends BaseScanner {
         case ValueTag:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.ValueTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ValueTag
                         ,   ScannerState.ValueTag
                         ,   ScannerStateTransition.From_ValueTag__To_ValueTag
                         );
@@ -350,16 +374,18 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             case '\t':
             case ' ':
-                    scannerStateTransition (
-                            ScannerState.EmptyTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EmptyTag
                         ,   ScannerState.EmptyTag
                         ,   ScannerStateTransition.From_EmptyTag__To_EmptyTag
                         );
                     return false;
             default:
                     state = ScannerState.NonEmptyTagError;
-                    scannerStateTransition (
-                            ScannerState.EmptyTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EmptyTag
                         ,   ScannerState.NonEmptyTagError
                         ,   ScannerStateTransition.From_EmptyTag__To_NonEmptyTagError
                         );
@@ -368,8 +394,9 @@ class Scanner extends BaseScanner {
         case CommentTag:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.CommentTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.CommentTag
                         ,   ScannerState.CommentTag
                         ,   ScannerStateTransition.From_CommentTag__To_CommentTag
                         );
@@ -379,8 +406,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.PreProcessing;
-                    scannerStateTransition (
-                            ScannerState.EndOfPreProcessorTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfPreProcessorTag
                         ,   ScannerState.PreProcessing
                         ,   ScannerStateTransition.From_EndOfPreProcessorTag__To_PreProcessing
                         );
@@ -390,8 +418,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.EndOfObjectTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfObjectTag
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_EndOfObjectTag__To_Indention
                         );
@@ -401,8 +430,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.EndOfEmptyTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfEmptyTag
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_EndOfEmptyTag__To_Indention
                         );
@@ -412,8 +442,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.EndOfValueTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfValueTag
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_EndOfValueTag__To_Indention
                         );
@@ -423,8 +454,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.EndOfCommentTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfCommentTag
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_EndOfCommentTag__To_Indention
                         );
@@ -433,8 +465,9 @@ class Scanner extends BaseScanner {
         case ValueLine:
             switch (currentChar) {
             default:
-                    scannerStateTransition (
-                            ScannerState.ValueLine
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ValueLine
                         ,   ScannerState.ValueLine
                         ,   ScannerStateTransition.From_ValueLine__To_ValueLine
                         );
@@ -444,8 +477,9 @@ class Scanner extends BaseScanner {
             switch (currentChar) {
             default:
                     state = ScannerState.Indention;
-                    scannerStateTransition (
-                            ScannerState.EndOfValueLine
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EndOfValueLine
                         ,   ScannerState.Indention
                         ,   ScannerStateTransition.From_EndOfValueLine__To_Indention
                         );
@@ -465,72 +499,81 @@ class Scanner extends BaseScanner {
         switch (state) {
         case Indention:
             state = ScannerState.EndOfEmptyTag;
-                    scannerStateTransition (
-                            ScannerState.Indention
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.Indention
                         ,   ScannerState.EndOfEmptyTag
                         ,   ScannerStateTransition.From_Indention__To_EndOfEmptyTag
                         );
             break;
         case TagExpected:
             state = ScannerState.EndOfEmptyTag;
-                    scannerStateTransition (
-                            ScannerState.TagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.TagExpected
                         ,   ScannerState.EndOfEmptyTag
                         ,   ScannerStateTransition.From_TagExpected__To_EndOfEmptyTag
                         );
             break;
         case NoContentTagExpected:
             state = ScannerState.EndOfEmptyTag;
-                    scannerStateTransition (
-                            ScannerState.NoContentTagExpected
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.NoContentTagExpected
                         ,   ScannerState.EndOfEmptyTag
                         ,   ScannerStateTransition.From_NoContentTagExpected__To_EndOfEmptyTag
                         );
             break;
         case PreProcessorTag:
             state = ScannerState.EndOfPreProcessorTag;
-                    scannerStateTransition (
-                            ScannerState.PreProcessorTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.PreProcessorTag
                         ,   ScannerState.EndOfPreProcessorTag
                         ,   ScannerStateTransition.From_PreProcessorTag__To_EndOfPreProcessorTag
                         );
             break;
         case ObjectTag:
             state = ScannerState.EndOfObjectTag;
-                    scannerStateTransition (
-                            ScannerState.ObjectTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ObjectTag
                         ,   ScannerState.EndOfObjectTag
                         ,   ScannerStateTransition.From_ObjectTag__To_EndOfObjectTag
                         );
             break;
         case ValueTag:
             state = ScannerState.EndOfValueTag;
-                    scannerStateTransition (
-                            ScannerState.ValueTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ValueTag
                         ,   ScannerState.EndOfValueTag
                         ,   ScannerStateTransition.From_ValueTag__To_EndOfValueTag
                         );
             break;
         case EmptyTag:
             state = ScannerState.EndOfEmptyTag;
-                    scannerStateTransition (
-                            ScannerState.EmptyTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.EmptyTag
                         ,   ScannerState.EndOfEmptyTag
                         ,   ScannerStateTransition.From_EmptyTag__To_EndOfEmptyTag
                         );
             break;
         case CommentTag:
             state = ScannerState.EndOfCommentTag;
-                    scannerStateTransition (
-                            ScannerState.CommentTag
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.CommentTag
                         ,   ScannerState.EndOfCommentTag
                         ,   ScannerStateTransition.From_CommentTag__To_EndOfCommentTag
                         );
             break;
         case ValueLine:
             state = ScannerState.EndOfValueLine;
-                    scannerStateTransition (
-                            ScannerState.ValueLine
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.ValueLine
                         ,   ScannerState.EndOfValueLine
                         ,   ScannerStateTransition.From_ValueLine__To_EndOfValueLine
                         );

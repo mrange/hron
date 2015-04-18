@@ -1,3 +1,7 @@
 ﻿<#@ include file="$(ProjectDir)\T4\ParserModel.ttinclude"#>
 
+<#
+  var package = "org.m3.hron";
+#>
+
 <#@ include file="$(ProjectDir)\T4\JavaParserGenerator.ttinclude"#>

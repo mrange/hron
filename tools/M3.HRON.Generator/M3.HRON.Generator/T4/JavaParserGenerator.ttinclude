@@ -12,7 +12,8 @@
 
 <#@ include file="JavaHeader.ttinclude" #>
 
-package org.m3.hron;
+package <#=package#>;
+
 <#
     var defaultState = model
         .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
@@ -63,23 +64,23 @@ enum ScannerResult {
     Done    ,
 }
 
-class Scanner extends BaseScanner {
-    public ScannerResult  result            ;
-    public ScannerState   state             ;
-    public String         currentLine       ;
-    public int            currentLineBegin  ;
-    public int            currentLineEnd    ;
-    public char           currentChar       ;
+class Scanner {
+    public ScannerResult    result            ;
+    public ScannerState     state             ;
+    public String           currentLine       ;
+    public int              currentLineBegin  ;
+    public int              currentLineEnd    ;
+    public char             currentChar       ;
+    public ScannerExtension extension         ;
 
-    @Override
-    public void init (ScannerState initialState) {
-        super.init (initialState);
+    public Scanner (ScannerState initialState, ScannerExtension ext) {
         result          = ScannerResult.Continue;
         state           = initialState          ;
         currentLine     = ""                    ;
         currentLineBegin= 0                     ;
         currentLineEnd  = 0                     ;
         currentChar     = ' '                   ;
+        extension       = ext                   ;
     }
 
     ScannerResult acceptLine (String line) {
@@ -88,7 +89,7 @@ class Scanner extends BaseScanner {
         currentLineEnd    = line.length() ;
         currentChar       = ' '           ;
 
-        scannerBeginLine ();
+        ScannerExtension.scannerBeginLine (this);
 
         for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
             currentChar = currentLine.charAt (iter);
@@ -98,7 +99,7 @@ class Scanner extends BaseScanner {
 
         applyEndOfLine ();
 
-        scannerEndLine ();
+        ScannerExtension.scannerEndLine (this);
 
         return result;
     }
@@ -255,8 +256,9 @@ class Scanner extends BaseScanner {
     void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
     {
 #>
-                    scannerStateChoice (
-                            ScannerStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
+                    ScannerExtension.scannerStateChoice (
+                            this
+                        ,   ScannerStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
                         );
 <#+
     }
@@ -266,8 +268,9 @@ class Scanner extends BaseScanner {
     void OutputStateTransition (ParserState parserState, string to)
     {
 #>
-                    scannerStateTransition (
-                            ScannerState.<#=parserState.Name#>
+                    ScannerExtension.scannerStateTransition (
+                            this
+                        ,   ScannerState.<#=parserState.Name#>
                         ,   ScannerState.<#=to#>
                         ,   ScannerStateTransition.From_<#=parserState.Name#>__To_<#=to#>
                         );
