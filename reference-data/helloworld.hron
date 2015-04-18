@@ -9,9 +9,9 @@
 
 		Just as with Python in hron the indention is important
 
-		Idention promotes readability but also allows hron string values
+		Idention promotes readability but also allows hron string values 
 		to be multi-line and hron has no special letters that requires escaping
-
+		
 		Letters like this causes hron no problems: &<>\'@=
 
 		This helps readability
