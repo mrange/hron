@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------------------------
 package org.m3.hron;
 
-public interface HRONVisitor {
+public interface HronVisitor {
     void Document_Begin ();
     void Document_End ();
 

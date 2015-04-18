@@ -9,7 +9,6 @@
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
-
 package org.m3.hron;
 
 import java.io.*;
@@ -23,58 +22,69 @@ public class Main {
 
     void run() throws IOException {
 
-        HRONVisitor visitor = new HRONVisitor() {
-            public void Document_Begin () {
-                System.out.format ("Document_Begin:\n");
-            }
-            public void Document_End () {
-                System.out.format ("Document_End:\n");
-            }
+        Path referenceDataPath  = FileSystems.getDefault ().getPath ("..", "..", "reference-data");
+        Path resultsPath        = FileSystems.getDefault ().getPath ("..", "..", "reference-data", "test-results", "Java");
 
-            public void PreProcessor (String line, int beginIndex, int endIndex) {
-                System.out.format ("PreProcessor:%s\n", line.substring (beginIndex, endIndex));
-            }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(referenceDataPath, p -> p.toString ().endsWith (".hron"))) {
+            for (Path hronPath : stream) {
 
-            public void Empty (String line) {
-                System.out.format ("Empty:%s\n", line);
-            }
+                Path hronFileNamePath       = hronPath.getFileName ();
+                String hronFileName         = hronFileNamePath.toString ();
+                String actionLogFileName    = hronFileName + ".actionlog";
+                Path actionLogPath          = resultsPath.resolve (actionLogFileName);
+                String actionLogFilePath    = actionLogPath.toString ();
 
-            public void Comment (int indent, String line, int beginIndex, int endIndex) {
-                System.out.format ("Comment:%i,%s\n", indent, line.substring (beginIndex, endIndex));
-            }
+                System.out.format("Processing: %s\n", hronFileName);
+                try (BufferedReader reader = Files.newBufferedReader (hronPath)) {
+                    System.out.format("  Writing action log: %s\n", actionLogFilePath);
+                    try (PrintStream writer = new PrintStream (actionLogFilePath)) {
 
-            public void Value_Begin (String line, int beginIndex, int endIndex) {
-                System.out.format ("Value_Begin:%s\n", line.substring (beginIndex, endIndex));
-            }
-            public void Value_Line (String line, int beginIndex, int endIndex) {
-                System.out.format ("ContentLine:%s\n", line.substring (beginIndex, endIndex));
-            }
-            public void Value_End () {
-                System.out.format ("Value_End:\n");
-            }
+                        HronVisitor visitor = new HronVisitor() {
+                            public void Document_Begin () {
+                                writer.format ("Document_Begin:\n");
+                            }
+                            public void Document_End () {
+                                writer.format ("Document_End:\n");
+                            }
 
-            public void Object_Begin (String line, int beginIndex, int endIndex) {
-                System.out.format ("Object_Begin:%s\n", line.substring (beginIndex, endIndex));
-            }
-            public void Object_End () {
-                System.out.format ("Object_End:\n");
-            }
+                            public void PreProcessor (String line, int beginIndex, int endIndex) {
+                                writer.format ("PreProcessor:%s\n", line.substring (beginIndex, endIndex));
+                            }
 
-            public void Error (int lineNo, String line, String parseError) {
-                System.out.format ("Error:%s\n", line);
-            }
-        };
+                            public void Empty (String line) {
+                                writer.format ("Empty:%s\n", line);
+                            }
 
+                            public void Comment (int indent, String line, int beginIndex, int endIndex) {
+                                writer.format ("Comment:%d,%s\n", indent, line.substring (beginIndex, endIndex));
+                            }
 
-        Path path = FileSystems.getDefault ().getPath ("..", "..", "reference-data");
+                            public void Value_Begin (String line, int beginIndex, int endIndex) {
+                                writer.format ("Value_Begin:%s\n", line.substring (beginIndex, endIndex));
+                            }
+                            public void Value_Line (String line, int beginIndex, int endIndex) {
+                                writer.format ("ContentLine:%s\n", line.substring (beginIndex, endIndex));
+                            }
+                            public void Value_End () {
+                                writer.format ("Value_End:\n");
+                            }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, p -> p.toString ().endsWith ("helloworld.hron"))) {
-            for (Path file: stream) {
-                System.out.format("Parsing %s\n", file.getFileName ());
-                try (BufferedReader reader = Files.newBufferedReader (file)) {
-                    HRON.parse (reader, visitor);
+                            public void Object_Begin (String line, int beginIndex, int endIndex) {
+                                writer.format ("Object_Begin:%s\n", line.substring (beginIndex, endIndex));
+                            }
+                            public void Object_End () {
+                                writer.format ("Object_End:\n");
+                            }
+
+                            public void Error (int lineNo, String line, String parseError) {
+                                writer.format ("Error:%s\n", line);
+                            }
+                        };
+
+                        Hron.parse (reader, visitor);
+                    }
                 }
             }
+        }
     }
-  }
 }

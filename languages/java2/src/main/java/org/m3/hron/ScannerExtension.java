@@ -9,7 +9,6 @@
 // ----------------------------------------------------------------------------------------------
 // You must not remove this notice, or any other, from this software.
 // ----------------------------------------------------------------------------------------------
-
 package org.m3.hron;
 
 class ScannerExtension {
@@ -18,9 +17,9 @@ class ScannerExtension {
     public int          lineNo          ;
     public boolean      isBuildingValue ;
 
-    public HRONVisitor  visitor         ;
+    public HronVisitor  visitor         ;
 
-    public ScannerExtension (HRONVisitor vis) {
+    public ScannerExtension (HronVisitor vis) {
         expectedIndent  = 0     ;
         indention       = 0     ;
         lineNo          = 0     ;
