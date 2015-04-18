@@ -54,8 +54,10 @@ class ScannerExtension {
         case PreProcessorTag:
         case EndOfPreProcessorTag:
             scanner.state = ScannerState.PreProcessing;
+            break;
         default:
             scanner.state = ScannerState.Indention;
+            break;
         }
     }
 
@@ -99,57 +101,61 @@ class ScannerExtension {
         case From_Indention__To_Indention:
             ++scanner.extension.indention;
             break;
+        default:
+            break;
         }
 
         switch (to)
         {
-            case PreProcessorTag:
-            case EmptyTag:
-            case CommentTag:
-            case ValueTag:
-            case ValueLine:
-            case ObjectTag:
-                scanner.result = ScannerResult.Done;
-                break;
-            case EndOfValueLine:
-                scanner.extension.visitor.Value_Line (scanner.currentLine, scanner.extension.expectedIndent, scanner.currentLineEnd);
-                break;
-            case EndOfPreProcessorTag:
-                scanner.extension.visitor.PreProcessor (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
-                break;
-            case EndOfCommentTag:
-                scanner.extension.visitor.Comment (scanner.extension.indention, scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
-                break;
-            case EndOfEmptyTag:
-                if (scanner.extension.isBuildingValue) {
-                    scanner.extension.visitor.Value_Line ("", 0, 0);
-                } else {
-                    scanner.extension.visitor.Empty (scanner.currentLine);
-                }
-                break;
-            case EndOfObjectTag:
-                popContext (scanner);
-                scanner.extension.visitor.Object_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
-                scanner.extension.expectedIndent = scanner.extension.indention + 1;
-                break;
-            case EndOfValueTag:
-                popContext (scanner);
-                scanner.extension.isBuildingValue = true;
-                scanner.extension.visitor.Value_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
-                scanner.extension.expectedIndent = scanner.extension.indention + 1;
-                break;
-            case Error:
-                scanner.result = ScannerResult.Error;
-                scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "General");
-                break;
-            case WrongTagError:
-                scanner.result = ScannerResult.Error;
-                scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "WrongTag");
-                break;
-            case NonEmptyTagError:
-                scanner.result = ScannerResult.Error;
-                scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "NonEmptyTag");
-                break;
+        case PreProcessorTag:
+        case EmptyTag:
+        case CommentTag:
+        case ValueTag:
+        case ValueLine:
+        case ObjectTag:
+            scanner.result = ScannerResult.Done;
+            break;
+        case EndOfValueLine:
+            scanner.extension.visitor.Value_Line (scanner.currentLine, scanner.extension.expectedIndent, scanner.currentLineEnd);
+            break;
+        case EndOfPreProcessorTag:
+            scanner.extension.visitor.PreProcessor (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
+            break;
+        case EndOfCommentTag:
+            scanner.extension.visitor.Comment (scanner.extension.indention, scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
+            break;
+        case EndOfEmptyTag:
+            if (scanner.extension.isBuildingValue) {
+                scanner.extension.visitor.Value_Line ("", 0, 0);
+            } else {
+                scanner.extension.visitor.Empty (scanner.currentLine);
+            }
+            break;
+        case EndOfObjectTag:
+            popContext (scanner);
+            scanner.extension.visitor.Object_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
+            scanner.extension.expectedIndent = scanner.extension.indention + 1;
+            break;
+        case EndOfValueTag:
+            popContext (scanner);
+            scanner.extension.isBuildingValue = true;
+            scanner.extension.visitor.Value_Begin (scanner.currentLine, scanner.extension.indention + 1, scanner.currentLineEnd);
+            scanner.extension.expectedIndent = scanner.extension.indention + 1;
+            break;
+        case Error:
+            scanner.result = ScannerResult.Error;
+            scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "General");
+            break;
+        case WrongTagError:
+            scanner.result = ScannerResult.Error;
+            scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "WrongTag");
+            break;
+        case NonEmptyTagError:
+            scanner.result = ScannerResult.Error;
+            scanner.extension.visitor.Error (scanner.extension.lineNo, scanner.currentLine, "NonEmptyTag");
+            break;
+        default:
+            break;
         }
     }
 }

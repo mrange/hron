@@ -22,7 +22,7 @@ public class Hron {
         try {
 
             ScannerExtension    extension   = new ScannerExtension (visitor);
-            Scanner             scanner     = new Scanner (ScannerState.PreProcessorTag, extension);
+            Scanner             scanner     = new Scanner (ScannerState.PreProcessing, extension);
 
             String line;
 
