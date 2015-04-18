@@ -1,4 +1,4 @@
-﻿# object values are started with '@'
+# object values are started with '@'
 @Common
 	=LogPath
 		Logs\CurrentDay

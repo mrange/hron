@@ -1,4 +1,4 @@
-﻿@Common
+@Common
 	=LogPath
 		Logs\CurrentDay
 	=WelcomeMessage

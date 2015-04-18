@@ -261,7 +261,7 @@ hron__parser_state  hron__initialize    (hron__visitor*     visitor   )
         return 0;
     }
 
-    scanner_init (ss, SS_PreProcessorTag, &ps);
+    scanner_init (ss, SS_PreProcessing, &ps);
 
     ss->parser_state.document__begin (ss->parser_state.payload);
 
