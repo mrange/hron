@@ -73,7 +73,7 @@ class Scanner {
     public char             currentChar       ;
     public ScannerExtension extension         ;
 
-    public Scanner (ScannerState initialState, ScannerExtension ext) {
+    public Scanner(ScannerState initialState, ScannerExtension ext) {
         result          = ScannerResult.Continue;
         state           = initialState          ;
         currentLine     = ""                    ;
@@ -83,28 +83,28 @@ class Scanner {
         extension       = ext                   ;
     }
 
-    ScannerResult acceptLine (String line) {
+    public ScannerResult acceptLine(String line) throws Exception {
         currentLine       = line          ;
         currentLineBegin  = 0             ;
         currentLineEnd    = line.length() ;
         currentChar       = ' '           ;
 
-        ScannerExtension.scannerBeginLine (this);
+        ScannerExtension.scannerBeginLine(this);
 
         for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
-            currentChar = currentLine.charAt (iter);
+            currentChar = currentLine.charAt(iter);
 
-            while (apply ()) { }
+            while(apply()) { }
         }
 
-        applyEndOfLine ();
+        applyEndOfLine();
 
-        ScannerExtension.scannerEndLine (this);
+        ScannerExtension.scannerEndLine(this);
 
         return result;
     }
 
-    boolean apply () {
+    private boolean apply() throws Exception {
         switch (state) {
 <#
     foreach (var parserState in model)
@@ -191,7 +191,7 @@ class Scanner {
         }
     }
 
-    void applyEndOfLine () {
+    private void applyEndOfLine() throws Exception {
         if (result == ScannerResult.Error) {
             return;
         }
@@ -256,7 +256,7 @@ class Scanner {
     void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
     {
 #>
-                    ScannerExtension.scannerStateChoice (
+                    ScannerExtension.scannerStateChoice(
                             this
                         ,   ScannerStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
                         );
@@ -268,7 +268,7 @@ class Scanner {
     void OutputStateTransition (ParserState parserState, string to)
     {
 #>
-                    ScannerExtension.scannerStateTransition (
+                    ScannerExtension.scannerStateTransition(
                             this
                         ,   ScannerState.<#=parserState.Name#>
                         ,   ScannerState.<#=to#>
