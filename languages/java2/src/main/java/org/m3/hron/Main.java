@@ -15,12 +15,12 @@ import java.io.*;
 import java.nio.file.*;
 
 public class Main {
-    public static void main (String[] args) throws IOException {
+    public static void main (String[] args) throws Exception {
         Main instance = new Main ();
         instance.run();
     }
 
-    void run() throws IOException {
+    void run() throws Exception {
 
         Path referenceDataPath  = FileSystems.getDefault ().getPath ("..", "..", "reference-data");
         Path resultsPath        = FileSystems.getDefault ().getPath ("..", "..", "reference-data", "test-results", "Java");
@@ -79,7 +79,7 @@ public class Main {
                             }
                         };
 
-                        Hron.parse (reader, visitor);
+                        Hron.parse (() -> reader.readLine (), visitor);
                     }
                 }
             }
