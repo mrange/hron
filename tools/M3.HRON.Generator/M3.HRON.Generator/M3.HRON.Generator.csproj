@@ -109,13 +109,20 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_Parser.cs</LastGenOutput>
     </None>
+    <None Include="..\..\..\languages\java2\src\main\java\org\m3\hron\GeneratedHRONParser.tt">
+      <Link>GeneratedHRONParser.tt</Link>
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GeneratedHRONParser.java</LastGenOutput>
+    </None>
     <None Include="App.config" />
     <None Include="Generated_JSParser.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Generated_JSParser.js</LastGenOutput>
     </None>
     <None Include="packages.config" />
+    <None Include="T4\JavaHeader.ttinclude" />
     <None Include="T4\CHeader.ttinclude" />
+    <None Include="T4\JavaParserGenerator.ttinclude" />
     <None Include="T4\CSharpHeader.ttinclude" />
     <None Include="T4\JSHeader.ttinclude" />
     <None Include="T4\JSParserGenerator.ttinclude" />
@@ -138,6 +145,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>generated_hron_parser.tt</DependentUpon>
+    </Content>
+    <Content Include="..\..\..\languages\java2\src\main\java\org\m3\hron\GeneratedHRONParser.java">
+      <Link>GeneratedHRONParser.java</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeneratedHRONParser.tt</DependentUpon>
     </Content>
     <Content Include="Generated_JSParser.js">
       <AutoGen>True</AutoGen>

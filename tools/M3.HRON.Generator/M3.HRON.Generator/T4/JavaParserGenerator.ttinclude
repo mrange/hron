@@ -1,0 +1,279 @@
+﻿// ---------------------------------------------------------------------------------------------- 
+// Copyright (c) Mårten Rånge. 
+// ---------------------------------------------------------------------------------------------- 
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License. 
+// ---------------------------------------------------------------------------------------------- 
+// You must not remove this notice, or any other, from this software. 
+// ---------------------------------------------------------------------------------------------- 
+
+<#@ include file="JavaHeader.ttinclude" #>
+
+package <#=package#>;
+
+<#
+    var defaultState = model
+        .FirstOrDefault (ps => ps.IsDefault) ?? new ParserState ("<DefaultState>", isDefault:true);
+#>
+
+enum ScannerState {
+<#
+foreach (var parserState in model)
+{
+#>
+    <#=parserState.Name#>,
+<#
+}
+#>
+}
+
+enum ScannerStateTransition {
+<#
+foreach (var parserState in model)
+{
+    foreach (var name in parserState.AllStates(defaultState).SelectMany (nps => nps.Names))
+    {
+#>
+    From_<#=parserState.Name#>__To_<#=name#>,
+<#
+    }
+}
+#>
+}
+
+enum ScannerStateChoice {
+<#
+foreach (var parserState in model)
+{
+    foreach (var nextParserState in parserState.ChoiceStates(defaultState))
+    {
+#>
+    From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>,
+<#
+    }
+}
+#>
+}
+
+enum ScannerResult {
+    Error   ,
+    Continue,
+    Done    ,
+}
+
+class Scanner {
+    public ScannerResult    result            ;
+    public ScannerState     state             ;
+    public String           currentLine       ;
+    public int              currentLineBegin  ;
+    public int              currentLineEnd    ;
+    public char             currentChar       ;
+    public ScannerExtension extension         ;
+
+    public Scanner(ScannerState initialState, ScannerExtension ext) {
+        result          = ScannerResult.Continue;
+        state           = initialState          ;
+        currentLine     = ""                    ;
+        currentLineBegin= 0                     ;
+        currentLineEnd  = 0                     ;
+        currentChar     = ' '                   ;
+        extension       = ext                   ;
+    }
+
+    public ScannerResult acceptLine(String line) throws Exception {
+        currentLine       = line          ;
+        currentLineBegin  = 0             ;
+        currentLineEnd    = line.length() ;
+        currentChar       = ' '           ;
+
+        ScannerExtension.scannerBeginLine(this);
+
+        for (int iter = currentLineBegin; iter < currentLineEnd && result == ScannerResult.Continue; ++iter) {
+            currentChar = currentLine.charAt(iter);
+
+            while(apply()) { }
+        }
+
+        applyEndOfLine();
+
+        ScannerExtension.scannerEndLine(this);
+
+        return result;
+    }
+
+    private boolean apply() throws Exception {
+        switch (state) {
+<#
+    foreach (var parserState in model)
+    {
+#>
+        case <#=parserState.Name#>:
+            switch (currentChar) {
+<#
+    foreach (var nextParserState in parserState.NextStates (defaultState))
+    {
+        if (nextParserState.IsDefaultCase)
+        {
+#>
+            default:
+<#
+        }
+        else
+        {
+            foreach (var ch in nextParserState.Characters)
+            {
+#>
+            case <#=GetCase(ch)#>:
+<#
+            }
+        }
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+                switch (state) {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+                case <#=name#>:
+<#
+                        OutputStateTransition (parserState, name);
+#>
+                        break;
+<#
+        }
+#>
+                    default:
+                        result = ScannerResult.Error;
+                        break;
+                    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0];
+            if (name != parserState.Name)
+            {
+#>
+                    state = ScannerState.<#=name#>;
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+    if (nextParserState.HandOver)
+    {
+#>
+                    return true;
+<#
+    }
+    else
+    {
+#>
+                    return false;
+<#
+    }
+#>
+<#
+    }
+#>
+                }
+<#
+    }
+#>
+        default:
+            result = ScannerResult.Error;
+            return false;
+        }
+    }
+
+    private void applyEndOfLine() throws Exception {
+        if (result == ScannerResult.Error) {
+            return;
+        }
+
+        switch (state) {
+<#
+    foreach (var parserState in model.Where (ps => ps.Any (nps => nps.IsTerminator)))
+    {
+#>
+        case <#=parserState.Name#>:
+<#
+        var nextParserState = parserState.First (nps => nps.IsTerminator);
+        if (nextParserState.IsChoice)
+        {
+            OutputStateChoice (parserState, nextParserState);
+#>
+
+            switch (state) {
+<#
+        foreach (var name in nextParserState.Names)
+        {
+#>
+            case <#=name#>:
+<#
+            OutputStateTransition (parserState, name);
+#>
+                break;
+<#
+        }
+#>
+            default:
+                result = ScannerResult.Error;
+                break;
+    }
+<#
+        }
+        else
+        {
+            var name = nextParserState.Names[0];
+            if (name != parserState.Name)
+            {
+#>
+            state = ScannerState.<#=name#>;
+<#
+            }
+            OutputStateTransition (parserState, name);
+        }
+#>
+            break;
+<#
+    }
+#>
+        }
+
+    }
+}
+
+
+<#@ include file="ParserGenerator.ttinclude"#>
+
+<#+
+    void OutputStateChoice (ParserState parserState, NextParserState nextParserState)
+    {
+#>
+                    ScannerExtension.scannerStateChoice(
+                            this
+                        ,   ScannerStateChoice.From_<#=parserState.Name#>__Choose_<#=string.Join ("_", nextParserState.Names)#>
+                        );
+<#+
+    }
+#>
+
+<#+
+    void OutputStateTransition (ParserState parserState, string to)
+    {
+#>
+                    ScannerExtension.scannerStateTransition(
+                            this
+                        ,   ScannerState.<#=parserState.Name#>
+                        ,   ScannerState.<#=to#>
+                        ,   ScannerStateTransition.From_<#=parserState.Name#>__To_<#=to#>
+                        );
+<#+
+    }
+#>
