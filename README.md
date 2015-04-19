@@ -75,18 +75,6 @@ hron sample
 			ATestUser
 		=Password
 			123
-
-# As we don't 'name' the below object, this will implicitly create an array out of the 
-# above DataBaseConnection and the below object. Like in real life, adding an apple 
-# next to an existing apple does not create some new concept of "array of apples", 
-# two apples next to each other implicitly constitute a "collection of apples" 
-# without the need for any special sauce (pun intended). 
-@
-	=Name
-		PartnerDB
-	=ConnectionString
-		Data Source=.\SQLEXPRESS;Initial Catalog=Partners
-
 ```
 
 The above would (in groovy/java lingo, replace Map with dictionary for .Net) parse to a map with
@@ -167,17 +155,15 @@ would be a better place with a simple, human readable data interchange format.
 
 Current contributors: 
 
-#### Mårten Rånge
-hron language specification, BNF, and implementations in CSharp and FSharp. 
+#### [Mårten Rånge](https://github.com/mrange)
+hron language specification, BNF, and implementations in C#, C++ and F#. 
 
-marten.range@gmail.com
-
-#### Matias Bjarland
+#### [Matias Bjarland](https://github.com/mbjarland)
 Contributions to hron language specification, implementations in groovy and java.
 
-mbjarland@gmail.com
-
-#### Mattias Karlsson
+#### [Mattias Karlsson](https://github.com/devlead)
 Together with Mårten responsible for spawning the idea for hron. Contributions to language 
 specification, invaluable feedback. 
 
+### [Daniel Brännström](https://github.com/codecontemplator)
+Contributed hron parsers for numerous languages such as Haskell, JavaScript, Python and PowerShell.
