@@ -50,7 +50,7 @@ let build_action_log (hron : string) (action_log : string)=
         |   Failure (msg, _, _) -> failwithf "Parse failure: %s" msg
 [<EntryPoint>]
 let main argv =
-    let hrons = Directory.GetFiles (@"..\..\..\..\..\..\reference-data", "*.hron")
+    let hrons = Directory.GetFiles (@"..\..\..\..\..\reference-data", "*.hron")
                     |> Array.map Path.GetFullPath
     for hron in hrons do
         let action_log = hron + ".actionlog"

@@ -83,7 +83,7 @@ let build_random() =
 let main argv =
 //    build_random()
 
-    let path  = Path.GetFullPath(@"..\..\..\..\..\..\reference-data\random.hron")
+    let path  = Path.GetFullPath(@"..\..\..\..\..\reference-data\random.hron")
     let input = File.ReadAllText(path)
     printf "Loaded: %s\r\n" path
     let result = Parser.parse HRONParser.p_hron input
