@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Global_AssemblyInfo.cs">
+      <Link>Properties\Global_AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Include_T4Include.cs">
       <DependentUpon>Include_T4Include.tt</DependentUpon>
       <AutoGen>True</AutoGen>

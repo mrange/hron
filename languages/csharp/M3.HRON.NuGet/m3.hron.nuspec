@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata schemaVersion="2">
+    <id>M3.HRON</id>
+    <version>1.0.0</version>
+    <title>M3.HRON</title>
+    <authors>Mårten Rånge</authors>
+    <owners>Mårten Rånge</owners>
+    <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
+    <projectUrl>https://github.com/mrange/hron</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>HRON is an object notation to be human readable, compact and performant</description>
+    <summary>HRON is an object notation to be human readable, compact and performant</summary>
+    <tags>parser hron</tags>
+    <frameworkAssemblies>
+    </frameworkAssemblies>
+    <releaseNotes>
+        * 1.0.0   - Initial release
+    </releaseNotes>
+  </metadata>
+  <files>
+    <file src="..\M3.HRON\bin\Release\M3.HRON.dll" target="lib/net40" />
+    <file src="..\M3.HRON\bin\Release\M3.HRON.pdb" target="lib/net40" />
+  </files>
+</package>

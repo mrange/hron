@@ -35,6 +35,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Global_AssemblyInfo.cs">
+      <Link>Properties\Global_AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Generated_Parser.cs" />
     <Compile Include="HRONDynamicSerialization.cs" />
     <Compile Include="HRONSerialization.cs" />

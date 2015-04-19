@@ -1,4 +1,4 @@
-﻿// ----------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
 // Copyright (c) Mårten Rånge.
 // ----------------------------------------------------------------------------------------------
 // This source code is subject to terms and conditions of the Microsoft Public License. A
@@ -13,4 +13,15 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("M3.HRON")]
+[assembly: AssemblyDescription("HRON is an object notation to be human readable, compact and performant, please see: https://github.com/mrange/hron")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("M3.HRON")]
+[assembly: AssemblyCopyright("Copyright © M3 2012")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+
+[assembly: ComVisible(false)]
+
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
