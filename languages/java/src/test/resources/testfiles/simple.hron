@@ -1,5 +1,0 @@
-@bean
-	=propOne
-		valueOne
-	=propTwo
-		valueTwo

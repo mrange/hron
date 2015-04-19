@@ -1,7 +1,7 @@
 NOTE
 ====
-This project is in its infancy. It will stabilize within the next few days but as of now, take anything here (including this readme) 
-with a grain of salt. 
+I am still trying to find the correct way to package the Java parser (Maven?) but for the interested the parser 
+should have reasonable quality as it passes the same semantic checks that the C# and C++ parser passes.
 
 About This Project
 ==================
@@ -16,18 +16,19 @@ Following is a typical usage of the parser from java:
 
     import org.m3.hron.HronParser;
     
-    File hronFile = new File('src/samples/sample.hron');
-    Map<String, Object> hron = new HronParser().parseFile(hronFile)
-    
-    assert hron.get("welcome").get("title").equals("Welcome to HRON");
-    
-    println "Hron sample successfully executed!"
+    Path largePath  = FileSystems.getDefault().getPath("..", "..", "reference-data", "simple.hron");
+    try (BufferedReader reader = Files.newBufferedReader(largePath)) {
+        // Object value is either a String or Map<String, Object>
+        Map<String, Object> map     = Hron.parseAsMap(() -> reader.readLine());
+        Map<String, Object> common  = (Map<String, Object>)map.get("Common");
+        String              logPath = (String)common.get("LogPath");
+    }
 
 Note that indentation is significant in the hron format and that indentation is performed using TAB characters. The above example can be run 
 by (first build the project jar file and then execute a sample groovy script against it): 
 
     > gradlew clean build 
-    > java -jar build/libs/hron-parser-java-1.0.jar
+    > java -jar build/libs/hron-parser-java-2.0.jar
     Hron sample successfully executed!
 
 For a few more examples of how you can use the parser, take a look at the [spock specification](https://github.com/mbjarland/hron/blob/master/languages/groovy/src/test/groovy/org/m3/hron/HronParserSpecification.groovy)
@@ -47,8 +48,4 @@ and generate a jar file in directory build/libs.
 
 TODO
 ====
-* reimplement the tests
-* rewrite this readme to match java (it is transplanted from groovy)
-* implement parse methods with string and reader arguments
-
-
+* Find a good way to package the Jar file (Maven?)
