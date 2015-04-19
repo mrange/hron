@@ -22,6 +22,7 @@ public class Main {
     }
 
     void run() throws Exception {
+        mapTest();
         performanceTest();
         semanticTest();
     }
@@ -162,6 +163,19 @@ public class Main {
             long elapsed = (now - then) / 1000000;
 
             System.out.format("  %d lines read in %d ms\n", lines.size()*outers, elapsed);
+        }
+    }
+
+    private void mapTest() throws Exception {
+        System.out.format("Map tests...\n");
+        Path largePath  = FileSystems.getDefault().getPath("..", "..", "reference-data", "simple.hron");
+        try (BufferedReader reader = Files.newBufferedReader(largePath)) {
+            Map<String, Object> map = Hron.parseAsMap(() -> reader.readLine());
+
+            StringBuilder sb = new StringBuilder();
+            Hron.writeFromMap(map, line -> { sb.append(line); sb.append('\n'); });
+
+            System.out.println(sb.toString());
         }
     }
 }
