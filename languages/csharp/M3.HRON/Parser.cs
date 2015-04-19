@@ -18,27 +18,6 @@ namespace M3.HRON.Generator.Parser
 {
     using M3.HRON.Generator.Source.Common;
 
-    interface IScannerVisitor
-    {
-        void Document_Begin();
-        void Document_End();
-
-        void PreProcessor(SubString preProcessor);
-
-        void Empty(SubString line);
-
-        void Comment(int indent, SubString comment);
-
-        void Object_Begin(SubString name);
-        void Object_End();
-
-        void Value_Begin(SubString name);
-        void Value_Line(SubString content);
-        void Value_End();
-
-        void Error(int lineNo, SubString line, Scanner.Error parseError);
-    }
-
     partial class Scanner
     {
         public enum Error
@@ -52,10 +31,10 @@ namespace M3.HRON.Generator.Parser
         int m_indention;
         int m_expectedIndention;
         int m_lineNo;
-        readonly IScannerVisitor m_visitor;
-        static readonly SubString s_empty = new SubString();
+        readonly IHRONVisitor m_visitor;
+        static readonly string s_empty = "";
 
-        public Scanner(IScannerVisitor visitor)
+        public Scanner(IHRONVisitor visitor)
         {
             m_visitor = visitor;
             State = ParserState.PreProcessing;
@@ -158,30 +137,30 @@ namespace M3.HRON.Generator.Parser
 
         partial void Partial_StateTransition__To_EndOfPreProcessorTag()
         {
-            m_visitor.PreProcessor(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.PreProcessor(Current, CurrentBegin + m_indention + 1, CurrentEnd);
         }
 
         partial void Partial_StateTransition__To_EndOfCommentTag()
         {
-            m_visitor.Comment(m_indention, CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Comment(m_indention, Current, CurrentBegin + m_indention + 1, CurrentEnd);
         }
 
         partial void Partial_StateTransition__To_EndOfEmptyTag()
         {
             if (m_isBuildingValue)
             {
-                m_visitor.Value_Line(s_empty);
+                m_visitor.Value_Line(s_empty, 0, 0);
             }
             else
             {
-                m_visitor.Empty(CurrentLine);
+                m_visitor.Empty(Current, CurrentBegin, CurrentEnd);
             }
         }
 
         partial void Partial_StateTransition__To_EndOfObjectTag()
         {
             PopContext();
-            m_visitor.Object_Begin(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Object_Begin(Current, CurrentBegin + m_indention + 1, CurrentEnd);
             m_expectedIndention = m_indention + 1;
         }
 
@@ -189,31 +168,31 @@ namespace M3.HRON.Generator.Parser
         {
             PopContext();
             m_isBuildingValue = true;
-            m_visitor.Value_Begin(CurrentLine.ToSubString(m_indention + 1));
+            m_visitor.Value_Begin(Current, CurrentBegin + m_indention + 1, CurrentEnd);
             m_expectedIndention = m_indention + 1;
         }
 
         partial void Partial_StateTransition__To_EndOfValueLine()
         {
-            m_visitor.Value_Line(CurrentLine.ToSubString(m_expectedIndention));
+            m_visitor.Value_Line(Current, CurrentBegin + m_expectedIndention, CurrentEnd);
         }
 
         partial void Partial_StateTransition__To_Error()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.General);
+            m_visitor.Error(m_lineNo, Error.General.ToString (), Current, CurrentBegin, CurrentEnd);
         }
 
         partial void Partial_StateTransition__To_WrongTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.WrongTag);
+            m_visitor.Error(m_lineNo, Error.WrongTag.ToString (), Current, CurrentBegin, CurrentEnd);
         }
 
         partial void Partial_StateTransition__To_NonEmptyTagError()
         {
             Result = ParserResult.Error;
-            m_visitor.Error(m_lineNo, CurrentLine, Error.NonEmptyTag);
+            m_visitor.Error(m_lineNo, Error.NonEmptyTag.ToString (), Current, CurrentBegin, CurrentEnd);
         }
 
     }

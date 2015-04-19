@@ -18,6 +18,7 @@ namespace M3.HRON.Validate
     using M3.HRON.Validate.Source.Common;
 
     using Source.ConsoleApp;
+  using System.Diagnostics;
 
     class Program
     {
@@ -32,6 +33,12 @@ namespace M3.HRON.Validate
         static partial class Runner
         {
             static partial void Partial_Run(string[] args, dynamic config)
+            {
+              PerformanceTest();
+              SyntacticTest();
+            }
+
+            static void SyntacticTest()
             {
                 Log.Info("Looking for reference data...");
                 var hrons = Directory
@@ -87,6 +94,30 @@ namespace M3.HRON.Validate
                 Log.Success("Processing of {0} test cases done", testCases.Length);
             }
 
+            static void PerformanceTest()
+            {
+              var fullPath  = Path.GetFullPath(@"..\..\..\..\..\reference-data\large.hron");
+              var allLines  = File.ReadAllLines (fullPath);
+              var visitor   = new EmptyVisitor ();
+
+              HRONSerialization.TryParse(allLines, visitor);
+
+              const int Count = 100;
+              var sw = new Stopwatch();
+              Log.Info("Starting performance run...");
+
+              sw.Start();
+
+              for (var iter = 0; iter < Count; ++iter)
+              {
+                HRONSerialization.TryParse(allLines, visitor);
+              }
+
+              sw.Stop();
+
+              Log.Success("{0:#,0} lines in {1:#,0} ms", Count*allLines.Length, sw.ElapsedMilliseconds);
+            }
+
             static string[] ReadLines(string fullPath)
             {
                 var lines = File
@@ -95,6 +126,53 @@ namespace M3.HRON.Validate
                     .ToArray()
                     ;
                 return lines;
+            }
+        }
+
+        sealed class EmptyVisitor : IHRONVisitor
+        {
+            public void Document_Begin()
+            {
+            }
+
+            public void Document_End()
+            {
+            }
+
+            public void PreProcessor(string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Empty(string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Comment(int indent, string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Object_Begin(string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Object_End()
+            {
+            }
+
+            public void Value_Begin(string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Value_Line(string baseString, int beginIndex, int endIndex)
+            {
+            }
+
+            public void Value_End()
+            {
+            }
+
+            public void Error(int lineNo, string parseError, string baseString, int beginIndex, int endIndex)
+            {
             }
         }
 
@@ -115,24 +193,24 @@ namespace M3.HRON.Validate
             {
             }
 
-            public void Empty(string line)
+            public void Empty(string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("Empty:{0}", line);
+                m_writer.WriteLine("Empty:{0}", baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
-            public void Comment(int indent, string comment)
+            public void Comment(int indent, string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("Comment:{0},{1}", indent, comment);
+                m_writer.WriteLine("Comment:{0},{1}", indent, baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
-            public void PreProcessor(string preProcessor)
+            public void PreProcessor(string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("PreProcessor:{0}", preProcessor);
+                m_writer.WriteLine("PreProcessor:{0}", baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
-            public void Object_Begin(string name)
+            public void Object_Begin(string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("Object_Begin:{0}", name);
+                m_writer.WriteLine("Object_Begin:{0}", baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
             public void Object_End()
@@ -140,19 +218,19 @@ namespace M3.HRON.Validate
                 m_writer.WriteLine("Object_End:");
             }
 
-            public void Error(int lineNo, string line, string parseError)
+            public void Error(int lineNo, string parseError, string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, line);
+                m_writer.WriteLine("Error:{0},{1},{2}", parseError, lineNo, baseString.Substring (beginIndex, endIndex - beginIndex));
             }
 
-            public void Value_Begin(string name)
+            public void Value_Begin(string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("Value_Begin:{0}", name);
+                m_writer.WriteLine("Value_Begin:{0}", baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
-            public void Value_Line(string content)
+            public void Value_Line(string baseString, int beginIndex, int endIndex)
             {
-                m_writer.WriteLine("ContentLine:{0}", content);
+                m_writer.WriteLine("ContentLine:{0}", baseString.Substring(beginIndex, endIndex - beginIndex));
             }
 
             public void Value_End()

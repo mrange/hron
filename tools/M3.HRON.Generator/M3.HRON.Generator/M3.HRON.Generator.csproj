@@ -87,14 +87,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Generated_Parser.tt</DependentUpon>
     </Compile>
-    <Compile Include="..\..\..\languages\CSharp\M3.HRON\Parser.cs">
-      <Link>Parser.cs</Link>
-    </Compile>
-    <Compile Include="Include_T4Include.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Include_T4Include.tt</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -128,10 +120,6 @@
     <None Include="T4\JSParserGenerator.ttinclude" />
     <None Include="T4\CParserGenerator.ttinclude" />
     <None Include="T4\CSharpParserGenerator.ttinclude" />
-    <None Include="Include_T4Include.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Include_T4Include.cs</LastGenOutput>
-    </None>
     <None Include="T4\Header.ttinclude" />
     <None Include="T4\ParserGenerator.ttinclude" />
     <None Include="T4\ParserModel.ttinclude" />

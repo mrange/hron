@@ -15,8 +15,6 @@
 
 namespace M3.HRON.Generator.Parser
 {
-    using M3.HRON.Generator.Source.Common;
-
     enum ParserState
     {
 <#
@@ -78,28 +76,32 @@ namespace M3.HRON.Generator.Parser
         partial void Partial_AcceptEndOfStream ();
 
         ParserResult Result;
-        SubString    CurrentLine;
-        char         CurrentCharacter;
+        string       Current          ;
+        int          CurrentBegin     ;
+        int          CurrentEnd       ;
+        char         CurrentCharacter ;
 
         public void AcceptEndOfStream ()
         {
             Partial_AcceptEndOfStream ();
         }
 
-        public bool AcceptLine (SubString ss)
+        public bool AcceptLine (string baseString, int beginIndex, int endIndex)
         {
-            Result = ParserResult.Continue;
-            CurrentLine = ss;
+            Result            = ParserResult.Continue;
+            Current           = baseString;
+            CurrentBegin      = beginIndex;
+            CurrentEnd        = endIndex;
 
             Partial_BeginLine ();
 
-            var bs = ss.BaseString;
-            var begin = ss.Begin;
-            var end = ss.End;
+            var cl    = Current;
+            var begin = CurrentBegin;
+            var end   = CurrentEnd;
 
             for (var iter = begin; iter < end; ++iter)
             {
-                CurrentCharacter = bs[iter];
+                CurrentCharacter = cl[iter];
 apply:
                 if (Result != ParserResult.Continue)
                 {

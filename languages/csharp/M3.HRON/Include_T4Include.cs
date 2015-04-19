@@ -45,6 +45,8 @@ namespace M3.HRON.Generator
     // ----------------------------------------------------------------------------------------------
     
     
+    
+    
     namespace Source.Common
     {
         using System;
@@ -57,7 +59,7 @@ namespace M3.HRON.Generator
         {
             public static void AppendSubString (this StringBuilder sb, SubString ss)
             {
-                sb.Append(ss.BaseString, ss.Begin, ss.Length);
+                sb.Append (ss.BaseString, ss.Begin, ss.Length);
             }
     
             public static string Concatenate (this IEnumerable<SubString> values, string delimiter = null)
@@ -71,7 +73,7 @@ namespace M3.HRON.Generator
     
                 var first = true;
     
-                var sb = new StringBuilder();
+                var sb = new StringBuilder ();
                 foreach (var value in values)
                 {
                     if (first)
@@ -80,30 +82,30 @@ namespace M3.HRON.Generator
                     }
                     else
                     {
-                        sb.Append(delimiter);
+                        sb.Append (delimiter);
                     }
     
-                    sb.AppendSubString(value);
+                    sb.AppendSubString (value);
                 }
     
-                return sb.ToString();
+                return sb.ToString ();
             }
     
     
     
             public static SubString ToSubString (this string value, int begin = 0, int count = int.MaxValue / 2)
             {
-                return new SubString(value, begin, count);
+                return new SubString (value, begin, count);
             }
     
-            public static SubString ToSubString(this StringBuilder value, int begin = 0, int count = int.MaxValue / 2)
+            public static SubString ToSubString (this StringBuilder value, int begin = 0, int count = int.MaxValue / 2)
             {
-                return new SubString(value.ToString(), begin, count);
+                return new SubString (value.ToString (), begin, count);
             }
     
-            public static SubString ToSubString(this SubString value, int begin = 0, int count = int.MaxValue / 2)
+            public static SubString ToSubString (this SubString value, int begin = 0, int count = int.MaxValue / 2)
             {
-                return new SubString(value, begin, count);
+                return new SubString (value, begin, count);
             }
     
             enum ParseLineState
@@ -113,9 +115,9 @@ namespace M3.HRON.Generator
                 ConsumedCR  ,
             }
     
-            public static IEnumerable<SubString> ReadLines(this string value)
+            public static IEnumerable<SubString> ReadLines (this string value)
             {
-                return value.ToSubString().ReadLines();
+                return value.ToSubString ().ReadLines ();
             }
     
             public static IEnumerable<SubString> ReadLines (this SubString subString)
@@ -136,7 +138,7 @@ namespace M3.HRON.Generator
                     switch (state)
                     {
                         case ParseLineState.ConsumedCR:
-                            yield return new SubString(baseString, beginLine, count);
+                            yield return new SubString (baseString, beginLine, count);
                             switch (ch)
                             {
                                 case '\r':
@@ -164,7 +166,7 @@ namespace M3.HRON.Generator
                                     state = ParseLineState.ConsumedCR;
                                     break;
                                 case '\n':
-                                    yield return new SubString(baseString, beginLine, count);
+                                    yield return new SubString (baseString, beginLine, count);
                                     state = ParseLineState.NewLine;
                                     break;
                                 default:
@@ -181,7 +183,7 @@ namespace M3.HRON.Generator
                                     state = ParseLineState.ConsumedCR;
                                     break;
                                 case '\n':
-                                    yield return new SubString(baseString, beginLine, count);
+                                    yield return new SubString (baseString, beginLine, count);
                                     state = ParseLineState.NewLine;
                                     break;
                                 default:
@@ -195,15 +197,15 @@ namespace M3.HRON.Generator
                 switch (state)
                 {
                     case ParseLineState.NewLine:
-                        yield return new SubString(baseString, 0, 0);
+                        yield return new SubString (baseString, 0, 0);
                         break;
                     case ParseLineState.ConsumedCR:
-                        yield return new SubString(baseString, beginLine, count);
-                        yield return new SubString(baseString, 0, 0);
+                        yield return new SubString (baseString, beginLine, count);
+                        yield return new SubString (baseString, 0, 0);
                         break;
                     case ParseLineState.Inline:
                     default:
-                        yield return new SubString(baseString, beginLine, count);
+                        yield return new SubString (baseString, beginLine, count);
                         break;
                 }
             }
@@ -240,84 +242,104 @@ namespace M3.HRON.Generator
                 return v;
             }
     
-            public static readonly SubString Empty = new SubString(null, 0,0);
+            public static readonly SubString Empty = new SubString (null, 0,0);
     
-            public SubString(SubString subString, int begin, int count) : this()
+            public SubString (SubString subString, int begin, int count) : this ()
             {
                 m_baseString    = subString.BaseString;
                 var length      = subString.Length;
     
-                begin           = Clamp(begin, 0, length);
-                count           = Clamp(count, 0, length - begin);
+                begin           = Clamp (begin, 0, length);
+                count           = Clamp (count, 0, length - begin);
                 var end         = begin + count;
     
                 m_begin         = subString.Begin + begin;
                 m_end           = subString.Begin + end;
             }
     
-            public SubString(string baseString, int begin, int count) : this()
+            public SubString (string baseString, int begin, int count) : this ()
             {
                 m_baseString    = baseString;
                 var length      = BaseString.Length;
     
-                begin           = Clamp(begin, 0, length);
-                count           = Clamp(count, 0, length - begin);
+                begin           = Clamp (begin, 0, length);
+                count           = Clamp (count, 0, length - begin);
                 var end         = begin + count;
     
                 m_begin         = begin;
                 m_end           = end;
             }
     
-            public bool Equals(SubString other)
+            public static bool operator== (SubString left, SubString right)
             {
-                return CompareTo(other) == 0;
+                return left.CompareTo (right) == 0;
             }
     
-            public override int GetHashCode()
+            public static bool operator!= (SubString left, SubString right)
+            {
+                return left.CompareTo (right) != 0;
+            }
+    
+            public bool Equals (SubString other)
+            {
+                return CompareTo (other) == 0;
+            }
+    
+            public override int GetHashCode  ()
             {
                 if (!m_hasHashCode)
                 {
-                    m_hashCode = Value.GetHashCode();
+                    m_hashCode = Value.GetHashCode ();
                     m_hasHashCode = true;
                 }
     
                 return m_hashCode;
             }
     
-            IEnumerator IEnumerable.GetEnumerator()
+            IEnumerator IEnumerable.GetEnumerator ()
             {
-                return GetEnumerator();
+                return GetEnumerator ();
             }
     
-            public object Clone()
+            public object Clone ()
             {
                 return this;
             }
     
-            public int CompareTo(object obj)
+            public int CompareTo (object obj)
             {
-                return obj is SubString ? CompareTo((SubString) obj) : 1;
+                return obj is SubString ? CompareTo ((SubString) obj) : 1;
             }
     
     
-            public override bool Equals(object obj)
+            public override bool Equals (object obj)
             {
-                return obj is SubString && Equals((SubString) obj);
+                return obj is SubString && Equals ((SubString) obj);
             }
     
     
-            public int CompareTo(SubString other)
+            public int CompareTo (SubString other)
             {
-                return String.Compare(
-                    BaseString,
-                    Begin,
-                    other.BaseString,
-                    other.Begin,
-                    Math.Min(Length, other.Length)
+                if (Length < other.Length)
+                {
+                    return -1;
+                }
+    
+                if (Length > other.Length)
+                {
+                    return 1;
+                }
+    
+                return String.Compare (
+                    BaseString          ,
+                    Begin               ,
+                    other.BaseString    ,
+                    other.Begin         ,
+                    Length
                     );
             }
     
-            public IEnumerator<char> GetEnumerator()
+            public IEnumerator<char> GetEnumerator ()
             {
                 for (var iter = Begin; iter < End; ++iter)
                 {
@@ -325,7 +347,7 @@ namespace M3.HRON.Generator
                 }
             }
     
-            public override string ToString()
+            public override string ToString ()
             {
                 return Value;
             }
@@ -336,7 +358,7 @@ namespace M3.HRON.Generator
                 {
                     if (m_value == null)
                     {
-                        m_value = BaseString.Substring(Begin, Length);
+                        m_value = BaseString.Substring (Begin, Length);
                     }
                     return m_value;
                 }
@@ -363,12 +385,12 @@ namespace M3.HRON.Generator
                 {
                     if (idx < 0)
                     {
-                        throw new IndexOutOfRangeException("idx");
+                        throw new IndexOutOfRangeException ("idx");
                     }
     
                     if (idx >= Length)
                     {
-                        throw new IndexOutOfRangeException("idx");
+                        throw new IndexOutOfRangeException ("idx");
                     }
     
                     return BaseString[idx + Begin];
@@ -394,9 +416,9 @@ namespace M3.HRON.Generator
                         return true;
                     }
     
-                    for(var iter = Begin; iter < End; ++iter)
+                    for (var iter = Begin; iter < End; ++iter)
                     {
-                        if (!Char.IsWhiteSpace(BaseString[iter]))
+                        if (!Char.IsWhiteSpace (BaseString[iter]))
                         {
                             return false;
                         }
@@ -406,6 +428,90 @@ namespace M3.HRON.Generator
                 }
             }
     
+            public bool All (Func<char,bool> test)
+            {
+                if (test == null)
+                {
+                    return true;
+                }
+    
+                if (IsEmpty)
+                {
+                    return true;
+                }
+    
+                for (var iter = Begin; iter < End; ++iter)
+                {
+                    if (!test (BaseString[iter]))
+                    {
+                        return false;
+                    }
+                }
+    
+                return true;
+            }
+    
+            static readonly char[] s_defaultTrimChars = " \t\r\n".ToCharArray ();
+    
+            static bool Contains (char[] trimChars, char ch)
+            {
+                for (int index = 0; index < trimChars.Length; index++)
+                {
+                    var trimChar = trimChars[index];
+    
+                    if (trimChar == ch)
+                    {
+                        return true;
+                    }
+                }
+    
+                return false;
+            }
+    
+            public SubString TrimStart (params char[] trimChars)
+            {
+                if (trimChars == null || trimChars.Length == 0)
+                {
+                    trimChars = s_defaultTrimChars;
+                }
+    
+                for (var iter = Begin; iter < End; ++iter)
+                {
+                    var ch = BaseString[iter];
+    
+                    if (!Contains (trimChars, ch))
+                    {
+                        return new SubString (BaseString, iter, End - iter);
+                    }
+                }
+    
+                return new SubString (BaseString, Begin, 0);
+            }
+    
+            public SubString TrimEnd (params char[] trimChars)
+            {
+                if (trimChars == null || trimChars.Length == 0)
+                {
+                    trimChars = s_defaultTrimChars;
+                }
+    
+                for (var iter = End - 1; iter >= Begin; --iter)
+                {
+                    var ch = BaseString[iter];
+    
+                    if (!Contains (trimChars, ch))
+                    {
+                        return new SubString (BaseString, Begin, iter - Begin + 1);
+                    }
+                }
+    
+                return new SubString (BaseString, Begin, 0);
+            }
+    
+            public SubString Trim (params char[] trimChars)
+            {
+                return TrimStart (trimChars).TrimEnd (trimChars);
+            }
         }
     }
 }
@@ -464,8 +570,6 @@ namespace M3.HRON.Generator
         using System;
         using System.Collections.Generic;
         using System.Globalization;
-    
-        using Source.Common;
     
         static partial class ParseExtensions
         {
@@ -635,7 +739,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, Type type, out object value)
             {
-                return s.TryParse (Config.DefaultCulture, type, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, type, out value);
             }
     
             public static object Parse (this string s, CultureInfo cultureInfo, Type type, object defaultValue)
@@ -646,7 +750,7 @@ namespace M3.HRON.Generator
     
             public static object Parse (this string s, Type type, object defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, type, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, type, defaultValue);
             }
     
             // Boolean (BoolLike)
@@ -655,7 +759,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Boolean value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Boolean Parse (this string s, CultureInfo cultureInfo, Boolean defaultValue)
@@ -667,7 +771,7 @@ namespace M3.HRON.Generator
     
             public static Boolean Parse (this string s, Boolean defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Boolean value)
@@ -683,7 +787,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Char value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Char Parse (this string s, CultureInfo cultureInfo, Char defaultValue)
@@ -695,7 +799,7 @@ namespace M3.HRON.Generator
     
             public static Char Parse (this string s, Char defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Char value)
@@ -711,7 +815,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out SByte value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static SByte Parse (this string s, CultureInfo cultureInfo, SByte defaultValue)
@@ -723,7 +827,7 @@ namespace M3.HRON.Generator
     
             public static SByte Parse (this string s, SByte defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out SByte value)
@@ -739,7 +843,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Int16 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Int16 Parse (this string s, CultureInfo cultureInfo, Int16 defaultValue)
@@ -751,7 +855,7 @@ namespace M3.HRON.Generator
     
             public static Int16 Parse (this string s, Int16 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Int16 value)
@@ -767,7 +871,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Int32 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Int32 Parse (this string s, CultureInfo cultureInfo, Int32 defaultValue)
@@ -779,7 +883,7 @@ namespace M3.HRON.Generator
     
             public static Int32 Parse (this string s, Int32 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Int32 value)
@@ -795,7 +899,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Int64 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Int64 Parse (this string s, CultureInfo cultureInfo, Int64 defaultValue)
@@ -807,7 +911,7 @@ namespace M3.HRON.Generator
     
             public static Int64 Parse (this string s, Int64 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Int64 value)
@@ -823,7 +927,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Byte value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Byte Parse (this string s, CultureInfo cultureInfo, Byte defaultValue)
@@ -835,7 +939,7 @@ namespace M3.HRON.Generator
     
             public static Byte Parse (this string s, Byte defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Byte value)
@@ -851,7 +955,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out UInt16 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static UInt16 Parse (this string s, CultureInfo cultureInfo, UInt16 defaultValue)
@@ -863,7 +967,7 @@ namespace M3.HRON.Generator
     
             public static UInt16 Parse (this string s, UInt16 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out UInt16 value)
@@ -879,7 +983,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out UInt32 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static UInt32 Parse (this string s, CultureInfo cultureInfo, UInt32 defaultValue)
@@ -891,7 +995,7 @@ namespace M3.HRON.Generator
     
             public static UInt32 Parse (this string s, UInt32 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out UInt32 value)
@@ -907,7 +1011,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out UInt64 value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static UInt64 Parse (this string s, CultureInfo cultureInfo, UInt64 defaultValue)
@@ -919,7 +1023,7 @@ namespace M3.HRON.Generator
     
             public static UInt64 Parse (this string s, UInt64 defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out UInt64 value)
@@ -935,7 +1039,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Single value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Single Parse (this string s, CultureInfo cultureInfo, Single defaultValue)
@@ -947,7 +1051,7 @@ namespace M3.HRON.Generator
     
             public static Single Parse (this string s, Single defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Single value)
@@ -963,7 +1067,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Double value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Double Parse (this string s, CultureInfo cultureInfo, Double defaultValue)
@@ -975,7 +1079,7 @@ namespace M3.HRON.Generator
     
             public static Double Parse (this string s, Double defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Double value)
@@ -991,7 +1095,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out Decimal value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static Decimal Parse (this string s, CultureInfo cultureInfo, Decimal defaultValue)
@@ -1003,7 +1107,7 @@ namespace M3.HRON.Generator
     
             public static Decimal Parse (this string s, Decimal defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out Decimal value)
@@ -1019,7 +1123,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out TimeSpan value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static TimeSpan Parse (this string s, CultureInfo cultureInfo, TimeSpan defaultValue)
@@ -1031,7 +1135,7 @@ namespace M3.HRON.Generator
     
             public static TimeSpan Parse (this string s, TimeSpan defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out TimeSpan value)
@@ -1047,7 +1151,7 @@ namespace M3.HRON.Generator
     
             public static bool TryParse (this string s, out DateTime value)
             {
-                return s.TryParse (Config.DefaultCulture, out value);
+                return s.TryParse (Source.Common.Config.DefaultCulture, out value);
             }
     
             public static DateTime Parse (this string s, CultureInfo cultureInfo, DateTime defaultValue)
@@ -1059,7 +1163,7 @@ namespace M3.HRON.Generator
     
             public static DateTime Parse (this string s, DateTime defaultValue)
             {
-                return s.Parse (Config.DefaultCulture, defaultValue);
+                return s.Parse (Source.Common.Config.DefaultCulture, defaultValue);
             }
     
             public static bool TryParse (this string s, CultureInfo cultureInfo, out DateTime value)
@@ -1392,7 +1496,7 @@ namespace M3.HRON.Generator.Include
     static partial class MetaData
     {
         public const string RootPath        = @"https://raw.github.com/";
-        public const string IncludeDate     = @"2012-12-26T22:04:56";
+        public const string IncludeDate     = @"2015-04-19T21:57:16";
 
         public const string Include_0       = @"mrange/T4Include/master/Common/SubString.cs";
         public const string Include_1       = @"mrange/T4Include/master/Common/Array.cs";
