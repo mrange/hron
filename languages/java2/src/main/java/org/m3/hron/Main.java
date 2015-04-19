@@ -168,8 +168,8 @@ public class Main {
 
     private void mapTest() throws Exception {
         System.out.format("Map tests...\n");
-        Path largePath  = FileSystems.getDefault().getPath("..", "..", "reference-data", "simple.hron");
-        try (BufferedReader reader = Files.newBufferedReader(largePath)) {
+        Path path  = FileSystems.getDefault().getPath("..", "..", "reference-data", "simple.hron");
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
             Map<String, Object> map = Hron.parseAsMap(() -> reader.readLine());
 
             StringBuilder sb = new StringBuilder();
