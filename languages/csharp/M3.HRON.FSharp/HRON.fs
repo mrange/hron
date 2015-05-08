@@ -125,10 +125,11 @@ module HRON =
       let ss (baseString : string) (beginIndex : int) (endIndex : int) : string =
         baseString.Substring(beginIndex, endIndex - beginIndex)
 
-      let mutable keys    = [-1<HRONElementKey>]
-      let mutable context = [ResizeArray<int<HRONElementKey>*HRONElement> ()]
-      let value           = System.Text.StringBuilder ()
-      let errors          = ResizeArray<int*string*string> ()
+      let mutable keys      = [-1<HRONElementKey>]
+      let mutable context   = [ResizeArray<int<HRONElementKey>*HRONElement> ()]
+      let mutable firstLine = true
+      let value             = System.Text.StringBuilder ()
+      let errors            = ResizeArray<int*string*string> ()
       interface IHRONVisitor with
           member x.Document_Begin() = 
             // Ignored
@@ -147,9 +148,12 @@ module HRON =
             ()
           member x.Value_Begin(baseString : string, beginIndex : int, endIndex : int) =
             x.PushValue <| ss baseString beginIndex endIndex
+            firstLine <- true
+            ignore <| value.Clear ()
           member x.Value_Line(baseString : string, beginIndex : int, endIndex : int) =
+            if firstLine then firstLine <- false
+            else ignore <| value.AppendLine ()
             ignore <| value.Append (baseString, beginIndex, endIndex - beginIndex)
-            ignore <| value.AppendLine ()
           member x.Value_End() =
             let kv = x.PopValue ()
             context.Head.Add kv
@@ -163,7 +167,7 @@ module HRON =
 
       member x.PushValue (name : string) : unit =
         keys <- key name::keys
-        ignore<| value.Clear ()
+        ignore <| value.Clear ()
 
       member x.PopValue () : int<HRONElementKey>*HRONElement =
         let key = keys.Head
@@ -192,3 +196,5 @@ module HRON =
       Some <| v.CreateDocument ()
     else
       None
+
+  let asString (q : HRONQuery) : string = q.AsString

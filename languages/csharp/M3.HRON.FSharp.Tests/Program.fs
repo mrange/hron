@@ -1,6 +1,20 @@
-﻿open test
+﻿// ----------------------------------------------------------------------------------------------
+// Copyright (c) Mårten Rånge.
+// ----------------------------------------------------------------------------------------------
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License.
+// ----------------------------------------------------------------------------------------------
+// You must not remove this notice, or any other, from this software.
+// ----------------------------------------------------------------------------------------------
+
+open UnitTest
 
 open M3.HRON.FSharp
+
+open HRON
 
 let simple = """
 # This is an ini file using hron
@@ -47,19 +61,35 @@ let simple = """
 		=UserName
 			AnotherTestUser
 		=Password
-			12356
-"""
+			12345"""
+
+let expect_hstring (expected : string) (actual : HRONQuery) = expect_eq expected actual.AsString
 
 [<Test>]
 let ``Basic HRON tests`` () : unit = 
+  let checkConnection (connection : HRONQuery) dbName connectionString timeOut user pwd =
+    expect {
+      do! expect_hstring  dbName            (connection ? Name            )
+      do! expect_hstring  connectionString  (connection ? ConnectionString)
+      do! expect_hstring  timeOut           (connection ? TimeOut         )
+
+      let u = connection ? User
+      do! expect_hstring user (u ? UserName)
+      do! expect_hstring pwd  (u ? Password)
+    }
+
   expect {
-    let! hron = expect_some <| HRON.parse simple
-    let databaseConnections = hron.Query ? DataBaseConnection
-    let customerConnection = databaseConnections.[0]
-    let name = customerConnection ? Name
-    let! _ = expect_eq "CustomerDB" name.AsString
-    let partnerConnection = databaseConnections.[1]
-    return ()
+    let! hron = assert_some <| parse simple
+    let query = hron.Query
+
+    let greeting = query ? Greeting ? Title
+    do! expect_hstring "Hello World from hron!" greeting
+
+    let conns = query ? DataBaseConnection
+    do! checkConnection conns     "CustomerDB"  @"Data Source=.\SQLEXPRESS;Initial Catalog=Customers" "10" "ATestUser"        "123"
+    do! checkConnection conns.[0] "CustomerDB"  @"Data Source=.\SQLEXPRESS;Initial Catalog=Customers" "10" "ATestUser"        "123"
+    do! checkConnection conns.[1] "PartnerDB"   @"Data Source=.\SQLEXPRESS;Initial Catalog=Partner"   "30" "AnotherTestUser"  "12345"
+
   } |> run
 
 

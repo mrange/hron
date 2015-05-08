@@ -1,4 +1,16 @@
-﻿module test
+﻿// ----------------------------------------------------------------------------------------------
+// Copyright (c) Mårten Rånge.
+// ----------------------------------------------------------------------------------------------
+// This source code is subject to terms and conditions of the Microsoft Public License. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// If you cannot locate the  Microsoft Public License, please send an email to 
+// dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+//  by the terms of the Microsoft Public License.
+// ----------------------------------------------------------------------------------------------
+// You must not remove this notice, or any other, from this software.
+// ----------------------------------------------------------------------------------------------
+
+module UnitTest
 
 open Microsoft.FSharp.Core
 
@@ -32,14 +44,15 @@ let highlightf  fmt = Printf.kprintf highlight  fmt
 
 type Expectation<'T> = Expectation of (('T-> unit) -> unit)
 
-let expect_eq (expected : 'T) (actual : 'T) : Expectation<'T> =
+let expect_eq (expected : 'T) (actual : 'T) : Expectation<unit> =
   Expectation <| fun a ->
     if expected = actual then
-      a actual
+      a ()
     else
       errorf "EQ: %A=%A" expected actual
+      a ()
 
-let expect_some (actual : 'T option) : Expectation<'T> =
+let assert_some (actual : 'T option) : Expectation<'T> =
   Expectation <| fun a ->
     match actual with
     | Some v -> a v
