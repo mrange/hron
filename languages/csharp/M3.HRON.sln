@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON", "M3.HRON\M3.HRON.csproj", "{EAD19435-BA50-45A3-A342-7ADA23A394E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Sample", "M3.HRON.Sample\M3.HRON.Sample.csproj", "{36370996-5E29-426E-9227-0A8127BEC883}"
@@ -8,6 +10,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Tests", "M3.HRON.Tests\M3.HRON.Tests.csproj", "{DE737E1A-D112-4707-8E60-09C480E5E497}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3.HRON.Validate", "M3.HRON.Validate\M3.HRON.Validate.csproj", "{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.FSharp", "M3.HRON.FSharp\M3.HRON.FSharp.fsproj", "{24FC0552-DEA7-4C35-98AC-130D90F86406}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "M3.HRON.FSharp.Tests", "M3.HRON.FSharp.Tests\M3.HRON.FSharp.Tests.fsproj", "{4F8D5FC7-C56B-4C5D-927D-BB6252C1BE1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +37,14 @@ Global
 		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58515DDD-9E11-4C3B-BAD4-0A71955EC79E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24FC0552-DEA7-4C35-98AC-130D90F86406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24FC0552-DEA7-4C35-98AC-130D90F86406}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24FC0552-DEA7-4C35-98AC-130D90F86406}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24FC0552-DEA7-4C35-98AC-130D90F86406}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F8D5FC7-C56B-4C5D-927D-BB6252C1BE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F8D5FC7-C56B-4C5D-927D-BB6252C1BE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F8D5FC7-C56B-4C5D-927D-BB6252C1BE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F8D5FC7-C56B-4C5D-927D-BB6252C1BE1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
