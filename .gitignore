@@ -14,8 +14,9 @@ _Resharper*
 *.psess
 *.vspx
 *.nupkg
+*.pyc
 languages/javascript/testdata/*.hron
 languages/javascript/testdata/*.hron.actionlog
 languages/javascript/mongoose-free-5.5.exe
 node_modules/
-*.pyc
+npm-debug.log
