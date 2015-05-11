@@ -1,1 +1,0 @@
-copy ..\..\..\reference-data\*.* .
